@@ -50,6 +50,8 @@ ClassicSVfit::ClassicSVfit(int verbosity)
     isValidSolution_(false),
     useHadTauTF_(false),
     clock_(0),
+    numSeconds_cpu_(-1.),
+    numSeconds_real_(-1.),
     verbosity_(verbosity)
 { 
   integrand_ = new ClassicSVfitIntegrand(verbosity_);
@@ -86,10 +88,10 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
 {
   if ( verbosity_ >= 1 ) {
     std::cout << "<ClassicSVfit::integrate>:" << std::endl;
-    clock_->Reset();
-    clock_->Start("<ClassicSVfit::integrate>");
   }
-  
+  clock_->Reset();
+  clock_->Start("<ClassicSVfit::integrate>");
+    
   std::vector<MeasuredTauLepton> measuredTauLeptons_rounded;
   for ( std::vector<MeasuredTauLepton>::const_iterator measuredTauLepton = measuredTauLeptons.begin();
 	measuredTauLepton != measuredTauLeptons.end(); ++measuredTauLepton ) {
@@ -306,6 +308,10 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   delete [] xu_;
 
   delete intAlgo_;
+
+  clock_->Stop("<ClassicSVfit::integrate>");
+  numSeconds_cpu_ = clock_->GetCpuTime("<ClassicSVfit::integrate>");
+  numSeconds_real_ = clock_->GetRealTime("<ClassicSVfit::integrate>");
 
   if ( verbosity_ >= 1 ) {
     clock_->Show("<ClassicSVfit::integrate>");

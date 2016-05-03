@@ -10,6 +10,8 @@
 #include <Math/Functor.h>
 #include <TMatrixD.h>
 #include <TH1.h>
+#include <TString.h>
+#include <TFormula.h>
 
 namespace classic_svFit
 {
@@ -28,10 +30,35 @@ namespace classic_svFit
     ~ClassicSVfitIntegrand();
   
     /// add an additional log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution (default is false)
-    void addLogM(bool value, double power = 1.) 
+    void addLogM_fixed(bool value, double power = 1.) 
     { 
-      addLogM_ = value; 
-      addLogM_power_ = power; 
+      addLogM_fixed_ = value; 
+      addLogM_fixed_power_ = power; 
+      if ( addLogM_fixed_ && addLogM_dynamic_ ) {
+      	std::cerr << "Warning: simultaneous use of fixed and dynamic logM terms not supported --> disabling dynamic logM term !!" << std::endl;
+      	addLogM_dynamic_ = false; 
+      }
+    }
+    void addLogM_dynamic(bool value, const std::string& power= "") 
+    { 
+      addLogM_dynamic_ = value; 
+      if ( addLogM_dynamic_ ) {
+	if ( power != "" ) {
+	  TString power_tstring = power.data();
+	  power_tstring = power_tstring.ReplaceAll("m", "x");
+	  power_tstring = power_tstring.ReplaceAll("mass", "x");
+	  std::string formulaName = "ClassicSVfitIntegrand_addLogM_dynamic_formula";
+	  delete addLogM_dynamic_formula_;
+	  addLogM_dynamic_formula_ = new TFormula(formulaName.data(), power_tstring.Data()); 
+	} else {
+	  std::cerr << "Warning: expression = '" << power << "' is invalid --> disabling dynamic logM term !!" << std::endl;
+	  addLogM_dynamic_ = false; 
+	}
+      }
+      if ( addLogM_dynamic_ && addLogM_fixed_ ) {
+	std::cerr << "Warning: simultaneous use of fixed and dynamic logM terms not supported --> disabling fixed logM term !!" << std::endl;
+	addLogM_fixed_ = false; 
+      }      
     }
 
     /// set pointer to histograms used to keep track of pT, eta, phi, mass and transverse mass of di-tau system
@@ -154,8 +181,10 @@ namespace classic_svFit
     unsigned numDimensions_;
 
     /// flag to enable/disable addition of log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution 
-    bool addLogM_; 
-    double addLogM_power_; 
+    bool addLogM_fixed_; 
+    double addLogM_fixed_power_; 
+    bool addLogM_dynamic_; 
+    TFormula* addLogM_dynamic_formula_;
 
     /// error code that can be passed on
     int errorCode_;

@@ -32,8 +32,10 @@ ClassicSVfitIntegrand::ClassicSVfitIntegrand(int verbosity)
     idxLeg2VisPtShift_(-1),
     idxLeg2_mNuNu_(-1),
     numDimensions_(0),
-    addLogM_(true), 
-    addLogM_power_(6.), // CV: best compatibility with "old" SVfitStandalone algorithm
+    addLogM_fixed_(true), 
+    addLogM_fixed_power_(6.), // CV: best compatibility with "old" SVfitStandalone algorithm
+    addLogM_dynamic_(false), 
+    addLogM_dynamic_formula_(0),
     errorCode_(0),
     histogramAdapter_(0),
     verbosity_(verbosity)
@@ -48,12 +50,16 @@ ClassicSVfitIntegrand::ClassicSVfitIntegrand(int verbosity)
 
 ClassicSVfitIntegrand::~ClassicSVfitIntegrand()
 {
-  std::cout << "<ClassicSVfitIntegrand::~ClassicSVfitIntegrand>:" << std::endl;
+  if ( verbosity_ ) {
+    std::cout << "<ClassicSVfitIntegrand::~ClassicSVfitIntegrand>:" << std::endl;
+  }
   
 #ifdef USE_SVFITTF
   delete hadTauTF1_;
   delete hadTauTF2_;
 #endif
+
+  delete addLogM_dynamic_formula_;
 }
 
 namespace
@@ -343,9 +349,14 @@ ClassicSVfitIntegrand::Eval(const double* x) const
   // CV: multiply matrix element by factor (Pi/(mTau GammaTau))^2 from Luca's write-up
   prob_PS_and_tauDecay *= square(TMath::Pi()/(tauLeptonMass*GammaTau));
 
+  double mTauTau = (tau1P4 + tau2P4).mass();
   double prob_logM = 1.;
-  if ( addLogM_ ) {
-    prob_logM = 1./TMath::Power(TMath::Max(1., (tau1P4 + tau2P4).mass()), addLogM_power_);
+  if ( addLogM_fixed_ ) {
+    prob_logM = 1./TMath::Power(TMath::Max(1., mTauTau), addLogM_fixed_power_);
+  }
+  if ( addLogM_dynamic_ ) {
+    double addLogM_power = addLogM_dynamic_formula_->Eval(mTauTau);
+    prob_logM = 1./TMath::Power(TMath::Max(1., mTauTau), TMath::Max(0., addLogM_power));
   }
 
   double jacobiFactor = 1./(visPtShift1*visPtShift2); // product of derrivatives dx1/dx1' and dx2/dx2' for parametrization of x1, x2 by x1', x2'

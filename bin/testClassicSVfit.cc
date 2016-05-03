@@ -44,9 +44,10 @@ int main(int argc, char* argv[])
   //svFitAlgo.setHadTauTF(hadTauTF);
   //svFitAlgo.enableHadTauTF();
 #endif
-  //svFitAlgo.addLogM(false);
-  svFitAlgo.addLogM(true, 6.);
-  //svFitAlgo.setMaxObjFunctionCalls(20000); // CV: default is 100000 evaluations of integrand per event
+  //svFitAlgo.addLogM_fixed(false);
+  svFitAlgo.addLogM_fixed(true, 6.);
+  //svFitAlgo.addLogM_dynamic(true, "(m/1000.)*15.");
+  //svFitAlgo.setMaxObjFunctionCalls(100000); // CV: default is 100000 evaluations of integrand per event
   svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET, "testClassicSVfit.root");
   bool isValidSolution = svFitAlgo.isValidSolution();
   double mass = svFitAlgo.mass();

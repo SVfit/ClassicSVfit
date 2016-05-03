@@ -126,7 +126,7 @@ SVfitIntegratorMarkovChain::SVfitIntegratorMarkovChain(const std::string& initMo
 
 SVfitIntegratorMarkovChain::~SVfitIntegratorMarkovChain()
 {
-  if ( verbosity_ >= 0 ) {
+  if ( verbosity_ >= 1 ) {
     std::cout << "<SVfitIntegratorMarkovChain::~SVfitIntegratorMarkovChain>:" << std::endl;
     std::cout << " integration calls = " << numIntegrationCalls_ << std::endl;
     std::cout << " moves: accepted = " << numMovesTotal_accepted_ << ", rejected = " << numMovesTotal_rejected_ 

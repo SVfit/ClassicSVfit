@@ -28,10 +28,12 @@ ClassicSVfit::ClassicSVfit(int verbosity)
   : integrand_(0),
     maxObjFunctionCalls_(100000),
     precision_(1.e-3),
+    treeFileName_(""),
     numDimensions_(0),
     xl_(0),
     xu_(0),
     histogramAdapter_(0),
+    likelihoodFileName_(""),
     pt_(-1.),
     ptErr_(-1.),
     ptLmax_(-1.),
@@ -84,7 +86,7 @@ namespace
 }
 
 void
-ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons, double measuredMETx, double measuredMETy, const TMatrixD& covMET, const std::string& likelihoodFileName)
+ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons, double measuredMETx, double measuredMETy, const TMatrixD& covMET)
 {
   if ( verbosity_ >= 1 ) {
     std::cout << "<ClassicSVfit::integrate>:" << std::endl;
@@ -218,14 +220,16 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   unsigned numIterSampling = TMath::Nint(0.90*maxObjFunctionCalls_/numChains);
   unsigned numIterSimAnnealingPhase1 = TMath::Nint(0.20*numIterBurnin);
   unsigned numIterSimAnnealingPhase2 = TMath::Nint(0.60*numIterBurnin);
-  std::string treeFileName = "SVfitIntegratorMarkovChain_ClassicSVfit.root";
+  if ( treeFileName_ == "" && verbosity_ >= 2 ) {
+    treeFileName_ = "SVfitIntegratorMarkovChain_ClassicSVfit.root";
+  }
   intAlgo_ = new SVfitIntegratorMarkovChain(
     "uniform", 
     numIterBurnin, numIterSampling, numIterSimAnnealingPhase1, numIterSimAnnealingPhase2,
     15., 1. - 1./(0.1*numIterBurnin),
     numChains, 100, 
     1.e-2, 0.71,
-    treeFileName.data());
+    treeFileName_.data());
   intAlgo_->registerCallBackFunction(*histogramAdapter_);
 
   //std::cout << "numDimensions = " << numDimensions_ << std::endl;
@@ -300,8 +304,8 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   transverseMassErr_ = histogramAdapter_->getTransverseMassErr();
   transverseMassLmax_ = histogramAdapter_->getTransverseMassLmax();
   
-  if ( likelihoodFileName != "" ) {
-    histogramAdapter_->writeHistograms(likelihoodFileName);
+  if ( likelihoodFileName_ != "" ) {
+    histogramAdapter_->writeHistograms(likelihoodFileName_);
   }
 
   delete [] xl_;

@@ -334,9 +334,13 @@ void SVfitIntegratorMarkovChain::integrate(gPtr_C g, const double* xl, const dou
   numMovesTotal_accepted_ += numMoves_accepted_;
   numMovesTotal_rejected_ += numMoves_rejected_;
 
-  tree_->Write();
+  if ( tree_ ) {
+    tree_->Write();
+  }
   delete treeFile_;
+  treeFile_ = 0;
   //delete tree_;
+  tree_ = 0;
 
   if ( verbosity_ >= 1 ) print(std::cout);
 }

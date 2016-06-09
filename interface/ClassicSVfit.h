@@ -62,8 +62,20 @@ class ClassicSVfit
     maxObjFunctionCalls_ = maxObjFunctionCalls;
   }
 
+  /// set name of ROOT file to store histograms of di-tau pT, eta, phi, mass and transverse mass
+  void setLikelihoodFileName(const std::string& likelihoodFileName)
+  {
+    likelihoodFileName_ = likelihoodFileName;
+  }
+
+  /// set name of ROOT file to store Markov Chain steps
+  void setTreeFileName(const std::string& treeFileName)
+  {
+    treeFileName_ = treeFileName;
+  }
+
   /// run integration 
-  void integrate(const std::vector<classic_svFit::MeasuredTauLepton>&, double, double, const TMatrixD&, const std::string& = "");
+  void integrate(const std::vector<classic_svFit::MeasuredTauLepton>&, double, double, const TMatrixD&);
 
   /// return transverse momentum (pT) of the di-tau system, uncertainty on pT of the di-tau system
   /// and maximum of likelihood function versus pT 
@@ -112,6 +124,7 @@ class ClassicSVfit
   classic_svFit::SVfitIntegratorMarkovChain* intAlgo_;
   unsigned maxObjFunctionCalls_;
   double precision_;
+  std::string treeFileName_;
 
   /// dimension of integration region
   unsigned numDimensions_;
@@ -122,6 +135,7 @@ class ClassicSVfit
   
   /// histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
   mutable classic_svFit::HistogramAdapter* histogramAdapter_;
+  std::string likelihoodFileName_;
 
   /// pT, eta, phi, mass and transverse mass of di-tau system
   double pt_;

@@ -82,7 +82,9 @@ namespace classic_svFit
     /// set transfer functions for pT of hadronic tau decays
     void setHadTauTF(const HadTauTFBase* hadTauTF) 
     { 
+      delete hadTauTF1_;
       hadTauTF1_ = hadTauTF->Clone("leg1"); 
+      delete hadTauTF2_;
       hadTauTF2_ = hadTauTF->Clone("leg2");
     }
     /// enable/disable use of transfer functions for hadronic tau decays

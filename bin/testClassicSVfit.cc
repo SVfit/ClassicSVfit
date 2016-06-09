@@ -48,7 +48,8 @@ int main(int argc, char* argv[])
   svFitAlgo.addLogM_fixed(true, 6.);
   //svFitAlgo.addLogM_dynamic(true, "(m/1000.)*15.");
   //svFitAlgo.setMaxObjFunctionCalls(100000); // CV: default is 100000 evaluations of integrand per event
-  svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET, "testClassicSVfit.root");
+  svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
+  svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
   bool isValidSolution = svFitAlgo.isValidSolution();
   double mass = svFitAlgo.mass();
   double massErr = svFitAlgo.massErr();

@@ -18,47 +18,47 @@
 class ClassicSVfit
 {
  public:
-  ClassicSVfit(int = 0); 
+  ClassicSVfit(int = 0);
   ~ClassicSVfit();
 
   /// add an additional log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution (default is false)
-  void addLogM_fixed(bool value, double power = 1.) 
-  { 
-    integrand_->addLogM_fixed(value, power); 
+  void addLogM_fixed(bool value, double power = 1.)
+  {
+    integrand_->addLogM_fixed(value, power);
   }
-  void addLogM_dynamic(bool value, const std::string& power = "") 
-  { 
-    integrand_->addLogM_dynamic(value, power); 
+  void addLogM_dynamic(bool value, const std::string& power = "")
+  {
+    integrand_->addLogM_dynamic(value, power);
   }
 
 #ifdef USE_SVFITTF
   /// set transfer functions for pT of hadronic tau decays
-  void setHadTauTF(const HadTauTFBase* hadTauTF) 
-  { 
+  void setHadTauTF(const HadTauTFBase* hadTauTF)
+  {
     integrand_->setHadTauTF(hadTauTF);
   }
   /// enable/disable use of transfer functions for hadronic tau decays
-  void enableHadTauTF() 
-  { 
+  void enableHadTauTF()
+  {
     integrand_->enableHadTauTF();
-    useHadTauTF_ = true; 
+    useHadTauTF_ = true;
   }
-  void disableHadTauTF() 
-  { 
+  void disableHadTauTF()
+  {
     integrand_->disableHadTauTF();
-    useHadTauTF_ = false; 
+    useHadTauTF_ = false;
   }
 
   /// set correlation between hadronic tau pT and MET
-  void setRhoHadTau(double rhoHadTau) 
-  { 
+  void setRhoHadTau(double rhoHadTau)
+  {
     integrand_->setRhoHadTau(rhoHadTau);
   }
 #endif
 
   /// number of function calls for Markov Chain integration (default is 100000)
-  void setMaxObjFunctionCalls(unsigned maxObjFunctionCalls) 
-  { 
+  void setMaxObjFunctionCalls(unsigned maxObjFunctionCalls)
+  {
     maxObjFunctionCalls_ = maxObjFunctionCalls;
   }
 
@@ -74,39 +74,39 @@ class ClassicSVfit
     treeFileName_ = treeFileName;
   }
 
-  /// run integration 
+  /// run integration
   void integrate(const std::vector<classic_svFit::MeasuredTauLepton>&, double, double, const TMatrixD&);
 
   /// return transverse momentum (pT) of the di-tau system, uncertainty on pT of the di-tau system
-  /// and maximum of likelihood function versus pT 
+  /// and maximum of likelihood function versus pT
   double pt() const { return pt_; }
   double ptErr() const { return ptErr_; }
   double ptLmax() const { return ptLmax_; }
 
   /// return pseudo-rapidity (eta) of the di-tau system, uncertainty on eta of the di-tau system
-  /// and maximum of likelihood function versus eta  
+  /// and maximum of likelihood function versus eta
   double eta() const { return eta_; }
   double etaErr() const { return etaErr_; }
   double etaLmax() const { return etaLmax_; }
 
   /// return azimuthal angle (phi) of the di-tau system, uncertainty on phi of the di-tau system
-  /// and maximum of likelihood function versus phi 
+  /// and maximum of likelihood function versus phi
   double phi() const { return phi_; }
   double phiErr() const { return phiErr_; }
   double phiLmax() const { return phiLmax_; }
 
   /// return mass of the di-tau system, uncertainty on the mass of the di-tau system
-  /// and maximum of likelihood function versus mass  
+  /// and maximum of likelihood function versus mass
   double mass() const { return mass_; }
   double massErr() const { return massErr_; }
   double massLmax() const { return massLmax_; }
 
   /// return mass of the di-tau system, uncertainty on the mass of the di-tau system
-  /// and maximum of likelihood function versus mass  
+  /// and maximum of likelihood function versus mass
   double transverseMass() const { return transverseMass_; }
   double transverseMassErr() const { return transverseMassErr_; }
   double transverseMassLmax() const { return transverseMassLmax_; }
-  
+
   /// return flag indicating if algorithm succeeded to find valid solution
   bool isValidSolution() const { return isValidSolution_; }
 
@@ -117,7 +117,7 @@ class ClassicSVfit
  protected:
 
   classic_svFit::ClassicSVfitIntegrand* integrand_;
-  
+
   std::vector<classic_svFit::MeasuredTauLepton> measuredTauLeptons_;
 
   /// interface to Markov Chain integration algorithm
@@ -132,7 +132,7 @@ class ClassicSVfit
   /// lower and upper boundary of integration region
   double* xl_;
   double* xu_;
-  
+
   /// histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
   mutable classic_svFit::HistogramAdapter* histogramAdapter_;
   std::string likelihoodFileName_;
@@ -164,7 +164,7 @@ class ClassicSVfit
   TBenchmark* clock_;
   double numSeconds_cpu_;
   double numSeconds_real_;
-  
+
   /// verbosity level
   int verbosity_;
 };

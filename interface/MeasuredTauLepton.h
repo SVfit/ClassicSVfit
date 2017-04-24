@@ -14,7 +14,7 @@ namespace classic_svFit
     */
     enum kDecayType {
       kUndefinedDecayType,
-      kTauToHadDecay,  /* < hadronic tau lepton decay                                                        */ 
+      kTauToHadDecay,  /* < hadronic tau lepton decay                                                        */
       kTauToElecDecay, /* < tau lepton decay to electron                                                     */
       kTauToMuDecay    /* < tau lepton decay to muon                                                         */
     };
@@ -34,8 +34,8 @@ namespace classic_svFit
     /// return azimuthal angle of the measured tau lepton in labframe
     double phi() const { return phi_; }
     /// return visible mass in labframe
-    double mass() const { return preciseVisMass_; }    
-    
+    double mass() const { return preciseVisMass_; }
+
     /// return visible energy in labframe
     double energy() const { return energy_; }
     /// return px of the measured tau lepton in labframe
@@ -49,14 +49,14 @@ namespace classic_svFit
     double p() const { return p_; }
 
     /// return decay mode of the reconstructed hadronic tau decay
-    int decayMode() const { return decayMode_; }    
+    int decayMode() const { return decayMode_; }
 
     /// return the lorentz vector in the labframe
     LorentzVector p4() const { return p4_; }
 
     /// return the momentum vector in the labframe
     Vector p3() const { return p3_; }
-    
+
     /// return auxiliary data-members to speed-up numerical computations
     double cosPhi_sinTheta() const { return cosPhi_sinTheta_; }
     double sinPhi_sinTheta() const { return sinPhi_sinTheta_; }
@@ -83,7 +83,7 @@ namespace classic_svFit
     double pz_;
 
     /// visible momentum in labframe (magnitude);
-    double p_;  
+    double p_;
 
     /// decay mode (hadronic tau decays only)
     int decayMode_;
@@ -91,7 +91,7 @@ namespace classic_svFit
     /// visible momentum in labframe (four-vector)
     LorentzVector p4_;
 
-    /// visible momentum in labframe 
+    /// visible momentum in labframe
     Vector p3_;
 
     /// mass of visible tau decay products (recomputed to reduce rounding errors)

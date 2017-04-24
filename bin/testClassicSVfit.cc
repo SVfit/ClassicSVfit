@@ -10,15 +10,15 @@
 
 using namespace classic_svFit;
 
-int main(int argc, char* argv[]) 
+int main(int argc, char* argv[])
 {
-  /* 
+  /*
      This is a single event for testing purposes.
   */
 
   // define MET
   double measuredMETx =  11.7491;
-  double measuredMETy = -51.9172; 
+  double measuredMETy = -51.9172;
 
   // define MET covariance
   TMatrixD covMET(2, 2);
@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
   /*
      tauDecayModes:  0 one-prong without neutral pions
                      1 one-prong with neutral pions
-		    10 three-prong without neutral pions
+        10 three-prong without neutral pions
   */
 
   int verbosity = 1;
@@ -56,8 +56,8 @@ int main(int argc, char* argv[])
   double transverseMass = svFitAlgo.transverseMass();
   double transverseMassErr = svFitAlgo.transverseMassErr();
   if ( isValidSolution ) {
-    std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 115.746 +/- 88.6066)," 
-	      << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 114.242 +/- 87.4277)" << std::endl;
+    std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 115.746 +/- 88.6066),"
+              << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 114.242 +/- 87.4277)" << std::endl;
   } else {
     std::cout << "sorry, failed to find valid solution !!" << std::endl;
   }

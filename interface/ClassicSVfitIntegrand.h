@@ -28,44 +28,44 @@ namespace classic_svFit
 
     ClassicSVfitIntegrand(int);
     ~ClassicSVfitIntegrand();
-  
+
     /// add an additional log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution (default is false)
-    void addLogM_fixed(bool value, double power = 1.) 
-    { 
-      addLogM_fixed_ = value; 
-      addLogM_fixed_power_ = power; 
+    void addLogM_fixed(bool value, double power = 1.)
+    {
+      addLogM_fixed_ = value;
+      addLogM_fixed_power_ = power;
       if ( addLogM_fixed_ && addLogM_dynamic_ ) {
-      	std::cerr << "Warning: simultaneous use of fixed and dynamic logM terms not supported --> disabling dynamic logM term !!" << std::endl;
-      	addLogM_dynamic_ = false; 
+        std::cerr << "Warning: simultaneous use of fixed and dynamic logM terms not supported --> disabling dynamic logM term !!" << std::endl;
+        addLogM_dynamic_ = false;
       }
     }
-    void addLogM_dynamic(bool value, const std::string& power= "") 
-    { 
-      addLogM_dynamic_ = value; 
+    void addLogM_dynamic(bool value, const std::string& power= "")
+    {
+      addLogM_dynamic_ = value;
       if ( addLogM_dynamic_ ) {
-	if ( power != "" ) {
-	  TString power_tstring = power.data();
-	  power_tstring = power_tstring.ReplaceAll("m", "x");
-	  power_tstring = power_tstring.ReplaceAll("mass", "x");
-	  std::string formulaName = "ClassicSVfitIntegrand_addLogM_dynamic_formula";
-	  delete addLogM_dynamic_formula_;
-	  addLogM_dynamic_formula_ = new TFormula(formulaName.data(), power_tstring.Data()); 
-	} else {
-	  std::cerr << "Warning: expression = '" << power << "' is invalid --> disabling dynamic logM term !!" << std::endl;
-	  addLogM_dynamic_ = false; 
-	}
+        if ( power != "" ) {
+          TString power_tstring = power.data();
+          power_tstring = power_tstring.ReplaceAll("m", "x");
+          power_tstring = power_tstring.ReplaceAll("mass", "x");
+          std::string formulaName = "ClassicSVfitIntegrand_addLogM_dynamic_formula";
+          delete addLogM_dynamic_formula_;
+          addLogM_dynamic_formula_ = new TFormula(formulaName.data(), power_tstring.Data());
+        } else {
+          std::cerr << "Warning: expression = '" << power << "' is invalid --> disabling dynamic logM term !!" << std::endl;
+          addLogM_dynamic_ = false;
+        }
       }
       if ( addLogM_dynamic_ && addLogM_fixed_ ) {
-	std::cerr << "Warning: simultaneous use of fixed and dynamic logM terms not supported --> disabling fixed logM term !!" << std::endl;
-	addLogM_fixed_ = false; 
-      }      
+        std::cerr << "Warning: simultaneous use of fixed and dynamic logM terms not supported --> disabling fixed logM term !!" << std::endl;
+        addLogM_fixed_ = false;
+      }
     }
 
     /// set pointer to histograms used to keep track of pT, eta, phi, mass and transverse mass of di-tau system
-    /// during Markov Chain integration 
-    void setHistogramAdapter(HistogramAdapter* histogramAdapter) 
-    { 
-      histogramAdapter_ = histogramAdapter; 
+    /// during Markov Chain integration
+    void setHistogramAdapter(HistogramAdapter* histogramAdapter)
+    {
+      histogramAdapter_ = histogramAdapter;
     }
 
     void setIdxLeg1_X(int idx) { idxLeg1_X_ = idx; }
@@ -80,30 +80,30 @@ namespace classic_svFit
 
 #ifdef USE_SVFITTF
     /// set transfer functions for pT of hadronic tau decays
-    void setHadTauTF(const HadTauTFBase* hadTauTF) 
-    { 
+    void setHadTauTF(const HadTauTFBase* hadTauTF)
+    {
       delete hadTauTF1_;
-      hadTauTF1_ = hadTauTF->Clone("leg1"); 
+      hadTauTF1_ = hadTauTF->Clone("leg1");
       delete hadTauTF2_;
       hadTauTF2_ = hadTauTF->Clone("leg2");
     }
     /// enable/disable use of transfer functions for hadronic tau decays
-    void enableHadTauTF() 
-    { 
+    void enableHadTauTF()
+    {
       if ( !(hadTauTF1_ && hadTauTF2_) ) {
-	std::cerr << "No tau pT transfer functions defined, call 'setHadTauTF' function first !!" << std::endl;
-	assert(0);
-      }      
-      useHadTauTF_ = true; 
+        std::cerr << "No tau pT transfer functions defined, call 'setHadTauTF' function first !!" << std::endl;
+        assert(0);
+      }
+      useHadTauTF_ = true;
     }
-    void disableHadTauTF() 
-    { 
-      useHadTauTF_ = false; 
+    void disableHadTauTF()
+    {
+      useHadTauTF_ = false;
     }
 
     /// set correlation between hadronic tau pT and MET
-    void setRhoHadTau(double rhoHadTau) 
-    { 
+    void setRhoHadTau(double rhoHadTau)
+    {
       rhoHadTau_ = rhoHadTau;
     }
 #endif
@@ -162,7 +162,7 @@ namespace classic_svFit
     double invCovMETyx_;
     double invCovMETyy_;
     double const_MET_;
-    
+
 #ifdef USE_SVFITTF
     /// account for resolution on pT of hadronic tau decays via appropriate transfer functions
     const HadTauTFBase* hadTauTF1_;
@@ -182,17 +182,17 @@ namespace classic_svFit
     int idxLeg2_mNuNu_;
     unsigned numDimensions_;
 
-    /// flag to enable/disable addition of log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution 
-    bool addLogM_fixed_; 
-    double addLogM_fixed_power_; 
-    bool addLogM_dynamic_; 
+    /// flag to enable/disable addition of log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution
+    bool addLogM_fixed_;
+    double addLogM_fixed_power_;
+    bool addLogM_dynamic_;
     TFormula* addLogM_dynamic_formula_;
 
     /// error code that can be passed on
     int errorCode_;
 
     HistogramAdapter* histogramAdapter_;
-    
+
     /// verbosity level
     int verbosity_;
   };

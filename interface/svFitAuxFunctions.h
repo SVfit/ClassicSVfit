@@ -24,7 +24,7 @@ namespace classic_svFit
   {
     return x*x*x*x;
   }
-  
+
   inline double fifth(double x)
   {
     return x*x*x*x*x;
@@ -56,8 +56,8 @@ namespace classic_svFit
   const double electronMass = 0.51100e-3; // GeV
   const double electronMass2 = electronMass*electronMass;
   const double muonMass = 0.10566; // GeV
-  const double muonMass2 = muonMass*muonMass; 
-  
+  const double muonMass2 = muonMass*muonMass;
+
   const double chargedPionMass = 0.13957; // GeV
   const double chargedPionMass2 = chargedPionMass*chargedPionMass;
   const double neutralPionMass = 0.13498; // GeV
@@ -104,7 +104,7 @@ namespace classic_svFit
     double x_;
     double xErr_;
     double y_;
-    double yErr_;    
+    double yErr_;
     double mTest_step_;
   };
   TGraphErrors* makeGraph(const std::string&, const std::vector<GraphPoint>&);

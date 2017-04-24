@@ -39,17 +39,17 @@ namespace classic_svFit
 
     void writeHistograms(const std::string& likelihoodFileName) const;
 
-   private:    
+   private:
     virtual double DoEval(const double* x) const
     {
       fillHistograms(tau1P4_, tau2P4_);
       return 0.;
     }
- 
+
    protected:
     LorentzVector tau1P4_;
     LorentzVector tau2P4_;
-    
+
     mutable TH1* histogramPt_;
     mutable TH1* histogramPt_density_;
     mutable TH1* histogramEta_;

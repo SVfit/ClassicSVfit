@@ -17,7 +17,7 @@ HistogramAdapter::HistogramAdapter()
     histogramTransverseMass_(0),
     histogramTransverseMass_density_(0)
 {}
- 
+
 HistogramAdapter::~HistogramAdapter()
 {
   delete histogramPt_;
@@ -40,17 +40,17 @@ namespace
     int numBins = 1 + TMath::Log(xMax/xMin)/TMath::Log(logBinWidth);
     TArrayF binning(numBins + 1);
     binning[0] = 0.;
-    double x = xMin;  
+    double x = xMin;
     for ( int idxBin = 1; idxBin <= numBins; ++idxBin ) {
       binning[idxBin] = x;
       x *= logBinWidth;
-    }  
+    }
     TH1* histogram = new TH1D(histogramName.data(), histogramName.data(), numBins, binning.GetArray());
     return histogram;
   }
 }
 
-void HistogramAdapter::bookHistograms(const LorentzVector& vis1P4, const LorentzVector& vis2P4) 
+void HistogramAdapter::bookHistograms(const LorentzVector& vis1P4, const LorentzVector& vis2P4)
 {
   // CV: book histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
   LorentzVector visDiTauP4 = vis1P4 + vis2P4;
@@ -74,7 +74,7 @@ void HistogramAdapter::bookHistograms(const LorentzVector& vis1P4, const Lorentz
   delete histogramMass_density_;
   histogramMass_density_ = (TH1*)histogramMass_->Clone(Form("%s_density", histogramMass_->GetName()));
   double mTvis2_measured = square(vis1P4.Et() + vis2P4.Et()) - (square(visDiTauP4.px()) + square(visDiTauP4.py()));
-  double mTvis_measured = TMath::Sqrt(TMath::Max(1., mTvis2_measured));  
+  double mTvis_measured = TMath::Sqrt(TMath::Max(1., mTvis2_measured));
   double minTransverseMass = mTvis_measured/1.0125;
   double maxTransverseMass = TMath::Max(1.e+4, 1.e+1*minTransverseMass);
   delete histogramTransverseMass_;
@@ -92,7 +92,7 @@ void HistogramAdapter::fillHistograms(const LorentzVector& tau1P4, const Lorentz
   histogramPhi_->Fill(fittedDiTauP4.phi());
   histogramMass_->Fill(fittedDiTauP4.mass());
   double transverseMass2 = square(tau1P4.Et() + tau2P4.Et()) - (square(fittedDiTauP4.px()) + square(fittedDiTauP4.py()));
-  double transverseMass = TMath::Sqrt(TMath::Max(1., transverseMass2));  
+  double transverseMass = TMath::Sqrt(TMath::Max(1., transverseMass2));
   histogramTransverseMass_->Fill(transverseMass);
 }
 
@@ -114,7 +114,7 @@ void HistogramAdapter::writeHistograms(const std::string& likelihoodFileName) co
 
 namespace
 {
-  void compHistogramDensity(const TH1* histogram, TH1* histogram_density) 
+  void compHistogramDensity(const TH1* histogram, TH1* histogram_density)
   {
     for ( int idxBin = 1; idxBin <= histogram->GetNbinsX(); ++idxBin ) {
       double binContent = histogram->GetBinContent(idxBin);
@@ -127,7 +127,7 @@ namespace
   }
 
   void extractHistogramProperties(const TH1* histogram, const TH1* histogram_density,
-                                  double& xMaximum, double& xMaximum_interpol, 
+                                  double& xMaximum, double& xMaximum_interpol,
                                   double& xMean,
                                   double& xQuantile016, double& xQuantile050, double& xQuantile084)
   {
@@ -148,9 +148,9 @@ namespace
       xQuantile050 = 0.;
       xQuantile084 = 0.;
     }
-    
+
     xMean = histogram->GetMean();
-    
+
     if ( histogram_density->Integral() > 0. ) {
       int binMaximum = histogram_density->GetMaximumBin();
       xMaximum = histogram_density->GetBinCenter(binMaximum);
@@ -158,17 +158,17 @@ namespace
       if ( binMaximum > 1 && binMaximum < histogram_density->GetNbinsX() ) {
         int binLeft       = binMaximum - 1;
         double xLeft      = histogram_density->GetBinCenter(binLeft);
-        double yLeft      = histogram_density->GetBinContent(binLeft);    
-        
+        double yLeft      = histogram_density->GetBinContent(binLeft);
+
         int binRight      = binMaximum + 1;
         double xRight     = histogram_density->GetBinCenter(binRight);
-        double yRight     = histogram_density->GetBinContent(binRight); 
-        
+        double yRight     = histogram_density->GetBinContent(binRight);
+
         double xMinus     = xLeft - xMaximum;
         double yMinus     = yLeft - yMaximum;
         double xPlus      = xRight - xMaximum;
         double yPlus      = yRight - yMaximum;
-        
+
         xMaximum_interpol = xMaximum + 0.5*(yPlus*square(xMinus) - yMinus*square(xPlus))/(yPlus*xMinus - yMinus*xPlus);
       } else {
         xMaximum_interpol = xMaximum;
@@ -179,12 +179,12 @@ namespace
     }
   }
 
-  double extractValue(const TH1* histogram, TH1* histogram_density) 
+  double extractValue(const TH1* histogram, TH1* histogram_density)
   {
     double maximum, maximum_interpol, mean, quantile016, quantile050, quantile084;
     compHistogramDensity(histogram, histogram_density);
     extractHistogramProperties(
-      histogram, histogram_density, 
+      histogram, histogram_density,
       maximum, maximum_interpol, mean, quantile016, quantile050, quantile084);
     double value = maximum;
     return value;
@@ -195,10 +195,10 @@ namespace
     double maximum, maximum_interpol, mean, quantile016, quantile050, quantile084;
     compHistogramDensity(histogram, histogram_density);
     extractHistogramProperties(
-      histogram, histogram_density, 
+      histogram, histogram_density,
       maximum, maximum_interpol, mean, quantile016, quantile050, quantile084);
     double uncertainty = TMath::Sqrt(0.5*(TMath::Power(quantile084 - maximum, 2.) + TMath::Power(maximum - quantile016, 2.)));
-    return uncertainty;  
+    return uncertainty;
   }
 
   double extractLmax(const TH1* histogram, TH1* histogram_density)
@@ -209,77 +209,77 @@ namespace
   }
 }
 
-double HistogramAdapter::getPt() const 
-{ 
-  return extractValue(histogramPt_, histogramPt_density_); 
+double HistogramAdapter::getPt() const
+{
+  return extractValue(histogramPt_, histogramPt_density_);
 }
 
-double HistogramAdapter::getPtErr() const 
-{ 
-  return extractUncertainty(histogramPt_, histogramPt_density_); 
-}
-  
-double HistogramAdapter::getPtLmax() const 
-{ 
-  return extractLmax(histogramPt_, histogramPt_density_); 
+double HistogramAdapter::getPtErr() const
+{
+  return extractUncertainty(histogramPt_, histogramPt_density_);
 }
 
-double HistogramAdapter::getEta() const 
-{ 
+double HistogramAdapter::getPtLmax() const
+{
+  return extractLmax(histogramPt_, histogramPt_density_);
+}
+
+double HistogramAdapter::getEta() const
+{
   return extractValue(histogramEta_, histogramEta_density_);
 }
 
-double HistogramAdapter::getEtaErr() const 
-{ 
-  return extractUncertainty(histogramEta_, histogramEta_density_); 
+double HistogramAdapter::getEtaErr() const
+{
+  return extractUncertainty(histogramEta_, histogramEta_density_);
 }
 
-double HistogramAdapter::getEtaLmax() const 
-{ 
+double HistogramAdapter::getEtaLmax() const
+{
   return extractLmax(histogramEta_, histogramEta_density_);
 }
 
-double HistogramAdapter::getPhi() const 
-{ 
+double HistogramAdapter::getPhi() const
+{
   return extractValue(histogramPhi_, histogramPhi_density_);
 }
 
-double HistogramAdapter::getPhiErr() const 
-{ 
+double HistogramAdapter::getPhiErr() const
+{
   return extractUncertainty(histogramPhi_, histogramPhi_density_);
 }
 
-double HistogramAdapter::getPhiLmax() const 
+double HistogramAdapter::getPhiLmax() const
 {
-  return extractLmax(histogramPhi_, histogramPhi_density_); 
+  return extractLmax(histogramPhi_, histogramPhi_density_);
 }
 
-double HistogramAdapter::getMass() const 
-{ 
-  return extractValue(histogramMass_, histogramMass_density_); 
+double HistogramAdapter::getMass() const
+{
+  return extractValue(histogramMass_, histogramMass_density_);
 }
 
-double HistogramAdapter::getMassErr() const 
+double HistogramAdapter::getMassErr() const
 {
   return extractUncertainty(histogramMass_, histogramMass_density_);
 }
 
-double HistogramAdapter::getMassLmax() const 
-{ 
+double HistogramAdapter::getMassLmax() const
+{
   return extractLmax(histogramMass_, histogramMass_density_);
 }
 
-double HistogramAdapter::getTransverseMass() const 
-{ 
-  return extractValue(histogramTransverseMass_, histogramTransverseMass_density_); 
+double HistogramAdapter::getTransverseMass() const
+{
+  return extractValue(histogramTransverseMass_, histogramTransverseMass_density_);
 }
 
-double HistogramAdapter::getTransverseMassErr() const 
-{ 
+double HistogramAdapter::getTransverseMassErr() const
+{
   return extractUncertainty(histogramTransverseMass_, histogramTransverseMass_density_);
 }
 
-double HistogramAdapter::getTransverseMassLmax() const 
+double HistogramAdapter::getTransverseMassLmax() const
 {
   return extractLmax(histogramTransverseMass_, histogramTransverseMass_density_);
 }

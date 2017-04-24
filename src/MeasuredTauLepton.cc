@@ -17,8 +17,8 @@ MeasuredTauLepton::MeasuredTauLepton()
   initialize();
 }
 
-MeasuredTauLepton::MeasuredTauLepton(int type, double pt, double eta, double phi, double mass, int decayMode) 
-  : type_(type), 
+MeasuredTauLepton::MeasuredTauLepton(int type, double pt, double eta, double phi, double mass, int decayMode)
+  : type_(type),
     pt_(roundToNdigits(pt)),
     eta_(roundToNdigits(eta)),
     phi_(roundToNdigits(phi)),
@@ -47,7 +47,7 @@ MeasuredTauLepton::MeasuredTauLepton(int type, double pt, double eta, double phi
       minVisMass = 0.3;
       maxVisMass = 1.5;
     }
-  } 
+  }
   preciseVisMass_ = mass_;
   if ( preciseVisMass_ < (0.9*minVisMass) || preciseVisMass_ > (1.1*maxVisMass) ) {
     std::string type_string;
@@ -68,12 +68,12 @@ MeasuredTauLepton::MeasuredTauLepton(int type, double pt, double eta, double phi
 }
 
 MeasuredTauLepton::MeasuredTauLepton(const MeasuredTauLepton& measuredTauLepton)
-  : type_(measuredTauLepton.type()), 
+  : type_(measuredTauLepton.type()),
     pt_(measuredTauLepton.pt()),
     eta_(measuredTauLepton.eta()),
     phi_(measuredTauLepton.phi()),
-    mass_(measuredTauLepton.mass()), 
-    decayMode_(measuredTauLepton.decayMode())     
+    mass_(measuredTauLepton.mass()),
+    decayMode_(measuredTauLepton.decayMode())
 {
   preciseVisMass_ = measuredTauLepton.mass();
   initialize();

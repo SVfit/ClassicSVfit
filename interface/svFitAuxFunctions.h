@@ -83,7 +83,7 @@ namespace classic_svFit
 
   const double GF = 1.166e-5; // in units of GeV^-2
 
-  const double v2 = square(246.22); // GeV^2
+  //const double v2 = square(246.22); // GeV^2
   //-----------------------------------------------------------------------------
 
   /**

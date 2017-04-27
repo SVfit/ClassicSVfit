@@ -20,16 +20,18 @@ HistogramAdapter::HistogramAdapter()
 
 HistogramAdapter::~HistogramAdapter()
 {
-  delete histogramPt_;
-  delete histogramPt_density_;
-  delete histogramEta_;
-  delete histogramEta_density_;
-  delete histogramPhi_;
-  delete histogramPhi_density_;
-  delete histogramMass_;
-  delete histogramMass_density_;
-  delete histogramTransverseMass_;
-  delete histogramTransverseMass_density_;
+  /*
+  if (histogramPt_) delete histogramPt_;
+  if (histogramPt_density_) delete histogramPt_density_;
+  if (histogramEta_) delete histogramEta_;
+  if (histogramEta_density_) delete histogramEta_density_;
+  if (histogramPhi_) delete histogramPhi_;
+  if (histogramPhi_density_) delete histogramPhi_density_;
+  if (histogramMass_) delete histogramMass_;
+  if (histogramMass_density_) delete histogramMass_density_;
+  if (histogramTransverseMass_) delete histogramTransverseMass_;
+  if (histogramTransverseMass_density_) delete histogramTransverseMass_density_;
+  */
 }
 
 namespace

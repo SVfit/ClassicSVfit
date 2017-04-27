@@ -51,15 +51,10 @@ namespace classic_svFit
     LorentzVector tau2P4_;
 
     mutable TH1* histogramPt_;
-    mutable TH1* histogramPt_density_;
     mutable TH1* histogramEta_;
-    mutable TH1* histogramEta_density_;
     mutable TH1* histogramPhi_;
-    mutable TH1* histogramPhi_density_;
     mutable TH1* histogramMass_;
-    mutable TH1* histogramMass_density_;
     mutable TH1* histogramTransverseMass_;
-    mutable TH1* histogramTransverseMass_density_;
   };
 }
 

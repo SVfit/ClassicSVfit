@@ -7,30 +7,20 @@ using namespace classic_svFit;
 
 HistogramAdapter::HistogramAdapter()
   : histogramPt_(0),
-    histogramPt_density_(0),
     histogramEta_(0),
-    histogramEta_density_(0),
     histogramPhi_(0),
-    histogramPhi_density_(0),
     histogramMass_(0),
-    histogramMass_density_(0),
-    histogramTransverseMass_(0),
-    histogramTransverseMass_density_(0)
+    histogramTransverseMass_(0)
 {}
 
 HistogramAdapter::~HistogramAdapter()
 {
   /*
   if (histogramPt_) delete histogramPt_;
-  if (histogramPt_density_) delete histogramPt_density_;
   if (histogramEta_) delete histogramEta_;
-  if (histogramEta_density_) delete histogramEta_density_;
   if (histogramPhi_) delete histogramPhi_;
-  if (histogramPhi_density_) delete histogramPhi_density_;
   if (histogramMass_) delete histogramMass_;
-  if (histogramMass_density_) delete histogramMass_density_;
   if (histogramTransverseMass_) delete histogramTransverseMass_;
-  if (histogramTransverseMass_density_) delete histogramTransverseMass_density_;
   */
 }
 
@@ -58,31 +48,21 @@ void HistogramAdapter::bookHistograms(const LorentzVector& vis1P4, const Lorentz
   LorentzVector visDiTauP4 = vis1P4 + vis2P4;
   delete histogramPt_;
   histogramPt_ = makeHistogram("ClassicSVfitIntegrand_histogramPt", 1., 1.e+3, 1.025);
-  delete histogramPt_density_;
-  histogramPt_density_ = (TH1*)histogramPt_->Clone(Form("%s_density", histogramPt_->GetName()));
   delete histogramEta_;
   histogramEta_ = new TH1D("ClassicSVfitIntegrand_histogramEta", "ClassicSVfitIntegrand_histogramEta", 198, -9.9, +9.9);
-  delete histogramEta_density_;
-  histogramEta_density_ = (TH1*)histogramEta_->Clone(Form("%s_density", histogramEta_->GetName()));
   delete histogramPhi_;
   histogramPhi_ = new TH1D("ClassicSVfitIntegrand_histogramPhi", "ClassicSVfitIntegrand_histogramPhi", 180, -TMath::Pi(), +TMath::Pi());
-  delete histogramPhi_density_;
-  histogramPhi_density_ = (TH1*)histogramPhi_->Clone(Form("%s_density", histogramPhi_->GetName()));
   double mVis_measured = visDiTauP4.mass();
   double minMass = mVis_measured/1.0125;
   double maxMass = TMath::Max(1.e+4, 1.e+1*minMass);
   delete histogramMass_;
   histogramMass_ = makeHistogram("ClassicSVfitIntegrand_histogramMass", minMass, maxMass, 1.025);
-  delete histogramMass_density_;
-  histogramMass_density_ = (TH1*)histogramMass_->Clone(Form("%s_density", histogramMass_->GetName()));
   double mTvis2_measured = square(vis1P4.Et() + vis2P4.Et()) - (square(visDiTauP4.px()) + square(visDiTauP4.py()));
   double mTvis_measured = TMath::Sqrt(TMath::Max(1., mTvis2_measured));
   double minTransverseMass = mTvis_measured/1.0125;
   double maxTransverseMass = TMath::Max(1.e+4, 1.e+1*minTransverseMass);
   delete histogramTransverseMass_;
   histogramTransverseMass_ = makeHistogram("ClassicSVfitIntegrand_histogramTransverseMass", minTransverseMass, maxTransverseMass, 1.025);
-  delete histogramTransverseMass_density_;
-  histogramTransverseMass_density_ = (TH1*)histogramTransverseMass_->Clone(Form("%s_density", histogramTransverseMass_->GetName()));
 }
 
 void HistogramAdapter::fillHistograms(const LorentzVector& tau1P4, const LorentzVector& tau2P4) const
@@ -102,33 +82,23 @@ void HistogramAdapter::writeHistograms(const std::string& likelihoodFileName) co
 {
   TFile* likelihoodFile = new TFile(likelihoodFileName.data(), "RECREATE");
   histogramPt_->Write();
-  histogramPt_density_->Write();
   histogramEta_->Write();
-  histogramEta_density_->Write();
   histogramPhi_->Write();
-  histogramPhi_density_->Write();
   histogramMass_->Write();
-  histogramMass_density_->Write();
   histogramTransverseMass_->Write();
-  histogramTransverseMass_density_->Write();
   delete likelihoodFile;
 }
 
 namespace
 {
-  void compHistogramDensity(const TH1* histogram, TH1* histogram_density)
+  TH1* compHistogramDensity(const TH1* histogram)
   {
-    for ( int idxBin = 1; idxBin <= histogram->GetNbinsX(); ++idxBin ) {
-      double binContent = histogram->GetBinContent(idxBin);
-      double binError = histogram->GetBinError(idxBin);
-      double binWidth = histogram->GetBinWidth(idxBin);
-      assert(binWidth > 0.);
-      histogram_density->SetBinContent(idxBin, binContent/binWidth);
-      histogram_density->SetBinError(idxBin, binError/binWidth);
-    }
+    TH1* histogram_density = static_cast<TH1*>(histogram->Clone((std::string(histogram->GetName())+"_density").c_str()));
+    histogram_density->Scale(1.0, "width");
+    return histogram_density;
   }
 
-  void extractHistogramProperties(const TH1* histogram, const TH1* histogram_density,
+  void extractHistogramProperties(const TH1* histogram,
                                   double& xMaximum, double& xMaximum_interpol,
                                   double& xMean,
                                   double& xQuantile016, double& xQuantile050, double& xQuantile084)
@@ -152,7 +122,8 @@ namespace
     }
 
     xMean = histogram->GetMean();
-
+    
+    TH1* histogram_density = compHistogramDensity(histogram);
     if ( histogram_density->Integral() > 0. ) {
       int binMaximum = histogram_density->GetMaximumBin();
       xMaximum = histogram_density->GetBinCenter(binMaximum);
@@ -179,109 +150,105 @@ namespace
       xMaximum = 0.;
       xMaximum_interpol = 0.;
     }
+    delete histogram_density;
   }
 
-  double extractValue(const TH1* histogram, TH1* histogram_density)
+  double extractValue(const TH1* histogram)
   {
     double maximum, maximum_interpol, mean, quantile016, quantile050, quantile084;
-    compHistogramDensity(histogram, histogram_density);
-    extractHistogramProperties(
-      histogram, histogram_density,
-      maximum, maximum_interpol, mean, quantile016, quantile050, quantile084);
+    extractHistogramProperties(histogram, maximum, maximum_interpol, mean, quantile016, quantile050, quantile084);
     double value = maximum;
     return value;
   }
 
-  double extractUncertainty(const TH1* histogram, TH1* histogram_density)
+  double extractUncertainty(const TH1* histogram)
   {
     double maximum, maximum_interpol, mean, quantile016, quantile050, quantile084;
-    compHistogramDensity(histogram, histogram_density);
-    extractHistogramProperties(
-      histogram, histogram_density,
-      maximum, maximum_interpol, mean, quantile016, quantile050, quantile084);
+    extractHistogramProperties(histogram, maximum, maximum_interpol, mean, quantile016, quantile050, quantile084);
     double uncertainty = TMath::Sqrt(0.5*(TMath::Power(quantile084 - maximum, 2.) + TMath::Power(maximum - quantile016, 2.)));
     return uncertainty;
   }
 
-  double extractLmax(const TH1* histogram, TH1* histogram_density)
+  double extractLmax(const TH1* histogram)
   {
-    compHistogramDensity(histogram, histogram_density);
+    TH1* histogram_density = compHistogramDensity(histogram);
     double Lmax = histogram_density->GetMaximum();
+    delete histogram_density;
     return Lmax;
   }
 }
 
 double HistogramAdapter::getPt() const
 {
-  return extractValue(histogramPt_, histogramPt_density_);
+  return extractValue(histogramPt_);
 }
 
 double HistogramAdapter::getPtErr() const
 {
-  return extractUncertainty(histogramPt_, histogramPt_density_);
+  return extractUncertainty(histogramPt_);
 }
 
 double HistogramAdapter::getPtLmax() const
 {
-  return extractLmax(histogramPt_, histogramPt_density_);
+  return extractLmax(histogramPt_);
 }
 
 double HistogramAdapter::getEta() const
 {
-  return extractValue(histogramEta_, histogramEta_density_);
+  return extractValue(histogramEta_);
 }
 
 double HistogramAdapter::getEtaErr() const
 {
-  return extractUncertainty(histogramEta_, histogramEta_density_);
+  return extractUncertainty(histogramEta_);
 }
 
 double HistogramAdapter::getEtaLmax() const
 {
-  return extractLmax(histogramEta_, histogramEta_density_);
+  return extractLmax(histogramEta_);
 }
 
 double HistogramAdapter::getPhi() const
 {
-  return extractValue(histogramPhi_, histogramPhi_density_);
+  return extractValue(histogramPhi_);
 }
 
 double HistogramAdapter::getPhiErr() const
 {
-  return extractUncertainty(histogramPhi_, histogramPhi_density_);
+  return extractUncertainty(histogramPhi_);
 }
 
 double HistogramAdapter::getPhiLmax() const
 {
-  return extractLmax(histogramPhi_, histogramPhi_density_);
+  return extractLmax(histogramPhi_);
 }
 
 double HistogramAdapter::getMass() const
 {
-  return extractValue(histogramMass_, histogramMass_density_);
+  return extractValue(histogramMass_);
 }
 
 double HistogramAdapter::getMassErr() const
 {
-  return extractUncertainty(histogramMass_, histogramMass_density_);
+  return extractUncertainty(histogramMass_);
 }
 
 double HistogramAdapter::getMassLmax() const
 {
-  return extractLmax(histogramMass_, histogramMass_density_);
+  return extractLmax(histogramMass_);
 }
 
 double HistogramAdapter::getTransverseMass() const
 {
-  return extractValue(histogramTransverseMass_, histogramTransverseMass_density_);
+  return extractValue(histogramTransverseMass_);
 }
 
 double HistogramAdapter::getTransverseMassErr() const
 {
-  return extractUncertainty(histogramTransverseMass_, histogramTransverseMass_density_);
+  return extractUncertainty(histogramTransverseMass_);
 }
 
 double HistogramAdapter::getTransverseMassLmax() const
 {
-  return extractLmax(histogramTransverseMass_, histogramTransverseMass_density_);
+  return extractLmax(histogramTransverseMass_);
 }

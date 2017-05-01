@@ -154,6 +154,9 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   }
   double measuredMETx_rounded = roundToNdigits(measuredMETx);
   double measuredMETy_rounded = roundToNdigits(measuredMETy);
+  met_.SetX(measuredMETx_rounded);
+  met_.SetY(measuredMETy_rounded);
+  met_.SetZ(0.0);
   TMatrixD covMET_rounded(2,2);
   covMET_rounded[0][0] = roundToNdigits(covMET[0][0]);
   covMET_rounded[1][0] = roundToNdigits(covMET[1][0]);
@@ -230,7 +233,8 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   delete histogramAdapter_;
   histogramAdapter_ = new HistogramAdapter();
   if ( measuredTauLeptons_rounded.size() == 2 ) {
-    histogramAdapter_->bookHistograms(measuredTauLeptons_rounded[0].p4(), measuredTauLeptons_rounded[1].p4());
+    histogramAdapter_->setMeasurement(measuredTauLeptons_rounded[0].p4(), measuredTauLeptons_rounded[1].p4(), met_);
+    histogramAdapter_->bookHistograms(measuredTauLeptons_rounded[0].p4(), measuredTauLeptons_rounded[1].p4(), met_);
   }
 
   integrand_->setInputs(measuredTauLeptons_rounded, measuredMETx_rounded, measuredMETy_rounded, covMET_rounded);

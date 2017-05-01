@@ -42,10 +42,17 @@ namespace
   }
 }
 
+void HistogramAdapter::setMeasurement(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met)
+{
+  vis1P4_ = vis1P4;
+  vis2P4_ = vis2P4;
+  met_ = met;
+}
+
 void HistogramAdapter::setTau1P4(const LorentzVector& tau1P4) { tau1P4_ = tau1P4; }
 void HistogramAdapter::setTau2P4(const LorentzVector& tau2P4) { tau2P4_ = tau2P4; }
 
-void HistogramAdapter::bookHistograms(const LorentzVector& vis1P4, const LorentzVector& vis2P4)
+void HistogramAdapter::bookHistograms(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met)
 {
   // CV: book histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
   LorentzVector visDiTauP4 = vis1P4 + vis2P4;
@@ -68,7 +75,8 @@ void HistogramAdapter::bookHistograms(const LorentzVector& vis1P4, const Lorentz
   histogramTransverseMass_ = makeHistogram("ClassicSVfitIntegrand_histogramTransverseMass", minTransverseMass, maxTransverseMass, 1.025);
 }
 
-void HistogramAdapter::fillHistograms(const LorentzVector& tau1P4, const LorentzVector& tau2P4) const
+void HistogramAdapter::fillHistograms(const LorentzVector& tau1P4, const LorentzVector& tau2P4,
+                                      const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
   // CV: fill histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
   LorentzVector fittedDiTauP4 = tau1P4 + tau2P4;
@@ -94,7 +102,7 @@ void HistogramAdapter::writeHistograms(const std::string& likelihoodFileName) co
 
 double HistogramAdapter::DoEval(const double* x) const
 {
-  fillHistograms(tau1P4_, tau2P4_);
+  fillHistograms(tau1P4_, tau2P4_, vis1P4_, vis2P4_, met_);
   return 0.;
 }
 

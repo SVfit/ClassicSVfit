@@ -14,11 +14,11 @@ namespace classic_svFit
     HistogramAdapter();
     ~HistogramAdapter();
 
+    void setMeasurement(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met);
     void setTau1P4(const LorentzVector& tau1P4);
     void setTau2P4(const LorentzVector& tau2P4);
 
-    void bookHistograms(const LorentzVector& vis1P4, const LorentzVector& vis2P4);
-    void fillHistograms(const LorentzVector& tau1P4, const LorentzVector& tau2P4) const;
+    void bookHistograms(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met);
 
     /// get pT, eta, phi, mass and transverse mass of di-tau system
     double getPt() const;
@@ -41,8 +41,14 @@ namespace classic_svFit
 
    private:
     virtual double DoEval(const double* x) const;
+    void fillHistograms(const LorentzVector& tau1P4, const LorentzVector& tau2P4,
+                        const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
 
    protected:
+    LorentzVector vis1P4_;
+    LorentzVector vis2P4_;
+    Vector met_;
+    
     LorentzVector tau1P4_;
     LorentzVector tau2P4_;
 

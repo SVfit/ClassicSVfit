@@ -64,6 +64,7 @@ class ClassicSVfit
   classic_svFit::ClassicSVfitIntegrand* integrand_;
 
   std::vector<classic_svFit::MeasuredTauLepton> measuredTauLeptons_;
+  classic_svFit::Vector met_;
 
   /// interface to Markov Chain integration algorithm
   classic_svFit::SVfitIntegratorMarkovChain* intAlgo_;

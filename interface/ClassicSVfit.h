@@ -73,39 +73,13 @@ class ClassicSVfit
   {
     treeFileName_ = treeFileName;
   }
+  
+  /// set and get histogram adapter
+  void setHistogramAdapter(classic_svFit::HistogramAdapter* histogramAdapter);
+  classic_svFit::HistogramAdapter* getHistogramAdapter() const;
 
   /// run integration
   void integrate(const std::vector<classic_svFit::MeasuredTauLepton>&, double, double, const TMatrixD&);
-
-  /// return transverse momentum (pT) of the di-tau system, uncertainty on pT of the di-tau system
-  /// and maximum of likelihood function versus pT
-  double pt() const { return pt_; }
-  double ptErr() const { return ptErr_; }
-  double ptLmax() const { return ptLmax_; }
-
-  /// return pseudo-rapidity (eta) of the di-tau system, uncertainty on eta of the di-tau system
-  /// and maximum of likelihood function versus eta
-  double eta() const { return eta_; }
-  double etaErr() const { return etaErr_; }
-  double etaLmax() const { return etaLmax_; }
-
-  /// return azimuthal angle (phi) of the di-tau system, uncertainty on phi of the di-tau system
-  /// and maximum of likelihood function versus phi
-  double phi() const { return phi_; }
-  double phiErr() const { return phiErr_; }
-  double phiLmax() const { return phiLmax_; }
-
-  /// return mass of the di-tau system, uncertainty on the mass of the di-tau system
-  /// and maximum of likelihood function versus mass
-  double mass() const { return mass_; }
-  double massErr() const { return massErr_; }
-  double massLmax() const { return massLmax_; }
-
-  /// return mass of the di-tau system, uncertainty on the mass of the di-tau system
-  /// and maximum of likelihood function versus mass
-  double transverseMass() const { return transverseMass_; }
-  double transverseMassErr() const { return transverseMassErr_; }
-  double transverseMassLmax() const { return transverseMassLmax_; }
 
   /// return flag indicating if algorithm succeeded to find valid solution
   bool isValidSolution() const { return isValidSolution_; }
@@ -136,23 +110,6 @@ class ClassicSVfit
   /// histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
   mutable classic_svFit::HistogramAdapter* histogramAdapter_;
   std::string likelihoodFileName_;
-
-  /// pT, eta, phi, mass and transverse mass of di-tau system
-  double pt_;
-  double ptErr_;
-  double ptLmax_;
-  double eta_;
-  double etaErr_;
-  double etaLmax_;
-  double phi_;
-  double phiErr_;
-  double phiLmax_;
-  double mass_;
-  double massErr_;
-  double massLmax_;
-  double transverseMass_;
-  double transverseMassErr_;
-  double transverseMassLmax_;
 
   /// flag indicating if algorithm succeeded to find valid solution
   bool isValidSolution_;

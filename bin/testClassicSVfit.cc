@@ -51,10 +51,10 @@ int main(int argc, char* argv[])
   svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
   svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
   bool isValidSolution = svFitAlgo.isValidSolution();
-  double mass = svFitAlgo.mass();
-  double massErr = svFitAlgo.massErr();
-  double transverseMass = svFitAlgo.transverseMass();
-  double transverseMassErr = svFitAlgo.transverseMassErr();
+  double mass = svFitAlgo.getHistogramAdapter()->getMass();
+  double massErr = svFitAlgo.getHistogramAdapter()->getMassErr();
+  double transverseMass = svFitAlgo.getHistogramAdapter()->getTransverseMass();
+  double transverseMassErr = svFitAlgo.getHistogramAdapter()->getTransverseMassErr();
   if ( isValidSolution ) {
     std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 115.746 +/- 88.6066),"
               << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 114.242 +/- 87.4277)" << std::endl;

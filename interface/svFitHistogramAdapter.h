@@ -8,6 +8,24 @@
 
 namespace classic_svFit
 {
+  class HistogramTools
+  {
+   public:
+    static TH1* compHistogramDensity(TH1 const* histogram);
+    static void extractHistogramProperties(
+        TH1 const* histogram,
+        double& xMaximum,
+        double& xMaximum_interpol,
+        double& xMean,
+        double& xQuantile016,
+        double& xQuantile050,
+        double& xQuantile084
+    );
+    static double extractValue(TH1 const* histogram);
+    static double extractUncertainty(TH1 const* histogram);
+    static double extractLmax(TH1 const* histogram);
+    static TH1* makeHistogram(const std::string& histogramName, double xMin, double xMax, double logBinWidth);
+  };
 
   class SVfitQuantity
   {
@@ -15,21 +33,20 @@ namespace classic_svFit
     SVfitQuantity();
     virtual ~SVfitQuantity();
 
-    virtual TH1* CreateHistogram(std::vector<classic_svFit::LorentzVector> const& measuredTauLeptons, classic_svFit::Vector const& measuredMET) const = 0;
-    virtual double FitFunction(std::vector<classic_svFit::LorentzVector> const& fittedTauLeptons, std::vector<classic_svFit::LorentzVector> const& measuredTauLeptons, classic_svFit::Vector const& measuredMET) const = 0;
+    virtual TH1* createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const = 0;
+    virtual double fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const = 0;
 
-    void SetHistogram(std::vector<classic_svFit::LorentzVector> const& measuredTauLeptons, classic_svFit::Vector const& measuredMET);
-    void WriteHistograms() const;
+    void bookHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met);
+    void writeHistograms() const;
 
-    double Eval(
-        std::vector<classic_svFit::LorentzVector> const& fittedTauLeptons,
-        std::vector<classic_svFit::LorentzVector> const& measuredTauLeptons,
-        classic_svFit::Vector const& measuredMET
+    double eval(
+        const LorentzVector& tau1P4, const LorentzVector& tau2P4,
+        const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& measuredMET
     ) const;
 
-    double ExtractValue() const;
-    double ExtractUncertainty() const;
-    double ExtractLmax() const;
+    double extractValue() const;
+    double extractUncertainty() const;
+    double extractLmax() const;
 
     mutable TH1* histogram_ = nullptr;
   };
@@ -37,36 +54,36 @@ namespace classic_svFit
   class HiggsPtSVfitQuantity : public SVfitQuantity
   {
    public:
-    virtual TH1* CreateHistogram(std::vector<classic_svFit::LorentzVector> const& measuredTauLeptons, classic_svFit::Vector const& measuredMET) const;
-    virtual double FitFunction(std::vector<classic_svFit::LorentzVector> const& fittedTauLeptons, std::vector<classic_svFit::LorentzVector> const& measuredTauLeptons, classic_svFit::Vector const& measuredMET) const;
+    virtual TH1* createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
+    virtual double fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
   };
   
   class HiggsEtaSVfitQuantity : public SVfitQuantity
   {
    public:
-    virtual TH1* CreateHistogram(std::vector<classic_svFit::LorentzVector> const& measuredTauLeptons, classic_svFit::Vector const& measuredMET) const;
-    virtual double FitFunction(std::vector<classic_svFit::LorentzVector> const& fittedTauLeptons, std::vector<classic_svFit::LorentzVector> const& measuredTauLeptons, classic_svFit::Vector const& measuredMET) const;
+    virtual TH1* createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
+    virtual double fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
   };
   
   class HiggsPhiSVfitQuantity : public SVfitQuantity
   {
    public:
-    virtual TH1* CreateHistogram(std::vector<classic_svFit::LorentzVector> const& measuredTauLeptons, classic_svFit::Vector const& measuredMET) const;
-    virtual double FitFunction(std::vector<classic_svFit::LorentzVector> const& fittedTauLeptons, std::vector<classic_svFit::LorentzVector> const& measuredTauLeptons, classic_svFit::Vector const& measuredMET) const;
+    virtual TH1* createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
+    virtual double fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
   };
   
   class HiggsMassSVfitQuantity : public SVfitQuantity
   {
    public:
-    virtual TH1* CreateHistogram(std::vector<classic_svFit::LorentzVector> const& measuredTauLeptons, classic_svFit::Vector const& measuredMET) const;
-    virtual double FitFunction(std::vector<classic_svFit::LorentzVector> const& fittedTauLeptons, std::vector<classic_svFit::LorentzVector> const& measuredTauLeptons, classic_svFit::Vector const& measuredMET) const;
+    virtual TH1* createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
+    virtual double fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
   };
   
   class TransverseMassSVfitQuantity : public SVfitQuantity
   {
    public:
-    virtual TH1* CreateHistogram(std::vector<classic_svFit::LorentzVector> const& measuredTauLeptons, classic_svFit::Vector const& measuredMET) const;
-    virtual double FitFunction(std::vector<classic_svFit::LorentzVector> const& fittedTauLeptons, std::vector<classic_svFit::LorentzVector> const& measuredTauLeptons, classic_svFit::Vector const& measuredMET) const;
+    virtual TH1* createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
+    virtual double fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
   };
   
   class HistogramAdapter : public ROOT::Math::Functor

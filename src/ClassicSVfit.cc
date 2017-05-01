@@ -55,6 +55,57 @@ ClassicSVfit::~ClassicSVfit()
   delete clock_;
 }
 
+void ClassicSVfit::addLogM_fixed(bool value, double power)
+{
+  integrand_->addLogM_fixed(value, power);
+}
+void ClassicSVfit::addLogM_dynamic(bool value, const std::string& power)
+{
+  integrand_->addLogM_dynamic(value, power);
+}
+
+#ifdef USE_SVFITTF
+void ClassicSVfit::setHadTauTF(const HadTauTFBase* hadTauTF)
+{
+  integrand_->setHadTauTF(hadTauTF);
+}
+void ClassicSVfit::enableHadTauTF()
+{
+  integrand_->enableHadTauTF();
+  useHadTauTF_ = true;
+}
+void ClassicSVfit::disableHadTauTF()
+{
+  integrand_->disableHadTauTF();
+  useHadTauTF_ = false;
+}
+
+void ClassicSVfit::setRhoHadTau(double rhoHadTau)
+{
+  integrand_->setRhoHadTau(rhoHadTau);
+}
+#endif
+
+void ClassicSVfit::setMaxObjFunctionCalls(unsigned maxObjFunctionCalls)
+{
+  maxObjFunctionCalls_ = maxObjFunctionCalls;
+}
+
+void ClassicSVfit::setLikelihoodFileName(const std::string& likelihoodFileName)
+{
+  likelihoodFileName_ = likelihoodFileName;
+}
+
+void ClassicSVfit::setTreeFileName(const std::string& treeFileName)
+{
+  treeFileName_ = treeFileName;
+}
+
+bool ClassicSVfit::isValidSolution() const { return isValidSolution_; }
+
+double ClassicSVfit::getComputingTime_cpu() const { return numSeconds_cpu_; }
+double ClassicSVfit::getComputingTime_real() const { return numSeconds_real_; }
+
 namespace
 {
   struct sortMeasuredTauLeptons

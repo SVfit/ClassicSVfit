@@ -30,82 +30,32 @@ namespace classic_svFit
     ~ClassicSVfitIntegrand();
 
     /// add an additional log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution (default is false)
-    void addLogM_fixed(bool value, double power = 1.)
-    {
-      addLogM_fixed_ = value;
-      addLogM_fixed_power_ = power;
-      if ( addLogM_fixed_ && addLogM_dynamic_ ) {
-        std::cerr << "Warning: simultaneous use of fixed and dynamic logM terms not supported --> disabling dynamic logM term !!" << std::endl;
-        addLogM_dynamic_ = false;
-      }
-    }
-    void addLogM_dynamic(bool value, const std::string& power= "")
-    {
-      addLogM_dynamic_ = value;
-      if ( addLogM_dynamic_ ) {
-        if ( power != "" ) {
-          TString power_tstring = power.data();
-          power_tstring = power_tstring.ReplaceAll("m", "x");
-          power_tstring = power_tstring.ReplaceAll("mass", "x");
-          std::string formulaName = "ClassicSVfitIntegrand_addLogM_dynamic_formula";
-          delete addLogM_dynamic_formula_;
-          addLogM_dynamic_formula_ = new TFormula(formulaName.data(), power_tstring.Data());
-        } else {
-          std::cerr << "Warning: expression = '" << power << "' is invalid --> disabling dynamic logM term !!" << std::endl;
-          addLogM_dynamic_ = false;
-        }
-      }
-      if ( addLogM_dynamic_ && addLogM_fixed_ ) {
-        std::cerr << "Warning: simultaneous use of fixed and dynamic logM terms not supported --> disabling fixed logM term !!" << std::endl;
-        addLogM_fixed_ = false;
-      }
-    }
+    void addLogM_fixed(bool value, double power = 1.);
+    void addLogM_dynamic(bool value, const std::string& power= "");
 
     /// set pointer to histograms used to keep track of pT, eta, phi, mass and transverse mass of di-tau system
     /// during Markov Chain integration
-    void setHistogramAdapter(HistogramAdapter* histogramAdapter)
-    {
-      histogramAdapter_ = histogramAdapter;
-    }
+    void setHistogramAdapter(HistogramAdapter* histogramAdapter);
 
-    void setIdxLeg1_X(int idx) { idxLeg1_X_ = idx; }
-    void setIdxLeg1_phi(int idx) { idxLeg1_phi_ = idx; }
-    void setIdxLeg1VisPtShift(int idx) { idxLeg1VisPtShift_ = idx; }
-    void setIdxLeg1_mNuNu(int idx) { idxLeg1_mNuNu_ = idx; }
-    void setIdxLeg2_X(int idx) { idxLeg2_X_ = idx; }
-    void setIdxLeg2_phi(int idx) { idxLeg2_phi_ = idx; }
-    void setIdxLeg2VisPtShift(int idx) { idxLeg2VisPtShift_ = idx; }
-    void setIdxLeg2_mNuNu(int idx) { idxLeg2_mNuNu_ = idx; }
-    void setNumDimensions(unsigned numDimensions) { numDimensions_ = numDimensions; }
+    void setIdxLeg1_X(int idx);
+    void setIdxLeg1_phi(int idx);
+    void setIdxLeg1VisPtShift(int idx);
+    void setIdxLeg1_mNuNu(int idx);
+    void setIdxLeg2_X(int idx);
+    void setIdxLeg2_phi(int idx);
+    void setIdxLeg2VisPtShift(int idx);
+    void setIdxLeg2_mNuNu(int idx);
+    void setNumDimensions(unsigned numDimensions);
 
 #ifdef USE_SVFITTF
     /// set transfer functions for pT of hadronic tau decays
-    void setHadTauTF(const HadTauTFBase* hadTauTF)
-    {
-      delete hadTauTF1_;
-      hadTauTF1_ = hadTauTF->Clone("leg1");
-      delete hadTauTF2_;
-      hadTauTF2_ = hadTauTF->Clone("leg2");
-    }
+    void setHadTauTF(const HadTauTFBase* hadTauTF);
     /// enable/disable use of transfer functions for hadronic tau decays
-    void enableHadTauTF()
-    {
-      if ( !(hadTauTF1_ && hadTauTF2_) ) {
-        std::cerr << "No tau pT transfer functions defined, call 'setHadTauTF' function first !!" << std::endl;
-        assert(0);
-      }
-      useHadTauTF_ = true;
-    }
-    void disableHadTauTF()
-    {
-      useHadTauTF_ = false;
-    }
+    void enableHadTauTF();
+    void disableHadTauTF();
 
     /// set correlation between hadronic tau pT and MET
-    void setRhoHadTau(double rhoHadTau)
-    {
-      rhoHadTau_ = rhoHadTau;
-    }
+    void setRhoHadTau(double rhoHadTau);
 #endif
 
     /// set momenta of visible tau decay products and of reconstructed missing transverse energy

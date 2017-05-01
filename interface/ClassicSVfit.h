@@ -22,57 +22,28 @@ class ClassicSVfit
   ~ClassicSVfit();
 
   /// add an additional log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution (default is false)
-  void addLogM_fixed(bool value, double power = 1.)
-  {
-    integrand_->addLogM_fixed(value, power);
-  }
-  void addLogM_dynamic(bool value, const std::string& power = "")
-  {
-    integrand_->addLogM_dynamic(value, power);
-  }
+  void addLogM_fixed(bool value, double power = 1.);
+  void addLogM_dynamic(bool value, const std::string& power = "");
 
 #ifdef USE_SVFITTF
   /// set transfer functions for pT of hadronic tau decays
-  void setHadTauTF(const HadTauTFBase* hadTauTF)
-  {
-    integrand_->setHadTauTF(hadTauTF);
-  }
+  void setHadTauTF(const HadTauTFBase* hadTauTF);
   /// enable/disable use of transfer functions for hadronic tau decays
-  void enableHadTauTF()
-  {
-    integrand_->enableHadTauTF();
-    useHadTauTF_ = true;
-  }
-  void disableHadTauTF()
-  {
-    integrand_->disableHadTauTF();
-    useHadTauTF_ = false;
-  }
+  void enableHadTauTF();
+  void disableHadTauTF();
 
   /// set correlation between hadronic tau pT and MET
-  void setRhoHadTau(double rhoHadTau)
-  {
-    integrand_->setRhoHadTau(rhoHadTau);
-  }
+  void setRhoHadTau(double rhoHadTau);
 #endif
 
   /// number of function calls for Markov Chain integration (default is 100000)
-  void setMaxObjFunctionCalls(unsigned maxObjFunctionCalls)
-  {
-    maxObjFunctionCalls_ = maxObjFunctionCalls;
-  }
+  void setMaxObjFunctionCalls(unsigned maxObjFunctionCalls);
 
   /// set name of ROOT file to store histograms of di-tau pT, eta, phi, mass and transverse mass
-  void setLikelihoodFileName(const std::string& likelihoodFileName)
-  {
-    likelihoodFileName_ = likelihoodFileName;
-  }
+  void setLikelihoodFileName(const std::string& likelihoodFileName);
 
   /// set name of ROOT file to store Markov Chain steps
-  void setTreeFileName(const std::string& treeFileName)
-  {
-    treeFileName_ = treeFileName;
-  }
+  void setTreeFileName(const std::string& treeFileName);
   
   /// set and get histogram adapter
   void setHistogramAdapter(classic_svFit::HistogramAdapter* histogramAdapter);
@@ -82,11 +53,11 @@ class ClassicSVfit
   void integrate(const std::vector<classic_svFit::MeasuredTauLepton>&, double, double, const TMatrixD&);
 
   /// return flag indicating if algorithm succeeded to find valid solution
-  bool isValidSolution() const { return isValidSolution_; }
+  bool isValidSolution() const;
 
   /// return computing time (in seconds) spent on last call to integrate method
-  double getComputingTime_cpu() const { return numSeconds_cpu_; }
-  double getComputingTime_real() const { return numSeconds_real_; }
+  double getComputingTime_cpu() const;
+  double getComputingTime_real() const;
 
  protected:
 

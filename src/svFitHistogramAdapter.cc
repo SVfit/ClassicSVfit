@@ -42,6 +42,9 @@ namespace
   }
 }
 
+void HistogramAdapter::setTau1P4(const LorentzVector& tau1P4) { tau1P4_ = tau1P4; }
+void HistogramAdapter::setTau2P4(const LorentzVector& tau2P4) { tau2P4_ = tau2P4; }
+
 void HistogramAdapter::bookHistograms(const LorentzVector& vis1P4, const LorentzVector& vis2P4)
 {
   // CV: book histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
@@ -87,6 +90,12 @@ void HistogramAdapter::writeHistograms(const std::string& likelihoodFileName) co
   histogramMass_->Write();
   histogramTransverseMass_->Write();
   delete likelihoodFile;
+}
+
+double HistogramAdapter::DoEval(const double* x) const
+{
+  fillHistograms(tau1P4_, tau2P4_);
+  return 0.;
 }
 
 namespace

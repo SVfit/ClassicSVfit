@@ -62,6 +62,81 @@ ClassicSVfitIntegrand::~ClassicSVfitIntegrand()
   delete addLogM_dynamic_formula_;
 }
 
+void ClassicSVfitIntegrand::addLogM_fixed(bool value, double power)
+{
+  addLogM_fixed_ = value;
+  addLogM_fixed_power_ = power;
+  if ( addLogM_fixed_ && addLogM_dynamic_ ) {
+    std::cerr << "Warning: simultaneous use of fixed and dynamic logM terms not supported --> disabling dynamic logM term !!" << std::endl;
+    addLogM_dynamic_ = false;
+  }
+}
+void ClassicSVfitIntegrand::addLogM_dynamic(bool value, const std::string& power)
+{
+  addLogM_dynamic_ = value;
+  if ( addLogM_dynamic_ ) {
+    if ( power != "" ) {
+      TString power_tstring = power.data();
+      power_tstring = power_tstring.ReplaceAll("m", "x");
+      power_tstring = power_tstring.ReplaceAll("mass", "x");
+      std::string formulaName = "ClassicSVfitIntegrand_addLogM_dynamic_formula";
+      delete addLogM_dynamic_formula_;
+      addLogM_dynamic_formula_ = new TFormula(formulaName.data(), power_tstring.Data());
+    } else {
+      std::cerr << "Warning: expression = '" << power << "' is invalid --> disabling dynamic logM term !!" << std::endl;
+      addLogM_dynamic_ = false;
+    }
+  }
+  if ( addLogM_dynamic_ && addLogM_fixed_ ) {
+    std::cerr << "Warning: simultaneous use of fixed and dynamic logM terms not supported --> disabling fixed logM term !!" << std::endl;
+    addLogM_fixed_ = false;
+  }
+}
+
+void ClassicSVfitIntegrand::setHistogramAdapter(HistogramAdapter* histogramAdapter)
+{
+  histogramAdapter_ = histogramAdapter;
+}
+
+void ClassicSVfitIntegrand::setIdxLeg1_X(int idx) { idxLeg1_X_ = idx; }
+void ClassicSVfitIntegrand::setIdxLeg1_phi(int idx) { idxLeg1_phi_ = idx; }
+void ClassicSVfitIntegrand::setIdxLeg1VisPtShift(int idx) { idxLeg1VisPtShift_ = idx; }
+void ClassicSVfitIntegrand::setIdxLeg1_mNuNu(int idx) { idxLeg1_mNuNu_ = idx; }
+void ClassicSVfitIntegrand::setIdxLeg2_X(int idx) { idxLeg2_X_ = idx; }
+void ClassicSVfitIntegrand::setIdxLeg2_phi(int idx) { idxLeg2_phi_ = idx; }
+void ClassicSVfitIntegrand::setIdxLeg2VisPtShift(int idx) { idxLeg2VisPtShift_ = idx; }
+void ClassicSVfitIntegrand::setIdxLeg2_mNuNu(int idx) { idxLeg2_mNuNu_ = idx; }
+void ClassicSVfitIntegrand::setNumDimensions(unsigned numDimensions) { numDimensions_ = numDimensions; }
+
+#ifdef USE_SVFITTF
+void ClassicSVfitIntegrand::setHadTauTF(const HadTauTFBase* hadTauTF)
+{
+  delete hadTauTF1_;
+  hadTauTF1_ = hadTauTF->Clone("leg1");
+  delete hadTauTF2_;
+  hadTauTF2_ = hadTauTF->Clone("leg2");
+}
+
+void ClassicSVfitIntegrand::enableHadTauTF()
+{
+  if ( !(hadTauTF1_ && hadTauTF2_) ) {
+    std::cerr << "No tau pT transfer functions defined, call 'setHadTauTF' function first !!" << std::endl;
+    assert(0);
+  }
+  useHadTauTF_ = true;
+}
+void ClassicSVfitIntegrand::disableHadTauTF()
+{
+  useHadTauTF_ = false;
+}
+
+void ClassicSVfitIntegrand::setRhoHadTau(double rhoHadTau)
+{
+  rhoHadTau_ = rhoHadTau;
+}
+#endif
+
+
 namespace
 {
   double norm(const Vector& v)

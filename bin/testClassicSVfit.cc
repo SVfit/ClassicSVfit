@@ -6,6 +6,7 @@
 
 #include "TauAnalysis/ClassicSVfit/interface/ClassicSVfit.h"
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredTauLepton.h"
+#include "TauAnalysis/ClassicSVfit/interface/svFitHistogramAdapter.h"
 #include "TauAnalysis/SVfitTF/interface/HadTauTFCrystalBall2.h"
 
 using namespace classic_svFit;
@@ -51,10 +52,10 @@ int main(int argc, char* argv[])
   svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
   svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
   bool isValidSolution = svFitAlgo.isValidSolution();
-  double mass = svFitAlgo.getHistogramAdapter()->getMass();
-  double massErr = svFitAlgo.getHistogramAdapter()->getMassErr();
-  double transverseMass = svFitAlgo.getHistogramAdapter()->getTransverseMass();
-  double transverseMassErr = svFitAlgo.getHistogramAdapter()->getTransverseMassErr();
+  double mass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMass();
+  double massErr = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMassErr();
+  double transverseMass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getTransverseMass();
+  double transverseMassErr = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getTransverseMassErr();
   if ( isValidSolution ) {
     std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 115.746 +/- 88.6066),"
               << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 114.242 +/- 87.4277)" << std::endl;

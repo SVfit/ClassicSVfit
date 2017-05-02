@@ -126,17 +126,17 @@ void SVfitQuantity::bookHistogram(const LorentzVector& vis1P4, const LorentzVect
   histogram_ = createHistogram(vis1P4, vis2P4, met);
 }
 
-void SVfitQuantity::writeHistograms() const
+void SVfitQuantity::writeHistogram() const
 {
   if (histogram_ != nullptr) histogram_->Write();
 }
 
-double SVfitQuantity::eval(
+void SVfitQuantity::fillHistogram(
     const LorentzVector& tau1P4, const LorentzVector& tau2P4,
     const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met
-) const
+)
 {
-  return fitFunction(tau1P4, tau2P4, vis1P4, vis2P4, met);
+  histogram_->Fill(fitFunction(tau1P4, tau2P4, vis1P4, vis2P4, met));
 }
 
 double SVfitQuantity::extractValue() const
@@ -154,45 +154,45 @@ double SVfitQuantity::extractLmax() const
   return HistogramTools::extractLmax(histogram_);
 }
 
-TH1* HiggsPtSVfitQuantity::createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
+TH1* DiTauSystemPtSVfitQuantity::createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
-  return HistogramTools::makeHistogram("SVfitStandaloneAlgorithm_histogramPt", 1., 1.e+3, 1.025);
+  return HistogramTools::makeHistogram("ClassicSVfitIntegrand_histogramPt", 1., 1.e+3, 1.025);
 }
 
-double HiggsPtSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
+double DiTauSystemPtSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
   return (tau1P4 + tau2P4).pt();
 }
 
-TH1* HiggsEtaSVfitQuantity::createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
+TH1* DiTauSystemEtaSVfitQuantity::createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
-  return new TH1D("SVfitStandaloneAlgorithm_histogramEta", "SVfitStandaloneAlgorithm_histogramEta", 198, -9.9, +9.9);
+  return new TH1D("ClassicSVfitIntegrand_histogramEta", "ClassicSVfitIntegrand_histogramEta", 198, -9.9, +9.9);
 }
 
-double HiggsEtaSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
+double DiTauSystemEtaSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
   return (tau1P4 + tau2P4).eta();
 }
 
-TH1* HiggsPhiSVfitQuantity::createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
+TH1* DiTauSystemPhiSVfitQuantity::createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
-  return new TH1D("SVfitStandaloneAlgorithm_histogramPhi", "SVfitStandaloneAlgorithm_histogramPhi", 180, -TMath::Pi(), +TMath::Pi());
+  return new TH1D("ClassicSVfitIntegrand_histogramPhi", "ClassicSVfitIntegrand_histogramPhi", 180, -TMath::Pi(), +TMath::Pi());
 }
 
-double HiggsPhiSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
+double DiTauSystemPhiSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
   return (tau1P4 + tau2P4).phi();
 }
 
-TH1* HiggsMassSVfitQuantity::createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
+TH1* DiTauSystemMassSVfitQuantity::createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
   double visMass = (vis1P4 + vis2P4).mass();
   double minMass = visMass/1.0125;
   double maxMass = TMath::Max(1.e+4, 1.e+1*minMass);
-  return HistogramTools::makeHistogram("SVfitStandaloneAlgorithm_histogramMass", minMass, maxMass, 1.025);
+  return HistogramTools::makeHistogram("ClassicSVfitIntegrand_histogramMass", minMass, maxMass, 1.025);
 }
 
-double HiggsMassSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
+double DiTauSystemMassSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
   return (tau1P4 + tau2P4).mass();
 }
@@ -204,7 +204,7 @@ TH1* TransverseMassSVfitQuantity::createHistogram(const LorentzVector& vis1P4, c
   double visTransverseMass = TMath::Sqrt(TMath::Max(1., visTransverseMass2));
   double minTransverseMass = visTransverseMass/1.0125;
   double maxTransverseMass = TMath::Max(1.e+4, 1.e+1*minTransverseMass);
-  return HistogramTools::makeHistogram("SVfitStandaloneAlgorithm_histogramTransverseMass", minTransverseMass, maxTransverseMass, 1.025);
+  return HistogramTools::makeHistogram("ClassicSVfitIntegrand_histogramTransverseMass", minTransverseMass, maxTransverseMass, 1.025);
 }
 
 double TransverseMassSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
@@ -213,22 +213,17 @@ double TransverseMassSVfitQuantity::fitFunction(const LorentzVector& tau1P4, con
 }
 
 
-HistogramAdapter::HistogramAdapter()
-  : histogramPt_(0),
-    histogramEta_(0),
-    histogramPhi_(0),
-    histogramMass_(0),
-    histogramTransverseMass_(0)
+HistogramAdapter::HistogramAdapter(std::vector<SVfitQuantity*> const& quantities) :
+  quantities_(quantities)
 {}
 
 HistogramAdapter::~HistogramAdapter()
 {
   /*
-  if (histogramPt_) delete histogramPt_;
-  if (histogramEta_) delete histogramEta_;
-  if (histogramPhi_) delete histogramPhi_;
-  if (histogramMass_) delete histogramMass_;
-  if (histogramTransverseMass_) delete histogramTransverseMass_;
+  for (std::vector<SVfitQuantity*>::iterator quantity = quantities_.begin(); quantity != quantities_.end(); ++quantity)
+  {
+    delete *quantity;
+  }
   */
 }
 
@@ -242,51 +237,41 @@ void HistogramAdapter::setMeasurement(const LorentzVector& vis1P4, const Lorentz
 void HistogramAdapter::setTau1P4(const LorentzVector& tau1P4) { tau1P4_ = tau1P4; }
 void HistogramAdapter::setTau2P4(const LorentzVector& tau2P4) { tau2P4_ = tau2P4; }
 
+unsigned int HistogramAdapter::registerQuantity(SVfitQuantity* quantity)
+{
+  quantities_.push_back(quantity);
+  return getNQuantities();
+}
+
 void HistogramAdapter::bookHistograms(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met)
 {
-  // CV: book histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
-  LorentzVector visDiTauP4 = vis1P4 + vis2P4;
-  delete histogramPt_;
-  histogramPt_ = HistogramTools::makeHistogram("ClassicSVfitIntegrand_histogramPt", 1., 1.e+3, 1.025);
-  delete histogramEta_;
-  histogramEta_ = new TH1D("ClassicSVfitIntegrand_histogramEta", "ClassicSVfitIntegrand_histogramEta", 198, -9.9, +9.9);
-  delete histogramPhi_;
-  histogramPhi_ = new TH1D("ClassicSVfitIntegrand_histogramPhi", "ClassicSVfitIntegrand_histogramPhi", 180, -TMath::Pi(), +TMath::Pi());
-  double mVis_measured = visDiTauP4.mass();
-  double minMass = mVis_measured/1.0125;
-  double maxMass = TMath::Max(1.e+4, 1.e+1*minMass);
-  delete histogramMass_;
-  histogramMass_ = HistogramTools::makeHistogram("ClassicSVfitIntegrand_histogramMass", minMass, maxMass, 1.025);
-  double mTvis2_measured = square(vis1P4.Et() + vis2P4.Et()) - (square(visDiTauP4.px()) + square(visDiTauP4.py()));
-  double mTvis_measured = TMath::Sqrt(TMath::Max(1., mTvis2_measured));
-  double minTransverseMass = mTvis_measured/1.0125;
-  double maxTransverseMass = TMath::Max(1.e+4, 1.e+1*minTransverseMass);
-  delete histogramTransverseMass_;
-  histogramTransverseMass_ = HistogramTools::makeHistogram("ClassicSVfitIntegrand_histogramTransverseMass", minTransverseMass, maxTransverseMass, 1.025);
+  for (std::vector<SVfitQuantity*>::iterator quantity = quantities_.begin(); quantity != quantities_.end(); ++quantity)
+  {
+    (*quantity)->bookHistogram(vis1P4, vis2P4, met);
+  }
 }
 
 void HistogramAdapter::fillHistograms(const LorentzVector& tau1P4, const LorentzVector& tau2P4,
                                       const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
-  // CV: fill histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
-  LorentzVector fittedDiTauP4 = tau1P4 + tau2P4;
-  histogramPt_->Fill(fittedDiTauP4.pt());
-  histogramEta_->Fill(fittedDiTauP4.eta());
-  histogramPhi_->Fill(fittedDiTauP4.phi());
-  histogramMass_->Fill(fittedDiTauP4.mass());
-  double transverseMass2 = square(tau1P4.Et() + tau2P4.Et()) - (square(fittedDiTauP4.px()) + square(fittedDiTauP4.py()));
-  double transverseMass = TMath::Sqrt(TMath::Max(1., transverseMass2));
-  histogramTransverseMass_->Fill(transverseMass);
+  for (std::vector<SVfitQuantity*>::iterator quantity = quantities_.begin(); quantity != quantities_.end(); ++quantity)
+  {
+    (*quantity)->fillHistogram(tau1P4, tau2P4, vis1P4, vis2P4, met);
+  }
 }
 
 void HistogramAdapter::writeHistograms(const std::string& likelihoodFileName) const
 {
   TFile* likelihoodFile = new TFile(likelihoodFileName.data(), "RECREATE");
-  histogramPt_->Write();
-  histogramEta_->Write();
-  histogramPhi_->Write();
-  histogramMass_->Write();
-  histogramTransverseMass_->Write();
+  likelihoodFile->cd();
+  
+  for (std::vector<SVfitQuantity*>::iterator quantity = quantities_.begin(); quantity != quantities_.end(); ++quantity)
+  {
+    (*quantity)->writeHistogram();
+  }
+  
+  likelihoodFile->Write();
+  likelihoodFile->Close();
   delete likelihoodFile;
 }
 
@@ -296,77 +281,126 @@ double HistogramAdapter::DoEval(const double* x) const
   return 0.;
 }
 
-double HistogramAdapter::getPt() const
+double HistogramAdapter::extractValue(size_t index) const
 {
-  return HistogramTools::extractValue(histogramPt_);
+  return quantities_.at(index)->extractValue();
 }
 
-double HistogramAdapter::getPtErr() const
+double HistogramAdapter::extractUncertainty(size_t index) const
 {
-  return HistogramTools::extractUncertainty(histogramPt_);
+  return quantities_.at(index)->extractUncertainty();
 }
 
-double HistogramAdapter::getPtLmax() const
+double HistogramAdapter::extractLmax(size_t index) const
 {
-  return HistogramTools::extractLmax(histogramPt_);
+  return quantities_.at(index)->extractLmax();
 }
 
-double HistogramAdapter::getEta() const
+std::vector<double> HistogramAdapter::extractValues() const
 {
-  return HistogramTools::extractValue(histogramEta_);
+  std::vector<double> results;
+  std::transform(quantities_.begin(), quantities_.end(), results.begin(),
+                 [](SVfitQuantity* quantity) { return quantity->extractValue(); });
+  return results;
 }
 
-double HistogramAdapter::getEtaErr() const
+std::vector<double> HistogramAdapter::extractUncertainties() const
 {
-  return HistogramTools::extractUncertainty(histogramEta_);
+  std::vector<double> results;
+  std::transform(quantities_.begin(), quantities_.end(), results.begin(),
+                 [](SVfitQuantity* quantity) { return quantity->extractUncertainty(); });
+  return results;
 }
 
-double HistogramAdapter::getEtaLmax() const
+std::vector<double> HistogramAdapter::extractLmaxima() const
 {
-  return HistogramTools::extractLmax(histogramEta_);
+  std::vector<double> results;
+  std::transform(quantities_.begin(), quantities_.end(), results.begin(),
+                 [](SVfitQuantity* quantity) { return quantity->extractLmax(); });
+  return results;
 }
 
-double HistogramAdapter::getPhi() const
+DiTauSystemHistogramAdapter::DiTauSystemHistogramAdapter(std::vector<SVfitQuantity*> const& quantities) :
+  HistogramAdapter(quantities)
 {
-  return HistogramTools::extractValue(histogramPhi_);
+  indexPt_ = registerQuantity(new DiTauSystemPtSVfitQuantity());
+  indexEta_ = registerQuantity(new DiTauSystemEtaSVfitQuantity());
+  indexPhi_ = registerQuantity(new DiTauSystemPhiSVfitQuantity());
+  indexMass_ = registerQuantity(new DiTauSystemMassSVfitQuantity());
+  indexTransverseMass_ = registerQuantity(new TransverseMassSVfitQuantity());
 }
 
-double HistogramAdapter::getPhiErr() const
+double DiTauSystemHistogramAdapter::getPt() const
 {
-  return HistogramTools::extractUncertainty(histogramPhi_);
+  return extractValue(indexPt_);
 }
 
-double HistogramAdapter::getPhiLmax() const
+double DiTauSystemHistogramAdapter::getPtErr() const
 {
-  return HistogramTools::extractLmax(histogramPhi_);
+  return extractUncertainty(indexPt_);
 }
 
-double HistogramAdapter::getMass() const
+double DiTauSystemHistogramAdapter::getPtLmax() const
 {
-  return HistogramTools::extractValue(histogramMass_);
+  return extractLmax(indexPt_);
 }
 
-double HistogramAdapter::getMassErr() const
+double DiTauSystemHistogramAdapter::getEta() const
 {
-  return HistogramTools::extractUncertainty(histogramMass_);
+  return extractValue(indexEta_);
 }
 
-double HistogramAdapter::getMassLmax() const
+double DiTauSystemHistogramAdapter::getEtaErr() const
 {
-  return HistogramTools::extractLmax(histogramMass_);
+  return extractUncertainty(indexEta_);
 }
 
-double HistogramAdapter::getTransverseMass() const
+double DiTauSystemHistogramAdapter::getEtaLmax() const
 {
-  return HistogramTools::extractValue(histogramTransverseMass_);
+  return extractLmax(indexEta_);
 }
 
-double HistogramAdapter::getTransverseMassErr() const
+double DiTauSystemHistogramAdapter::getPhi() const
 {
-  return HistogramTools::extractUncertainty(histogramTransverseMass_);
+  return extractValue(indexPhi_);
 }
 
-double HistogramAdapter::getTransverseMassLmax() const
+double DiTauSystemHistogramAdapter::getPhiErr() const
 {
-  return HistogramTools::extractLmax(histogramTransverseMass_);
+  return extractUncertainty(indexPhi_);
+}
+
+double DiTauSystemHistogramAdapter::getPhiLmax() const
+{
+  return extractLmax(indexPhi_);
+}
+
+double DiTauSystemHistogramAdapter::getMass() const
+{
+  return extractValue(indexMass_);
+}
+
+double DiTauSystemHistogramAdapter::getMassErr() const
+{
+  return extractUncertainty(indexMass_);
+}
+
+double DiTauSystemHistogramAdapter::getMassLmax() const
+{
+  return extractLmax(indexMass_);
+}
+
+double DiTauSystemHistogramAdapter::getTransverseMass() const
+{
+  return extractValue(indexTransverseMass_);
+}
+
+double DiTauSystemHistogramAdapter::getTransverseMassErr() const
+{
+  return extractUncertainty(indexTransverseMass_);
+}
+
+double DiTauSystemHistogramAdapter::getTransverseMassLmax() const
+{
+  return extractLmax(indexTransverseMass_);
 }

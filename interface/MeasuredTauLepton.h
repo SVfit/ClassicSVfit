@@ -22,45 +22,45 @@ namespace classic_svFit
     MeasuredTauLepton();
     MeasuredTauLepton(int, double, double, double, double, int = -1);
     MeasuredTauLepton(const MeasuredTauLepton&);
-    ~MeasuredTauLepton() {}
+    ~MeasuredTauLepton();
 
     /// return decay type of the tau lepton
-    int type() const { return type_; }
+    int type() const;
 
     /// return pt of the measured tau lepton in labframe
-    double pt() const { return pt_; }
+    double pt() const;
     /// return pseudo-rapidity of the measured tau lepton in labframe
-    double eta() const { return eta_; }
+    double eta() const;
     /// return azimuthal angle of the measured tau lepton in labframe
-    double phi() const { return phi_; }
+    double phi() const;
     /// return visible mass in labframe
-    double mass() const { return preciseVisMass_; }
+    double mass() const;
 
     /// return visible energy in labframe
-    double energy() const { return energy_; }
+    double energy() const;
     /// return px of the measured tau lepton in labframe
-    double px() const { return px_; }
+    double px() const;
     /// return py of the measured tau lepton in labframe
-    double py() const { return py_; }
+    double py() const;
     /// return pz of the measured tau lepton in labframe
-    double pz() const { return pz_; }
+    double pz() const;
 
     /// return the measured tau lepton momentum in labframe
-    double p() const { return p_; }
+    double p() const;
 
     /// return decay mode of the reconstructed hadronic tau decay
-    int decayMode() const { return decayMode_; }
+    int decayMode() const;
 
     /// return the lorentz vector in the labframe
-    LorentzVector p4() const { return p4_; }
+    LorentzVector p4() const;
 
     /// return the momentum vector in the labframe
-    Vector p3() const { return p3_; }
+    Vector p3() const;
 
     /// return auxiliary data-members to speed-up numerical computations
-    double cosPhi_sinTheta() const { return cosPhi_sinTheta_; }
-    double sinPhi_sinTheta() const { return sinPhi_sinTheta_; }
-    double cosTheta() const { return cosTheta_; }
+    double cosPhi_sinTheta() const;
+    double sinPhi_sinTheta() const;
+    double cosTheta() const;
 
    protected:
     /// set visible momentum in all coordinates systems

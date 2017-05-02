@@ -34,21 +34,6 @@ ClassicSVfit::ClassicSVfit(int verbosity)
     xu_(0),
     histogramAdapter_(0),
     likelihoodFileName_(""),
-    pt_(-1.),
-    ptErr_(-1.),
-    ptLmax_(-1.),
-    eta_(-1.),
-    etaErr_(-1.),
-    etaLmax_(-1.),
-    phi_(-1.),
-    phiErr_(-1.),
-    phiLmax_(-1.),
-    mass_(-1.),
-    massErr_(-1.),
-    massLmax_(-1.),
-    transverseMass_(-1.),
-    transverseMassErr_(-1.),
-    transverseMassLmax_(-1.),
     isValidSolution_(false),
     useHadTauTF_(false),
     clock_(0),
@@ -69,6 +54,57 @@ ClassicSVfit::~ClassicSVfit()
 
   delete clock_;
 }
+
+void ClassicSVfit::addLogM_fixed(bool value, double power)
+{
+  integrand_->addLogM_fixed(value, power);
+}
+void ClassicSVfit::addLogM_dynamic(bool value, const std::string& power)
+{
+  integrand_->addLogM_dynamic(value, power);
+}
+
+#ifdef USE_SVFITTF
+void ClassicSVfit::setHadTauTF(const HadTauTFBase* hadTauTF)
+{
+  integrand_->setHadTauTF(hadTauTF);
+}
+void ClassicSVfit::enableHadTauTF()
+{
+  integrand_->enableHadTauTF();
+  useHadTauTF_ = true;
+}
+void ClassicSVfit::disableHadTauTF()
+{
+  integrand_->disableHadTauTF();
+  useHadTauTF_ = false;
+}
+
+void ClassicSVfit::setRhoHadTau(double rhoHadTau)
+{
+  integrand_->setRhoHadTau(rhoHadTau);
+}
+#endif
+
+void ClassicSVfit::setMaxObjFunctionCalls(unsigned maxObjFunctionCalls)
+{
+  maxObjFunctionCalls_ = maxObjFunctionCalls;
+}
+
+void ClassicSVfit::setLikelihoodFileName(const std::string& likelihoodFileName)
+{
+  likelihoodFileName_ = likelihoodFileName;
+}
+
+void ClassicSVfit::setTreeFileName(const std::string& treeFileName)
+{
+  treeFileName_ = treeFileName;
+}
+
+bool ClassicSVfit::isValidSolution() const { return isValidSolution_; }
+
+double ClassicSVfit::getComputingTime_cpu() const { return numSeconds_cpu_; }
+double ClassicSVfit::getComputingTime_real() const { return numSeconds_real_; }
 
 namespace
 {
@@ -118,6 +154,9 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   }
   double measuredMETx_rounded = roundToNdigits(measuredMETx);
   double measuredMETy_rounded = roundToNdigits(measuredMETy);
+  met_.SetX(measuredMETx_rounded);
+  met_.SetY(measuredMETy_rounded);
+  met_.SetZ(0.0);
   TMatrixD covMET_rounded(2,2);
   covMET_rounded[0][0] = roundToNdigits(covMET[0][0]);
   covMET_rounded[1][0] = roundToNdigits(covMET[1][0]);
@@ -194,7 +233,8 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   delete histogramAdapter_;
   histogramAdapter_ = new HistogramAdapter();
   if ( measuredTauLeptons_rounded.size() == 2 ) {
-    histogramAdapter_->bookHistograms(measuredTauLeptons_rounded[0].p4(), measuredTauLeptons_rounded[1].p4());
+    histogramAdapter_->setMeasurement(measuredTauLeptons_rounded[0].p4(), measuredTauLeptons_rounded[1].p4(), met_);
+    histogramAdapter_->bookHistograms(measuredTauLeptons_rounded[0].p4(), measuredTauLeptons_rounded[1].p4(), met_);
   }
 
   integrand_->setInputs(measuredTauLeptons_rounded, measuredMETx_rounded, measuredMETy_rounded, covMET_rounded);
@@ -287,23 +327,6 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   double integralErr = 0.;
   intAlgo_->integrate(&g_C, xl_, xu_, numDimensions_, integral, integralErr);
 
-  pt_ = histogramAdapter_->getPt();
-  ptErr_ = histogramAdapter_->getPtErr();
-  ptLmax_ = histogramAdapter_->getPtLmax();
-  eta_ = histogramAdapter_->getEta();
-  etaErr_ = histogramAdapter_->getEtaErr();
-  etaLmax_ = histogramAdapter_->getEtaLmax();
-  phi_ = histogramAdapter_->getPhi();
-  phiErr_ = histogramAdapter_->getPhiErr();
-  phiLmax_ = histogramAdapter_->getPhiLmax();
-  mass_ = histogramAdapter_->getMass();
-  massErr_ = histogramAdapter_->getMassErr();
-  massLmax_ = histogramAdapter_->getMassLmax();
-  isValidSolution_ = ( massLmax_ > 0. ) ? true : false;
-  transverseMass_ = histogramAdapter_->getTransverseMass();
-  transverseMassErr_ = histogramAdapter_->getTransverseMassErr();
-  transverseMassLmax_ = histogramAdapter_->getTransverseMassLmax();
-
   if ( likelihoodFileName_ != "" ) {
     histogramAdapter_->writeHistograms(likelihoodFileName_);
   }
@@ -320,4 +343,15 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   if ( verbosity_ >= 1 ) {
     clock_->Show("<ClassicSVfit::integrate>");
   }
+}
+
+void ClassicSVfit::setHistogramAdapter(classic_svFit::HistogramAdapter* histogramAdapter)
+{
+  if (histogramAdapter_) delete histogramAdapter_;
+  histogramAdapter_ = histogramAdapter;
+}
+
+classic_svFit::HistogramAdapter* ClassicSVfit::getHistogramAdapter() const
+{
+  return histogramAdapter_;
 }

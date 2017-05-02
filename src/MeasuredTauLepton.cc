@@ -79,6 +79,34 @@ MeasuredTauLepton::MeasuredTauLepton(const MeasuredTauLepton& measuredTauLepton)
   initialize();
 }
 
+MeasuredTauLepton::~MeasuredTauLepton()
+{
+}
+
+int MeasuredTauLepton::type() const { return type_; }
+
+double MeasuredTauLepton::pt() const { return pt_; }
+double MeasuredTauLepton::eta() const { return eta_; }
+double MeasuredTauLepton::phi() const { return phi_; }
+double MeasuredTauLepton::mass() const { return preciseVisMass_; }
+
+double MeasuredTauLepton::energy() const { return energy_; }
+double MeasuredTauLepton::px() const { return px_; }
+double MeasuredTauLepton::py() const { return py_; }
+double MeasuredTauLepton::pz() const { return pz_; }
+
+double MeasuredTauLepton::p() const { return p_; }
+
+int MeasuredTauLepton::decayMode() const { return decayMode_; }
+
+LorentzVector MeasuredTauLepton::p4() const { return p4_; }
+
+Vector MeasuredTauLepton::p3() const { return p3_; }
+
+double MeasuredTauLepton::cosPhi_sinTheta() const { return cosPhi_sinTheta_; }
+double MeasuredTauLepton::sinPhi_sinTheta() const { return sinPhi_sinTheta_; }
+double MeasuredTauLepton::cosTheta() const { return cosTheta_; }
+
 void MeasuredTauLepton::initialize()
 {
   // CV: relations between pT and p, energy taken from http://en.wikipedia.org/wiki/Pseudorapidity

@@ -32,7 +32,7 @@ ClassicSVfit::ClassicSVfit(int verbosity)
     numDimensions_(0),
     xl_(0),
     xu_(0),
-    histogramAdapter_(0),
+    histogramAdapter_(new DiTauSystemHistogramAdapter()),
     likelihoodFileName_(""),
     isValidSolution_(false),
     useHadTauTF_(false),
@@ -230,8 +230,6 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   }
 
   // CV: book histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
-  delete histogramAdapter_;
-  histogramAdapter_ = new DiTauSystemHistogramAdapter();
   if ( measuredTauLeptons_rounded.size() == 2 ) {
     histogramAdapter_->setMeasurement(measuredTauLeptons_rounded[0].p4(), measuredTauLeptons_rounded[1].p4(), met_);
     histogramAdapter_->bookHistograms(measuredTauLeptons_rounded[0].p4(), measuredTauLeptons_rounded[1].p4(), met_);

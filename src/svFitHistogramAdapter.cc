@@ -240,7 +240,7 @@ void HistogramAdapter::setTau2P4(const LorentzVector& tau2P4) { tau2P4_ = tau2P4
 unsigned int HistogramAdapter::registerQuantity(SVfitQuantity* quantity)
 {
   quantities_.push_back(quantity);
-  return getNQuantities();
+  return getNQuantities() - 1;
 }
 
 void HistogramAdapter::bookHistograms(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met)

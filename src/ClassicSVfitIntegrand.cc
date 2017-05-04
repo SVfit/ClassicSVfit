@@ -93,6 +93,11 @@ void ClassicSVfitIntegrand::addLogM_dynamic(bool value, const std::string& power
   }
 }
 
+void ClassicSVfitIntegrand::setDiTauMassConstraint(double diTauMass)
+{
+  diTauMassConstraint_ = diTauMass;
+}
+
 void ClassicSVfitIntegrand::setHistogramAdapter(HistogramAdapter* histogramAdapter)
 {
   histogramAdapter_ = histogramAdapter;
@@ -291,8 +296,13 @@ ClassicSVfitIntegrand::Eval(const double* x) const
   double x1 = x1_dash/visPtShift1;
   if ( !(x1 >= 1.e-5 && x1 <= 1.) ) return 0.;
 
-  assert(idxLeg2_X_ != -1);
-  double x2_dash = x[idxLeg2_X_];
+  double x2_dash = 0.0;
+  if (idxLeg2_X_ != -1) {
+    x2_dash = x[idxLeg2_X_];
+  }
+  else {
+    x2_dash = (measuredTauLepton1_.p4() + measuredTauLepton2_.p4()).M2()/(x1_dash * diTauMassConstraint_);
+  }
   double x2 = x2_dash/visPtShift2;
   if ( !(x2 >= 1.e-5 && x2 <= 1.) ) return 0.;
 

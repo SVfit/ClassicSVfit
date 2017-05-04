@@ -24,6 +24,8 @@ class ClassicSVfit
   /// add an additional log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution (default is false)
   void addLogM_fixed(bool value, double power = 1.);
   void addLogM_dynamic(bool value, const std::string& power = "");
+  
+  void setDiTauMassConstraint(double diTauMass);
 
 #ifdef USE_SVFITTF
   /// set transfer functions for pT of hadronic tau decays
@@ -65,6 +67,8 @@ class ClassicSVfit
 
   std::vector<classic_svFit::MeasuredTauLepton> measuredTauLeptons_;
   classic_svFit::Vector met_;
+  
+  double diTauMassConstraint_ = -1.0;
 
   /// interface to Markov Chain integration algorithm
   classic_svFit::SVfitIntegratorMarkovChain* intAlgo_;

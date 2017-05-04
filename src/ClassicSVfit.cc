@@ -64,6 +64,12 @@ void ClassicSVfit::addLogM_dynamic(bool value, const std::string& power)
   integrand_->addLogM_dynamic(value, power);
 }
 
+void ClassicSVfit::setDiTauMassConstraint(double diTauMass)
+{
+  diTauMassConstraint_ = diTauMass;
+  integrand_->setDiTauMassConstraint(diTauMassConstraint_);
+}
+
 #ifdef USE_SVFITTF
 void ClassicSVfit::setHadTauTF(const HadTauTFBase* hadTauTF)
 {
@@ -213,8 +219,10 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
 	    }
     }
     if ( idx == 1 ) {
-      idxLeg2_X = numDimensions_;
-      numDimensions_ += 1;
+      if (diTauMassConstraint_ < 0.0) {
+        idxLeg2_X = numDimensions_;
+        numDimensions_ += 1;
+      }
       idxLeg2_phi = numDimensions_;
       numDimensions_ += 1;
       if ( measuredTauLepton.type() == MeasuredTauLepton::kTauToHadDecay ) {
@@ -290,12 +298,14 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
     xl_[idxLeg1_mNuNu] = 0.;
     xu_[idxLeg1_mNuNu] = tauLeptonMass2;
   }
-  xl_[idxLeg2_X] = 0.;
+  if (idxLeg2_X != -1) {
+    xl_[idxLeg2_X] = 0.;
 #ifdef USE_SVFITTF
-  xu_[idxLeg2_X] = 2.; // upper integration bound for x2' = visPtShift2*x2
+    xu_[idxLeg2_X] = 2.; // upper integration bound for x2' = visPtShift2*x2
 #else
-  xu_[idxLeg2_X] = 1.;
+    xu_[idxLeg2_X] = 1.;
 #endif
+  }
   xl_[idxLeg2_phi] = -TMath::Pi();
   xu_[idxLeg2_phi] = +TMath::Pi();
   if ( idxLeg2VisPtShift != -1 ) {

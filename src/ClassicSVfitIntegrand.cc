@@ -301,7 +301,7 @@ ClassicSVfitIntegrand::Eval(const double* x) const
     x2_dash = x[idxLeg2_X_];
   }
   else {
-    x2_dash = (measuredTauLepton1_.p4() + measuredTauLepton2_.p4()).M2()/(x1_dash * diTauMassConstraint_);
+    x2_dash = (measuredTauLepton1_.p4() + measuredTauLepton2_.p4()).mass()/(x1_dash * diTauMassConstraint_);
   }
   double x2 = x2_dash/visPtShift2;
   if ( !(x2 >= 1.e-5 && x2 <= 1.) ) return 0.;

@@ -301,7 +301,7 @@ ClassicSVfitIntegrand::Eval(const double* x) const
     x2_dash = x[idxLeg2_X_];
   }
   else {
-    x2_dash = (measuredTauLepton1_.p4() + measuredTauLepton2_.p4()).M2()/(x1_dash * diTauMassConstraint_ * diTauMassConstraint_);
+    x2_dash = (measuredTauLepton1_.p4() + measuredTauLepton2_.p4()).M2()/(diTauMassConstraint_ * diTauMassConstraint_)/x1_dash;
   }
   double x2 = x2_dash/visPtShift2;
   if ( !(x2 >= 1.e-5 && x2 <= 1.) ) return 0.;
@@ -445,6 +445,9 @@ ClassicSVfitIntegrand::Eval(const double* x) const
   }
 
   double jacobiFactor = 1./(visPtShift1*visPtShift2); // product of derrivatives dx1/dx1' and dx2/dx2' for parametrization of x1, x2 by x1', x2'
+  if (diTauMassConstraint_ > 0.0) {
+    jacobiFactor *= (2.0*x2*diTauMassConstraint_);
+  }
   double prob = prob_PS_and_tauDecay*prob_TF*prob_logM*jacobiFactor;
   if ( verbosity_ >= 2 ) {
     std::cout << "prob: PS+decay = " << prob_PS_and_tauDecay << ","

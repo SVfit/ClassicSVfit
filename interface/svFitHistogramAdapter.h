@@ -149,11 +149,11 @@ namespace classic_svFit
     double getTransverseMassLmax() const;
    
    private:
-    unsigned int indexPt_;
-    unsigned int indexEta_;
-    unsigned int indexPhi_;
-    unsigned int indexMass_;
-    unsigned int indexTransverseMass_;
+    unsigned int indexPt_ = 0;
+    unsigned int indexEta_ = 0;
+    unsigned int indexPhi_ = 0;
+    unsigned int indexMass_ = 0;
+    unsigned int indexTransverseMass_ = 0;
   };
 }
 

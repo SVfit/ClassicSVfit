@@ -404,3 +404,8 @@ double DiTauSystemHistogramAdapter::getTransverseMassLmax() const
 {
   return extractLmax(indexTransverseMass_);
 }
+
+bool DiTauSystemHistogramAdapter::isValidSolution() const 
+{ 
+  return ( getMassLmax() > 0. ) ? true : false; 
+}

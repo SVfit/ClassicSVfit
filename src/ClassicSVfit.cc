@@ -333,7 +333,8 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
 
   double integral = 0.;
   double integralErr = 0.;
-  intAlgo_->integrate(&g_C, xl_, xu_, numDimensions_, integral, integralErr);
+  intAlgo_->integrate(&g_C, xl_, xu_, numDimensions_, integral, integralErr);  
+  isValidSolution_ = histogramAdapter_->isValidSolution();
 
   if ( likelihoodFileName_ != "" ) {
     histogramAdapter_->writeHistograms(likelihoodFileName_);
@@ -355,7 +356,7 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
 
 void ClassicSVfit::setHistogramAdapter(classic_svFit::HistogramAdapter* histogramAdapter)
 {
-  if (histogramAdapter_) delete histogramAdapter_;
+  if ( histogramAdapter_ ) delete histogramAdapter_;
   histogramAdapter_ = histogramAdapter;
 }
 

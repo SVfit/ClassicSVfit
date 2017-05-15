@@ -110,6 +110,8 @@ namespace classic_svFit
     std::vector<double> extractUncertainties() const;
     std::vector<double> extractLmaxima() const;
 
+    virtual bool isValidSolution() const = 0;
+
    private:
     virtual double DoEval(const double* x) const;
     void fillHistograms(const LorentzVector& tau1P4, const LorentzVector& tau2P4,
@@ -148,6 +150,8 @@ namespace classic_svFit
     double getTransverseMassErr() const;
     double getTransverseMassLmax() const;
    
+    bool isValidSolution() const;
+
    private:
     unsigned int indexPt_ = 0;
     unsigned int indexEta_ = 0;

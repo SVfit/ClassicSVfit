@@ -414,8 +414,8 @@ ClassicSVfitIntegrand::Eval(const double* x) const
   }
 #endif
 
-  const double conversionFactor = 1.e+10*square(hbar_c); // conversion factor from GeV^-2 to picobarn = 10^-40m
-  const double constFactor = 2.*conversionFactor/eigth(2.*TMath::Pi());
+  const double conversionFactor = 1.e+10*square(hbar_c); // conversion factor from GeV^-2 to picobarn = 10^-40m//FIX ME store this
+  const double constFactor = 2.*conversionFactor/eigth(2.*TMath::Pi()); //FIXME store this
   double prob_PS_and_tauDecay = constFactor;
   double prob_tauDecay_leg1 = 0.;
   if ( leg1isLep_ ) {
@@ -465,4 +465,3 @@ ClassicSVfitIntegrand::Eval(const double* x) const
 
   return prob;
 }
-

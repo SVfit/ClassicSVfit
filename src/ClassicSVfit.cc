@@ -275,7 +275,8 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
     15., 1. - 1./(0.1*numIterBurnin),
     numChains, 100,
     1.e-2, 0.71,
-    treeFileName_.data());
+    treeFileName_.data(),
+    verbosity_);
   intAlgo_->registerCallBackFunction(*histogramAdapter_);
 
   //std::cout << "numDimensions = " << numDimensions_ << std::endl;
@@ -334,6 +335,10 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   double integral = 0.;
   double integralErr = 0.;
   intAlgo_->integrate(&g_C, xl_, xu_, numDimensions_, integral, integralErr);
+
+  //TEST
+
+  //////
 
   if ( likelihoodFileName_ != "" ) {
     histogramAdapter_->writeHistograms(likelihoodFileName_);

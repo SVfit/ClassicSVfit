@@ -150,6 +150,7 @@ void SVfitIntegratorMarkovChain::setIntegrand(gPtr_C g, const double* xl, const 
     xMax_[iDimension] = xu[iDimension];
   }
 
+  //epsilon.resize(numDimensions_);//TEST AK
   epsilon0s_.resize(numDimensions_);
   for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
     epsilon0s_[iDimension] = epsilon0_;
@@ -213,11 +214,11 @@ void SVfitIntegratorMarkovChain::integrate(gPtr_C g, const double* xl, const dou
     tree_ = new TTree("tree", "Markov Chain transitions");
     for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
       std::string branchName = Form("x%u", iDimension);
-      std::string branchName_and_option = Form("%s/F", branchName.data());
-      tree_->Branch(branchName.data(), &x_[iDimension], branchName_and_option.data());
+      std::string branchName_and_option = Form("%s/D", branchName.data());
+      tree_->Branch(branchName.data(), &x_[iDimension]);
     }
-    tree_->Branch("move", &treeMove_, "move/I");
-    tree_->Branch("integrand", &treeIntegrand_, "integrand/F");
+    tree_->Branch("move", &treeMove_);
+    tree_->Branch("integrand", &treeIntegrand_);
   }
 
   for ( unsigned iChain = 0; iChain < numChains_; ++iChain ) {
@@ -452,7 +453,7 @@ void SVfitIntegratorMarkovChain::makeStochasticMove(unsigned idxMove, bool& isAc
     double C = rnd_.BreitWigner(0., 1.);
     exp_nu_times_C = TMath::Exp(nu_*C);
   } while ( TMath::IsNaN(exp_nu_times_C) || !TMath::Finite(exp_nu_times_C) || exp_nu_times_C > 1.e+6 );
-  vdouble epsilon(numDimensions_);
+  vdouble epsilon(numDimensions_);//FIXME AK
   for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
     epsilon[iDimension] = epsilon0s_[iDimension]*exp_nu_times_C;
   }
@@ -515,5 +516,3 @@ double SVfitIntegratorMarkovChain::evalProb(const std::vector<double>& q)
   double prob = (*integrand_)(x_, numDimensions_, 0);
   return prob;
 }
-
-

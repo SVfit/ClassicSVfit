@@ -42,7 +42,6 @@ ClassicSVfit::ClassicSVfit(int verbosity)
     verbosity_(verbosity)
 {
   integrand_ = new ClassicSVfitIntegrand(verbosity_);
-
   clock_ = new TBenchmark();
 }
 
@@ -279,6 +278,8 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
     verbosity_);
   intAlgo_->registerCallBackFunction(*histogramAdapter_);
 
+  intCubaAlgo_ = new SVfitCUBAIntegrator();
+
   //std::cout << "numDimensions = " << numDimensions_ << std::endl;
   xl_ = new double[numDimensions_];
   xu_ = new double[numDimensions_];
@@ -336,9 +337,8 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   double integralErr = 0.;
   intAlgo_->integrate(&g_C, xl_, xu_, numDimensions_, integral, integralErr);
 
-  //TEST
+  intCubaAlgo_->integrate(&g_C, xl_, xu_, numDimensions_, integral, integralErr);
 
-  //////
 
   if ( likelihoodFileName_ != "" ) {
     histogramAdapter_->writeHistograms(likelihoodFileName_);

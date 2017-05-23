@@ -4,6 +4,7 @@
 #include "TauAnalysis/ClassicSVfit/interface/ClassicSVfitIntegrand.h"
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredTauLepton.h"
 #include "TauAnalysis/ClassicSVfit/interface/SVfitIntegratorMarkovChain.h"
+#include "TauAnalysis/ClassicSVfit/interface/SVfitCUBAIntegrator.h"
 #ifdef USE_SVFITTF
 #include "TauAnalysis/SVfitTF/interface/HadTauTFBase.h"
 #endif
@@ -24,7 +25,7 @@ class ClassicSVfit
   /// add an additional log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution (default is false)
   void addLogM_fixed(bool value, double power = 1.);
   void addLogM_dynamic(bool value, const std::string& power = "");
-  
+
   void setDiTauMassConstraint(double diTauMass);
 
 #ifdef USE_SVFITTF
@@ -46,7 +47,7 @@ class ClassicSVfit
 
   /// set name of ROOT file to store Markov Chain steps
   void setTreeFileName(const std::string& treeFileName);
-  
+
   /// set and get histogram adapter
   void setHistogramAdapter(classic_svFit::HistogramAdapter* histogramAdapter);
   classic_svFit::HistogramAdapter* getHistogramAdapter() const;
@@ -67,11 +68,15 @@ class ClassicSVfit
 
   std::vector<classic_svFit::MeasuredTauLepton> measuredTauLeptons_;
   classic_svFit::Vector met_;
-  
+
   double diTauMassConstraint_ = -1.0;
 
   /// interface to Markov Chain integration algorithm
   classic_svFit::SVfitIntegratorMarkovChain* intAlgo_;
+
+  /// interface to CUBA integration algorithm
+  classic_svFit::SVfitCUBAIntegrator* intCubaAlgo_;
+
   unsigned maxObjFunctionCalls_;
   double precision_;
   std::string treeFileName_;

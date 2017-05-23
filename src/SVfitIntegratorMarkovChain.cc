@@ -150,7 +150,7 @@ void SVfitIntegratorMarkovChain::setIntegrand(gPtr_C g, const double* xl, const 
     xMax_[iDimension] = xu[iDimension];
   }
 
-  //epsilon.resize(numDimensions_);//TEST AK
+  epsilon_.resize(numDimensions_);
   epsilon0s_.resize(numDimensions_);
   for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
     epsilon0s_[iDimension] = epsilon0_;
@@ -214,7 +214,6 @@ void SVfitIntegratorMarkovChain::integrate(gPtr_C g, const double* xl, const dou
     tree_ = new TTree("tree", "Markov Chain transitions");
     for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
       std::string branchName = Form("x%u", iDimension);
-      std::string branchName_and_option = Form("%s/D", branchName.data());
       tree_->Branch(branchName.data(), &x_[iDimension]);
     }
     tree_->Branch("move", &treeMove_);
@@ -453,9 +452,8 @@ void SVfitIntegratorMarkovChain::makeStochasticMove(unsigned idxMove, bool& isAc
     double C = rnd_.BreitWigner(0., 1.);
     exp_nu_times_C = TMath::Exp(nu_*C);
   } while ( TMath::IsNaN(exp_nu_times_C) || !TMath::Finite(exp_nu_times_C) || exp_nu_times_C > 1.e+6 );
-  vdouble epsilon(numDimensions_);//FIXME AK
   for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
-    epsilon[iDimension] = epsilon0s_[iDimension]*exp_nu_times_C;
+    epsilon_[iDimension] = epsilon0s_[iDimension]*exp_nu_times_C;
   }
 
   // Metropolis algorithm: move according to eq. (27) in [2]
@@ -463,7 +461,7 @@ void SVfitIntegratorMarkovChain::makeStochasticMove(unsigned idxMove, bool& isAc
 //--- update position components
 //    by single step of chosen size in direction of the momentum components
   for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
-    qProposal_[iDimension] = q_[iDimension] + epsilon[iDimension]*p_[iDimension];
+    qProposal_[iDimension] = q_[iDimension] + epsilon_[iDimension]*p_[iDimension];
   }
 
 //--- ensure that proposed new point is within integration region

@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
         10 three-prong without neutral pions
   */
 
-  int verbosity = 1;
+  int verbosity = 0;
   ClassicSVfit svFitAlgo(verbosity);
 #ifdef USE_SVFITTF
   //HadTauTFCrystalBall2* hadTauTF = new HadTauTFCrystalBall2();
@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
   //svFitAlgo.addLogM_dynamic(true, "(m/1000.)*15.");
   //svFitAlgo.setMaxObjFunctionCalls(100000); // CV: default is 100000 evaluations of integrand per event
   svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
-  for(unsigned int iTry=0;iTry<1;++iTry) svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+  for(unsigned int iTry=0;iTry<100;++iTry) svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
   bool isValidSolution = svFitAlgo.isValidSolution();
   double mass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMass();
   double massErr = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMassErr();

@@ -41,7 +41,7 @@ void HistogramTools::extractHistogramProperties(
   }
 
   xMean = histogram->GetMean();
-  
+
   TH1* histogram_density = HistogramTools::compHistogramDensity(histogram);
   if ( histogram_density->Integral() > 0. ) {
     int binMaximum = histogram_density->GetMaximumBin();
@@ -154,6 +154,11 @@ double SVfitQuantity::extractLmax() const
   return HistogramTools::extractLmax(histogram_);
 }
 
+bool SVfitQuantity::isValidSolution() const
+{
+  return (extractLmax() > 0.9);
+}
+
 TH1* DiTauSystemPtSVfitQuantity::createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
   return HistogramTools::makeHistogram("ClassicSVfitIntegrand_histogramPt", 1., 1.e+3, 1.025);
@@ -264,12 +269,12 @@ void HistogramAdapter::writeHistograms(const std::string& likelihoodFileName) co
 {
   TFile* likelihoodFile = new TFile(likelihoodFileName.data(), "RECREATE");
   likelihoodFile->cd();
-  
+
   for (std::vector<SVfitQuantity*>::iterator quantity = quantities_.begin(); quantity != quantities_.end(); ++quantity)
   {
     (*quantity)->writeHistogram();
   }
-  
+
   likelihoodFile->Write();
   likelihoodFile->Close();
   delete likelihoodFile;
@@ -318,6 +323,12 @@ std::vector<double> HistogramAdapter::extractLmaxima() const
   std::transform(quantities_.begin(), quantities_.end(), results.begin(),
                  [](SVfitQuantity* quantity) { return quantity->extractLmax(); });
   return results;
+}
+
+bool HistogramAdapter::isValidSolution() const
+{
+  return std::accumulate(quantities_.begin(), quantities_.end(), true,
+                         [](bool result, SVfitQuantity* quantity) { return result && quantity->isValidSolution(); });
 }
 
 DiTauSystemHistogramAdapter::DiTauSystemHistogramAdapter(std::vector<SVfitQuantity*> const& quantities) :
@@ -403,9 +414,4 @@ double DiTauSystemHistogramAdapter::getTransverseMassErr() const
 double DiTauSystemHistogramAdapter::getTransverseMassLmax() const
 {
   return extractLmax(indexTransverseMass_);
-}
-
-bool DiTauSystemHistogramAdapter::isValidSolution() const 
-{ 
-  return ( getMassLmax() > 0. ) ? true : false; 
 }

@@ -6,19 +6,20 @@
 
 #include "TauAnalysis/ClassicSVfit/interface/ClassicSVfit.h"
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredTauLepton.h"
+#include "TauAnalysis/ClassicSVfit/interface/svFitHistogramAdapter.h"
 #include "TauAnalysis/SVfitTF/interface/HadTauTFCrystalBall2.h"
 
 using namespace classic_svFit;
 
-int main(int argc, char* argv[]) 
+int main(int argc, char* argv[])
 {
-  /* 
+  /*
      This is a single event for testing purposes.
   */
 
   // define MET
   double measuredMETx =  11.7491;
-  double measuredMETy = -51.9172; 
+  double measuredMETy = -51.9172;
 
   // define MET covariance
   TMatrixD covMET(2, 2);
@@ -34,7 +35,7 @@ int main(int argc, char* argv[])
   /*
      tauDecayModes:  0 one-prong without neutral pions
                      1 one-prong with neutral pions
-		    10 three-prong without neutral pions
+        10 three-prong without neutral pions
   */
 
   int verbosity = 1;
@@ -44,18 +45,20 @@ int main(int argc, char* argv[])
   //svFitAlgo.setHadTauTF(hadTauTF);
   //svFitAlgo.enableHadTauTF();
 #endif
-  //svFitAlgo.addLogM(false);
-  svFitAlgo.addLogM(true, 6.);
-  //svFitAlgo.setMaxObjFunctionCalls(20000); // CV: default is 100000 evaluations of integrand per event
-  svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET, "testClassicSVfit.root");
+  //svFitAlgo.addLogM_fixed(false);
+  svFitAlgo.addLogM_fixed(true, 6.);
+  //svFitAlgo.addLogM_dynamic(true, "(m/1000.)*15.");
+  //svFitAlgo.setMaxObjFunctionCalls(100000); // CV: default is 100000 evaluations of integrand per event
+  svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
+  svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
   bool isValidSolution = svFitAlgo.isValidSolution();
-  double mass = svFitAlgo.mass();
-  double massErr = svFitAlgo.massErr();
-  double transverseMass = svFitAlgo.transverseMass();
-  double transverseMassErr = svFitAlgo.transverseMassErr();
+  double mass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMass();
+  double massErr = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMassErr();
+  double transverseMass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getTransverseMass();
+  double transverseMassErr = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getTransverseMassErr();
   if ( isValidSolution ) {
-    std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 115.746 +/- 92.8784)," 
-	      << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 114.242 +/- 91.5567)" << std::endl;
+    std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 115.746 +/- 92.8784),"
+              << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 114.242 +/- 91.5567)" << std::endl;
   } else {
     std::cout << "sorry, failed to find valid solution !!" << std::endl;
   }

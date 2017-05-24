@@ -14,7 +14,7 @@ using namespace classic_svFit;
 /// global function pointer, needed for Markov Chain integration
 const ClassicSVfitIntegrand* ClassicSVfitIntegrand::gSVfitIntegrand = 0;
 
-ClassicSVfitIntegrand::ClassicSVfitIntegrand(int verbosity) 
+ClassicSVfitIntegrand::ClassicSVfitIntegrand(int verbosity)
   : beamAxis_(0., 0., 1.),
     invCovMET_(2,2),
 #ifdef USE_SVFITTF
@@ -32,8 +32,10 @@ ClassicSVfitIntegrand::ClassicSVfitIntegrand(int verbosity)
     idxLeg2VisPtShift_(-1),
     idxLeg2_mNuNu_(-1),
     numDimensions_(0),
-    addLogM_(true), 
-    addLogM_power_(6.), // CV: best compatibility with "old" SVfitStandalone algorithm
+    addLogM_fixed_(true),
+    addLogM_fixed_power_(6.), // CV: best compatibility with "old" SVfitStandalone algorithm
+    addLogM_dynamic_(false),
+    addLogM_dynamic_formula_(0),
     errorCode_(0),
     histogramAdapter_(0),
     verbosity_(verbosity)
@@ -41,20 +43,104 @@ ClassicSVfitIntegrand::ClassicSVfitIntegrand(int verbosity)
   if ( verbosity_ ) {
     std::cout << "<ClassicSVfitIntegrand::ClassicSVfitIntegrand>:" << std::endl;
   }
-  
+
   // set global function pointer to this
   gSVfitIntegrand = this;
 }
 
 ClassicSVfitIntegrand::~ClassicSVfitIntegrand()
 {
-  std::cout << "<ClassicSVfitIntegrand::~ClassicSVfitIntegrand>:" << std::endl;
-  
+  if ( verbosity_ ) {
+    std::cout << "<ClassicSVfitIntegrand::~ClassicSVfitIntegrand>:" << std::endl;
+  }
+
 #ifdef USE_SVFITTF
   delete hadTauTF1_;
   delete hadTauTF2_;
 #endif
+
+  delete addLogM_dynamic_formula_;
 }
+
+void ClassicSVfitIntegrand::addLogM_fixed(bool value, double power)
+{
+  addLogM_fixed_ = value;
+  addLogM_fixed_power_ = power;
+  if ( addLogM_fixed_ && addLogM_dynamic_ ) {
+    std::cerr << "Warning: simultaneous use of fixed and dynamic logM terms not supported --> disabling dynamic logM term !!" << std::endl;
+    addLogM_dynamic_ = false;
+  }
+}
+void ClassicSVfitIntegrand::addLogM_dynamic(bool value, const std::string& power)
+{
+  addLogM_dynamic_ = value;
+  if ( addLogM_dynamic_ ) {
+    if ( power != "" ) {
+      TString power_tstring = power.data();
+      power_tstring = power_tstring.ReplaceAll("m", "x");
+      power_tstring = power_tstring.ReplaceAll("mass", "x");
+      std::string formulaName = "ClassicSVfitIntegrand_addLogM_dynamic_formula";
+      delete addLogM_dynamic_formula_;
+      addLogM_dynamic_formula_ = new TFormula(formulaName.data(), power_tstring.Data());
+    } else {
+      std::cerr << "Warning: expression = '" << power << "' is invalid --> disabling dynamic logM term !!" << std::endl;
+      addLogM_dynamic_ = false;
+    }
+  }
+  if ( addLogM_dynamic_ && addLogM_fixed_ ) {
+    std::cerr << "Warning: simultaneous use of fixed and dynamic logM terms not supported --> disabling fixed logM term !!" << std::endl;
+    addLogM_fixed_ = false;
+  }
+}
+
+void ClassicSVfitIntegrand::setDiTauMassConstraint(double diTauMass)
+{
+  diTauMassConstraint_ = diTauMass;
+}
+
+void ClassicSVfitIntegrand::setHistogramAdapter(HistogramAdapter* histogramAdapter)
+{
+  histogramAdapter_ = histogramAdapter;
+}
+
+void ClassicSVfitIntegrand::setIdxLeg1_X(int idx) { idxLeg1_X_ = idx; }
+void ClassicSVfitIntegrand::setIdxLeg1_phi(int idx) { idxLeg1_phi_ = idx; }
+void ClassicSVfitIntegrand::setIdxLeg1VisPtShift(int idx) { idxLeg1VisPtShift_ = idx; }
+void ClassicSVfitIntegrand::setIdxLeg1_mNuNu(int idx) { idxLeg1_mNuNu_ = idx; }
+void ClassicSVfitIntegrand::setIdxLeg2_X(int idx) { idxLeg2_X_ = idx; }
+void ClassicSVfitIntegrand::setIdxLeg2_phi(int idx) { idxLeg2_phi_ = idx; }
+void ClassicSVfitIntegrand::setIdxLeg2VisPtShift(int idx) { idxLeg2VisPtShift_ = idx; }
+void ClassicSVfitIntegrand::setIdxLeg2_mNuNu(int idx) { idxLeg2_mNuNu_ = idx; }
+void ClassicSVfitIntegrand::setNumDimensions(unsigned numDimensions) { numDimensions_ = numDimensions; }
+
+#ifdef USE_SVFITTF
+void ClassicSVfitIntegrand::setHadTauTF(const HadTauTFBase* hadTauTF)
+{
+  delete hadTauTF1_;
+  hadTauTF1_ = hadTauTF->Clone("leg1");
+  delete hadTauTF2_;
+  hadTauTF2_ = hadTauTF->Clone("leg2");
+}
+
+void ClassicSVfitIntegrand::enableHadTauTF()
+{
+  if ( !(hadTauTF1_ && hadTauTF2_) ) {
+    std::cerr << "No tau pT transfer functions defined, call 'setHadTauTF' function first !!" << std::endl;
+    assert(0);
+  }
+  useHadTauTF_ = true;
+}
+void ClassicSVfitIntegrand::disableHadTauTF()
+{
+  useHadTauTF_ = false;
+}
+
+void ClassicSVfitIntegrand::setRhoHadTau(double rhoHadTau)
+{
+  rhoHadTau_ = rhoHadTau;
+}
+#endif
+
 
 namespace
 {
@@ -64,8 +150,8 @@ namespace
   }
 }
 
-void 
-ClassicSVfitIntegrand::setInputs(const std::vector<MeasuredTauLepton>& measuredTauLeptons, double measuredMETx, double measuredMETy, const TMatrixD& covMET) 
+void
+ClassicSVfitIntegrand::setInputs(const std::vector<MeasuredTauLepton>& measuredTauLeptons, double measuredMETx, double measuredMETy, const TMatrixD& covMET)
 {
   if ( verbosity_ ) {
     std::cout << "<ClassicSVfitIntegrand::setInputs>:" << std::endl;
@@ -138,8 +224,8 @@ ClassicSVfitIntegrand::setInputs(const std::vector<MeasuredTauLepton>& measuredT
   invCovMET_ = covMET;
   double covDet = invCovMET_.Determinant();
   const_MET_ = 0.;
-  if ( covDet != 0 ) { 
-    invCovMET_.Invert(); 
+  if ( covDet != 0 ) {
+    invCovMET_.Invert();
     invCovMETxx_ = invCovMET_(0,0);
     invCovMETxy_ = invCovMET_(0,1);
     invCovMETyx_ = invCovMET_(1,0);
@@ -152,11 +238,11 @@ ClassicSVfitIntegrand::setInputs(const std::vector<MeasuredTauLepton>& measuredT
 
 #ifdef USE_SVFITTF
   if ( useHadTauTF_ ) {
-    if ( measuredTauLepton1_.type() == MeasuredTauLepton::kTauToHadDecay ) { 
+    if ( measuredTauLepton1_.type() == MeasuredTauLepton::kTauToHadDecay ) {
       assert(hadTauTF1_);
       hadTauTF1_->setDecayMode(measuredTauLepton1_.decayMode());
     }
-    if ( measuredTauLepton2_.type() == MeasuredTauLepton::kTauToHadDecay ) { 
+    if ( measuredTauLepton2_.type() == MeasuredTauLepton::kTauToHadDecay ) {
       assert(hadTauTF2_);
       hadTauTF2_->setDecayMode(measuredTauLepton2_.decayMode());
     }
@@ -165,7 +251,7 @@ ClassicSVfitIntegrand::setInputs(const std::vector<MeasuredTauLepton>& measuredT
 }
 
 double
-ClassicSVfitIntegrand::Eval(const double* x) const 
+ClassicSVfitIntegrand::Eval(const double* x) const
 {
   if ( verbosity_ >= 2 ) {
     std::cout << "<ClassicSVfitIntegrand::Eval(const double*)>:" << std::endl;
@@ -178,9 +264,9 @@ ClassicSVfitIntegrand::Eval(const double* x) const
   }
 
   // in case of initialization errors don't start to do anything
-  if ( errorCode_ != 0 ) { 
+  if ( errorCode_ != 0 ) {
     return 0.;
-  } 
+  }
 
   double visPtShift1 = ( idxLeg1VisPtShift_ != -1 && !leg1isLep_ ) ? (1./x[idxLeg1VisPtShift_]) : 1.;
   double visPtShift2 = ( idxLeg2VisPtShift_ != -1 && !leg2isLep_ ) ? (1./x[idxLeg2VisPtShift_]) : 1.;
@@ -209,9 +295,14 @@ ClassicSVfitIntegrand::Eval(const double* x) const
   double x1_dash = x[idxLeg1_X_];
   double x1 = x1_dash/visPtShift1;
   if ( !(x1 >= 1.e-5 && x1 <= 1.) ) return 0.;
-  
-  assert(idxLeg2_X_ != -1);
-  double x2_dash = x[idxLeg2_X_];
+
+  double x2_dash = 0.0;
+  if (idxLeg2_X_ != -1) {
+    x2_dash = x[idxLeg2_X_];
+  }
+  else {
+    x2_dash = (measuredTauLepton1_.p4() + measuredTauLepton2_.p4()).M2()/(diTauMassConstraint_ * diTauMassConstraint_)/x1_dash;
+  }
   double x2 = x2_dash/visPtShift2;
   if ( !(x2 >= 1.e-5 && x2 <= 1.) ) return 0.;
 
@@ -219,7 +310,7 @@ ClassicSVfitIntegrand::Eval(const double* x) const
   double nu1En = vis1En*(1. - x1)/x1;
   double nu1Mass = ( idxLeg1_mNuNu_ != -1 ) ? TMath::Sqrt(x[idxLeg1_mNuNu_]) : 0.;
   double nu1P = TMath::Sqrt(TMath::Max(0., nu1En*nu1En - square(nu1Mass)));
-  assert(idxLeg1_phi_ != -1);  
+  assert(idxLeg1_phi_ != -1);
   double phiNu1 = x[idxLeg1_phi_];
   double cosThetaNu1 = compCosThetaNuNu(vis1En, vis1P, leg1Mass2_, nu1En, nu1P, square(nu1Mass));
   if ( !(cosThetaNu1 >= -1. && cosThetaNu1 <= +1.) ) return 0.;
@@ -244,7 +335,7 @@ ClassicSVfitIntegrand::Eval(const double* x) const
   double nu2En = vis2En*(1. - x2)/x2;
   double nu2Mass = ( idxLeg2_mNuNu_ != -1 ) ? TMath::Sqrt(x[idxLeg2_mNuNu_]) : 0.;
   double nu2P = TMath::Sqrt(TMath::Max(0., nu2En*nu2En - square(nu2Mass)));
-  assert(idxLeg2_phi_ != -2);  
+  assert(idxLeg2_phi_ != -2);
   double phiNu2 = x[idxLeg2_phi_];
   double cosThetaNu2 = compCosThetaNuNu(vis2En, vis2P, leg2Mass2_, nu2En, nu2P, square(nu2Mass));
   if ( !(cosThetaNu2 >= -1. && cosThetaNu2 <= +1.) ) return 0.;
@@ -281,23 +372,23 @@ ClassicSVfitIntegrand::Eval(const double* x) const
   if ( verbosity_ >= 2 ) {
     std::cout << "TF(met): recPx = " << measuredMETx_ << ", recPy = " << measuredMETy_ << ", genPx = " << sumNuPx << ", genPy = " << sumNuPy << " --> prob = " << prob_TF_met << std::endl;
     std::cout << "leg1: En = " << vis1P4.energy() << ", Px = " << vis1P4.px() << ", Py = " << vis1P4.py() << ", Pz = " << vis1P4.pz() << ";"
-	      << " Pt = " << vis1P4.pt() << ", eta = " << vis1P4.eta() << ", phi = " << vis1P4.phi() << ", mass = " << vis1P4.mass() 
-	      << " (x = " << x1 << ")" << std::endl;
+              << " Pt = " << vis1P4.pt() << ", eta = " << vis1P4.eta() << ", phi = " << vis1P4.phi() << ", mass = " << vis1P4.mass()
+              << " (x = " << x1 << ")" << std::endl;
     std::cout << "tau1: En = " << tau1P4.energy() << ", Px = " << tau1P4.px() << ", Py = " << tau1P4.py() << ", Pz = " << tau1P4.pz() << ";"
-	      << " Pt = " << tau1P4.pt() << ", eta = " << tau1P4.eta() << ", phi = " << tau1P4.phi() << std::endl;
+              << " Pt = " << tau1P4.pt() << ", eta = " << tau1P4.eta() << ", phi = " << tau1P4.phi() << std::endl;
     std::cout << "nu1: En = " << nu1P4.energy() << ", Px = " << nu1P4.px() << ", Py = " << nu1P4.py() << ", Pz = " << nu1P4.pz() << ";"
-	      << " Pt = " << nu1P4.pt() << ", eta = " << nu1P4.eta() << ", phi = " << nu1P4.phi() << ", mass = " << nu1P4.mass() << std::endl;
+              << " Pt = " << nu1P4.pt() << ", eta = " << nu1P4.eta() << ", phi = " << nu1P4.phi() << ", mass = " << nu1P4.mass() << std::endl;
     //double angle1 = compAngle(vis1P4, nu1P4);
     //std::cout << "angle(vis1, nu1) = " << angle1 << std::endl;
     //double phiInvis1 = compPhiInvis(vis1P4, nu1P4);
     //std::cout << "phiInvis1 = " << phiInvis1 << std::endl;
     std::cout << "leg2: En = " << vis2P4.energy() << ", Px = " << vis2P4.px() << ", Py = " << vis2P4.py() << ", Pz = " << vis2P4.pz() << ";"
-	      << " Pt = " << vis2P4.pt() << ", eta = " << vis2P4.eta() << ", phi = " << vis2P4.phi() << ", mass = " << vis2P4.mass() 
-	      << " (x = " << x2 << ")" << std::endl;
+              << " Pt = " << vis2P4.pt() << ", eta = " << vis2P4.eta() << ", phi = " << vis2P4.phi() << ", mass = " << vis2P4.mass()
+              << " (x = " << x2 << ")" << std::endl;
     std::cout << "tau2: En = " << tau2P4.energy() << ", Px = " << tau2P4.px() << ", Py = " << tau2P4.py() << ", Pz = " << tau2P4.pz() << ";"
-	      << " Pt = " << tau2P4.pt() << ", eta = " << tau2P4.eta() << ", phi = " << tau2P4.phi() << std::endl;
+              << " Pt = " << tau2P4.pt() << ", eta = " << tau2P4.eta() << ", phi = " << tau2P4.phi() << std::endl;
     std::cout << "nu2: En = " << nu2P4.energy() << ", Px = " << nu2P4.px() << ", Py = " << nu2P4.py() << ", Pz = " << nu2P4.pz() << ";"
-	      << " Pt = " << nu2P4.pt() << ", eta = " << nu2P4.eta() << ", phi = " << nu2P4.phi() << ", mass = " << nu2P4.mass() << std::endl;
+              << " Pt = " << nu2P4.pt() << ", eta = " << nu2P4.eta() << ", phi = " << nu2P4.phi() << ", mass = " << nu2P4.mass() << std::endl;
     //double angle2 = compAngle(vis2P4, nu2P4);
     //std::cout << "angle(vis2, nu2) = " << angle2 << std::endl;
     //double phiInvis2 = compPhiInvis(vis2P4, nu2P4);
@@ -310,7 +401,7 @@ ClassicSVfitIntegrand::Eval(const double* x) const
   if ( useHadTauTF_ && idxLeg1VisPtShift_ != -1 && !leg1isLep_ ) {
     double prob_TF_leg1 = (*hadTauTF1_)(measuredTauLepton1_.pt(), vis1P4.pt(), vis1P4.eta());
     if ( verbosity_ >= 2 ) {
-      std::cout << "TF(leg1): recPt = " << measuredTauLepton1_.pt() << ", genPt = " << vis1P4.pt() << ", genEta = " << vis1P4.eta() << " --> prob = " << prob_TF_leg1 << std::endl;    
+      std::cout << "TF(leg1): recPt = " << measuredTauLepton1_.pt() << ", genPt = " << vis1P4.pt() << ", genEta = " << vis1P4.eta() << " --> prob = " << prob_TF_leg1 << std::endl;
     }
     prob_TF *= prob_TF_leg1;
   }
@@ -319,7 +410,7 @@ ClassicSVfitIntegrand::Eval(const double* x) const
     if ( verbosity_ >= 2 ) {
       std::cout << "TF(leg2): recPt = " << measuredTauLepton2_.pt() << ", genPt = " << vis2P4.pt() << ", genEta = " << vis2P4.eta() << " --> prob = " << prob_TF_leg2 << std::endl;
     }
-    prob_TF *= prob_TF_leg2;    
+    prob_TF *= prob_TF_leg2;
   }
 #endif
 
@@ -331,7 +422,7 @@ ClassicSVfitIntegrand::Eval(const double* x) const
     prob_tauDecay_leg1 = compPSfactor_tauToLepDecay(x1, vis1P4.E(), vis1P4.P(), leg1Mass_, nu1P4.E(), nu1P4.P(), nu1Mass);
   } else {
     prob_tauDecay_leg1 = compPSfactor_tauToHadDecay(x1, vis1P4.E(), vis1P4.P(), leg1Mass_, nu1P4.E(), nu1P4.P());
-  }  
+  }
   prob_PS_and_tauDecay *= prob_tauDecay_leg1;
   double prob_tauDecay_leg2 = 0.;
   if ( leg2isLep_ ) {
@@ -343,20 +434,28 @@ ClassicSVfitIntegrand::Eval(const double* x) const
   // CV: multiply matrix element by factor (Pi/(mTau GammaTau))^2 from Luca's write-up
   prob_PS_and_tauDecay *= square(TMath::Pi()/(tauLeptonMass*GammaTau));
 
+  double mTauTau = (tau1P4 + tau2P4).mass();
   double prob_logM = 1.;
-  if ( addLogM_ ) {
-    prob_logM = 1./TMath::Power(TMath::Max(1., (tau1P4 + tau2P4).mass()), addLogM_power_);
+  if ( addLogM_fixed_ ) {
+    prob_logM = 1./TMath::Power(TMath::Max(1., mTauTau), addLogM_fixed_power_);
+  }
+  if ( addLogM_dynamic_ ) {
+    double addLogM_power = addLogM_dynamic_formula_->Eval(mTauTau);
+    prob_logM = 1./TMath::Power(TMath::Max(1., mTauTau), TMath::Max(0., addLogM_power));
   }
 
   double jacobiFactor = 1./(visPtShift1*visPtShift2); // product of derrivatives dx1/dx1' and dx2/dx2' for parametrization of x1, x2 by x1', x2'
+  if (diTauMassConstraint_ > 0.0) {
+    jacobiFactor *= (2.0*x2*diTauMassConstraint_);
+  }
   double prob = prob_PS_and_tauDecay*prob_TF*prob_logM*jacobiFactor;
   if ( verbosity_ >= 2 ) {
-    std::cout << "prob: PS+decay = " << prob_PS_and_tauDecay << "," 
-	      << " TF = " << prob_TF << ", log(M) = " << prob_logM << ", Jacobi = " << jacobiFactor << " --> returning " << prob << std::endl;
+    std::cout << "prob: PS+decay = " << prob_PS_and_tauDecay << ","
+              << " TF = " << prob_TF << ", log(M) = " << prob_logM << ", Jacobi = " << jacobiFactor << " --> returning " << prob << std::endl;
   }
   if ( TMath::IsNaN(prob) ) {
-    std::cerr << "Warning: prob = " << prob << " (PS+decay = " << prob_PS_and_tauDecay << "," 
-	      << " TF = " << prob_TF << ", log(M) = " << prob_logM << ", Jacobi = " << jacobiFactor << ") --> setting prob = 0 !!" << std::endl;
+    std::cerr << "Warning: prob = " << prob << " (PS+decay = " << prob_PS_and_tauDecay << ","
+              << " TF = " << prob_TF << ", log(M) = " << prob_logM << ", Jacobi = " << jacobiFactor << ") --> setting prob = 0 !!" << std::endl;
     prob = 0.;
   }
 

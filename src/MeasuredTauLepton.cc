@@ -17,8 +17,8 @@ MeasuredTauLepton::MeasuredTauLepton()
   initialize();
 }
 
-MeasuredTauLepton::MeasuredTauLepton(int type, double pt, double eta, double phi, double mass, int decayMode) 
-  : type_(type), 
+MeasuredTauLepton::MeasuredTauLepton(int type, double pt, double eta, double phi, double mass, int decayMode)
+  : type_(type),
     pt_(roundToNdigits(pt)),
     eta_(roundToNdigits(eta)),
     phi_(roundToNdigits(phi)),
@@ -47,7 +47,7 @@ MeasuredTauLepton::MeasuredTauLepton(int type, double pt, double eta, double phi
       minVisMass = 0.3;
       maxVisMass = 1.5;
     }
-  } 
+  }
   preciseVisMass_ = mass_;
   if ( preciseVisMass_ < (0.9*minVisMass) || preciseVisMass_ > (1.1*maxVisMass) ) {
     std::string type_string;
@@ -68,16 +68,44 @@ MeasuredTauLepton::MeasuredTauLepton(int type, double pt, double eta, double phi
 }
 
 MeasuredTauLepton::MeasuredTauLepton(const MeasuredTauLepton& measuredTauLepton)
-  : type_(measuredTauLepton.type()), 
+  : type_(measuredTauLepton.type()),
     pt_(measuredTauLepton.pt()),
     eta_(measuredTauLepton.eta()),
     phi_(measuredTauLepton.phi()),
-    mass_(measuredTauLepton.mass()), 
-    decayMode_(measuredTauLepton.decayMode())     
+    mass_(measuredTauLepton.mass()),
+    decayMode_(measuredTauLepton.decayMode())
 {
   preciseVisMass_ = measuredTauLepton.mass();
   initialize();
 }
+
+MeasuredTauLepton::~MeasuredTauLepton()
+{
+}
+
+int MeasuredTauLepton::type() const { return type_; }
+
+double MeasuredTauLepton::pt() const { return pt_; }
+double MeasuredTauLepton::eta() const { return eta_; }
+double MeasuredTauLepton::phi() const { return phi_; }
+double MeasuredTauLepton::mass() const { return preciseVisMass_; }
+
+double MeasuredTauLepton::energy() const { return energy_; }
+double MeasuredTauLepton::px() const { return px_; }
+double MeasuredTauLepton::py() const { return py_; }
+double MeasuredTauLepton::pz() const { return pz_; }
+
+double MeasuredTauLepton::p() const { return p_; }
+
+int MeasuredTauLepton::decayMode() const { return decayMode_; }
+
+LorentzVector MeasuredTauLepton::p4() const { return p4_; }
+
+Vector MeasuredTauLepton::p3() const { return p3_; }
+
+double MeasuredTauLepton::cosPhi_sinTheta() const { return cosPhi_sinTheta_; }
+double MeasuredTauLepton::sinPhi_sinTheta() const { return sinPhi_sinTheta_; }
+double MeasuredTauLepton::cosTheta() const { return cosTheta_; }
 
 void MeasuredTauLepton::initialize()
 {

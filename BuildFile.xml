@@ -1,7 +1,9 @@
-<use   name="DataFormats/CLHEP"/>
+<use   name="TauAnalysis/SVfitTF"/>
 <use   name="root"/>
 <use   name="roofit"/>
 <Flags CPPDEFINES="USE_SVFITTF"/>
+<Flags LDFLAGS="-rdynamic" />
+<Flags ADD_SUBDIR="1"/>
 <export>
   <lib   name="1"/>
 </export>

@@ -17,7 +17,7 @@ double roundToNdigits(double x, int n)
   //std::cout << "<roundToNdigits>: x = " << x << ", x_rounded = " << x_rounded << std::endl;
   return x_rounded;
 }
-  
+
 TGraphErrors* makeGraph(const std::string& graphName, const std::vector<GraphPoint>& graphPoints)
 {
   //std::cout << "<makeGraph>:" << std::endl;
@@ -32,7 +32,7 @@ TGraphErrors* makeGraph(const std::string& graphName, const std::vector<GraphPoi
   }
   return graph;
 }
-  
+
 void extractResult(TGraphErrors* graph, double& mass, double& massErr, double& Lmax, int verbosity)
 {
   // determine range of mTest values that are within ~2 sigma interval within maximum of likelihood function
@@ -46,7 +46,7 @@ void extractResult(TGraphErrors* graph, double& mass, double& massErr, double& L
       x_Lmax = x;
       y_Lmax = y;
       idxPoint_Lmax = iPoint;
-    }    
+    }
   }
 
   double xMin = 1.e+6;
@@ -57,8 +57,8 @@ void extractResult(TGraphErrors* graph, double& mass, double& massErr, double& L
     if ( x < xMin ) xMin = x;
     if ( x > xMax ) xMax = x;
   }
-  
-  // fit log-likelihood function within ~2 sigma interval within maximum 
+
+  // fit log-likelihood function within ~2 sigma interval within maximum
   // with parabola
   std::vector<GraphPoint> graphPoints_forFit;
   double xMin_fit = 1.e+6;
@@ -73,8 +73,8 @@ void extractResult(TGraphErrors* graph, double& mass, double& massErr, double& L
       GraphPoint graphPoint;
       graphPoint.x_ = x;
       graphPoint.xErr_ = xErr;
-      if ( (x - xErr) < xMin_fit ) xMin_fit = x - xErr; 
-      if ( (x + xErr) > xMax_fit ) xMax_fit = x + xErr; 
+      if ( (x - xErr) < xMin_fit ) xMin_fit = x - xErr;
+      if ( (x + xErr) > xMax_fit ) xMax_fit = x + xErr;
       graphPoint.y_ = -TMath::Log(y);
       graphPoint.yErr_ = yErr/y;
       graphPoints_forFit.push_back(graphPoint);
@@ -84,31 +84,31 @@ void extractResult(TGraphErrors* graph, double& mass, double& massErr, double& L
   TGraphErrors* likelihoodGraph_forFit = makeGraph("svFitLikelihoodGraph_forFit", graphPoints_forFit);
   int numPoints = likelihoodGraph_forFit->GetN();
   bool useFit = false;
-  if ( numPoints >= 3 ) {  
+  if ( numPoints >= 3 ) {
     TF1* fitFunction = new TF1("fitFunction", "TMath::Power((x - [0])/[1], 2.) + [2]", xMin_fit, xMax_fit);
     fitFunction->SetParameter(0, x_Lmax);
     fitFunction->SetParameter(1, 0.20*x_Lmax);
     fitFunction->SetParameter(2, -TMath::Log(y_Lmax));
-    
+
     std::string fitOptions = "NSQ";
     //if ( !verbosity ) fitOptions.append("Q");
     TFitResultPtr fitResult = likelihoodGraph_forFit->Fit(fitFunction, fitOptions.data());
     if ( fitResult.Get() ) {
       if ( verbosity >= 1 ) {
-	std::cout << "fitting graph of p versus M(test) in range " << xMin_fit << ".." << xMax_fit << ", result:" << std::endl;
-	std::cout << " parameter #0 = " << fitFunction->GetParameter(0) << " +/- " << fitFunction->GetParError(0) << std::endl;
-	std::cout << " parameter #1 = " << fitFunction->GetParameter(1) << " +/- " << fitFunction->GetParError(1) << std::endl;
-	std::cout << " parameter #2 = " << fitFunction->GetParameter(2) << " +/- " << fitFunction->GetParError(2) << std::endl;
-	std::cout << "chi^2 = " << fitResult->Chi2() << std::endl;
+        std::cout << "fitting graph of p versus M(test) in range " << xMin_fit << ".." << xMax_fit << ", result:" << std::endl;
+        std::cout << " parameter #0 = " << fitFunction->GetParameter(0) << " +/- " << fitFunction->GetParError(0) << std::endl;
+        std::cout << " parameter #1 = " << fitFunction->GetParameter(1) << " +/- " << fitFunction->GetParError(1) << std::endl;
+        std::cout << " parameter #2 = " << fitFunction->GetParameter(2) << " +/- " << fitFunction->GetParError(2) << std::endl;
+        std::cout << "chi^2 = " << fitResult->Chi2() << std::endl;
       }
-      if ( fitResult->Chi2() < (10.*numPoints) && 
-	   fitFunction->GetParameter(0) > xMin && fitFunction->GetParameter(0) < xMax &&
-	   TMath::Abs(fitFunction->GetParameter(0) - x_Lmax) < (0.10*x_Lmax) ) {
-	mass = fitFunction->GetParameter(0);
-	massErr = TMath::Sqrt(square(fitFunction->GetParameter(1)) + square(fitFunction->GetParError(0)));
-	Lmax = TMath::Exp(-fitFunction->GetParameter(2));
-	//std::cout << "fit: mass = " << mass << " +/- " << massErr << " (Lmax = " << Lmax << ")" << std::endl;
-	useFit = true;
+      if ( fitResult->Chi2() < (10.*numPoints) &&
+           fitFunction->GetParameter(0) > xMin && fitFunction->GetParameter(0) < xMax &&
+           TMath::Abs(fitFunction->GetParameter(0) - x_Lmax) < (0.10*x_Lmax) ) {
+        mass = fitFunction->GetParameter(0);
+        massErr = TMath::Sqrt(square(fitFunction->GetParameter(1)) + square(fitFunction->GetParError(0)));
+        Lmax = TMath::Exp(-fitFunction->GetParameter(2));
+        //std::cout << "fit: mass = " << mass << " +/- " << massErr << " (Lmax = " << Lmax << ")" << std::endl;
+        useFit = true;
       }
     } else {
       std::cerr << "Warning in <extractResult>: Fit did not converge !!" << std::endl;
@@ -121,7 +121,7 @@ void extractResult(TGraphErrors* graph, double& mass, double& massErr, double& L
     Lmax = y_Lmax;
     //std::cout << "graph: mass = " << mass << " +/- " << massErr << " (Lmax = " << Lmax << ")" << std::endl;
   }
-  
+
   delete likelihoodGraph_forFit;
 }
 
@@ -204,8 +204,8 @@ double compPSfactor_tauToHadDecay(double x, double visEn, double visP, double vi
     if ( !(cosThetaNu >= (-1. + epsilon) && cosThetaNu <= +1.) ) return 0.;
     double PSfactor = (visEn + nuEn)/(8.*visP*square(x)*TMath::Sqrt(square(visP) + square(nuP) + 2.*visP*nuP*cosThetaNu + tauLeptonMass2));
     //-------------------------------------------------------------------------
-    // CV: multiply by constant matrix element, 
-    //     chosen such that the branching fraction of the tau to decay into hadrons is reproduced      
+    // CV: multiply by constant matrix element,
+    //     chosen such that the branching fraction of the tau to decay into hadrons is reproduced
     const double M2 = 16.*TMath::Pi()*cube(tauLeptonMass)*GammaTauToHad/(tauLeptonMass2 - visMass2);
     PSfactor *= M2;
     //-------------------------------------------------------------------------

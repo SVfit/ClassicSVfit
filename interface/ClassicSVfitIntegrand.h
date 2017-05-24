@@ -10,6 +10,8 @@
 #include <Math/Functor.h>
 #include <TMatrixD.h>
 #include <TH1.h>
+#include <TString.h>
+#include <TFormula.h>
 
 namespace classic_svFit
 {
@@ -26,57 +28,36 @@ namespace classic_svFit
 
     ClassicSVfitIntegrand(int);
     ~ClassicSVfitIntegrand();
-  
+
     /// add an additional log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution (default is false)
-    void addLogM(bool value, double power = 1.) 
-    { 
-      addLogM_ = value; 
-      addLogM_power_ = power; 
-    }
+    void addLogM_fixed(bool value, double power = 1.);
+    void addLogM_dynamic(bool value, const std::string& power= "");
+    
+    void setDiTauMassConstraint(double diTauMass);
 
     /// set pointer to histograms used to keep track of pT, eta, phi, mass and transverse mass of di-tau system
-    /// during Markov Chain integration 
-    void setHistogramAdapter(HistogramAdapter* histogramAdapter) 
-    { 
-      histogramAdapter_ = histogramAdapter; 
-    }
+    /// during Markov Chain integration
+    void setHistogramAdapter(HistogramAdapter* histogramAdapter);
 
-    void setIdxLeg1_X(int idx) { idxLeg1_X_ = idx; }
-    void setIdxLeg1_phi(int idx) { idxLeg1_phi_ = idx; }
-    void setIdxLeg1VisPtShift(int idx) { idxLeg1VisPtShift_ = idx; }
-    void setIdxLeg1_mNuNu(int idx) { idxLeg1_mNuNu_ = idx; }
-    void setIdxLeg2_X(int idx) { idxLeg2_X_ = idx; }
-    void setIdxLeg2_phi(int idx) { idxLeg2_phi_ = idx; }
-    void setIdxLeg2VisPtShift(int idx) { idxLeg2VisPtShift_ = idx; }
-    void setIdxLeg2_mNuNu(int idx) { idxLeg2_mNuNu_ = idx; }
-    void setNumDimensions(unsigned numDimensions) { numDimensions_ = numDimensions; }
+    void setIdxLeg1_X(int idx);
+    void setIdxLeg1_phi(int idx);
+    void setIdxLeg1VisPtShift(int idx);
+    void setIdxLeg1_mNuNu(int idx);
+    void setIdxLeg2_X(int idx);
+    void setIdxLeg2_phi(int idx);
+    void setIdxLeg2VisPtShift(int idx);
+    void setIdxLeg2_mNuNu(int idx);
+    void setNumDimensions(unsigned numDimensions);
 
 #ifdef USE_SVFITTF
     /// set transfer functions for pT of hadronic tau decays
-    void setHadTauTF(const HadTauTFBase* hadTauTF) 
-    { 
-      hadTauTF1_ = hadTauTF->Clone("leg1"); 
-      hadTauTF2_ = hadTauTF->Clone("leg2");
-    }
+    void setHadTauTF(const HadTauTFBase* hadTauTF);
     /// enable/disable use of transfer functions for hadronic tau decays
-    void enableHadTauTF() 
-    { 
-      if ( !(hadTauTF1_ && hadTauTF2_) ) {
-	std::cerr << "No tau pT transfer functions defined, call 'setHadTauTF' function first !!" << std::endl;
-	assert(0);
-      }      
-      useHadTauTF_ = true; 
-    }
-    void disableHadTauTF() 
-    { 
-      useHadTauTF_ = false; 
-    }
+    void enableHadTauTF();
+    void disableHadTauTF();
 
     /// set correlation between hadronic tau pT and MET
-    void setRhoHadTau(double rhoHadTau) 
-    { 
-      rhoHadTau_ = rhoHadTau;
-    }
+    void setRhoHadTau(double rhoHadTau);
 #endif
 
     /// set momenta of visible tau decay products and of reconstructed missing transverse energy
@@ -133,7 +114,7 @@ namespace classic_svFit
     double invCovMETyx_;
     double invCovMETyy_;
     double const_MET_;
-    
+
 #ifdef USE_SVFITTF
     /// account for resolution on pT of hadronic tau decays via appropriate transfer functions
     const HadTauTFBase* hadTauTF1_;
@@ -153,15 +134,19 @@ namespace classic_svFit
     int idxLeg2_mNuNu_;
     unsigned numDimensions_;
 
-    /// flag to enable/disable addition of log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution 
-    bool addLogM_; 
-    double addLogM_power_; 
+    /// flag to enable/disable addition of log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution
+    bool addLogM_fixed_;
+    double addLogM_fixed_power_;
+    bool addLogM_dynamic_;
+    TFormula* addLogM_dynamic_formula_;
+    
+    double diTauMassConstraint_ = -1.0;
 
     /// error code that can be passed on
     int errorCode_;
 
     HistogramAdapter* histogramAdapter_;
-    
+
     /// verbosity level
     int verbosity_;
   };

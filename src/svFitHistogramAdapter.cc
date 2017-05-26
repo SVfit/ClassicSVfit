@@ -156,7 +156,7 @@ double SVfitQuantity::extractLmax() const
 
 bool SVfitQuantity::isValidSolution() const
 {
-  return (extractLmax() > 0.9);
+  return (extractLmax() > 0.0);
 }
 
 TH1* DiTauSystemPtSVfitQuantity::createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const

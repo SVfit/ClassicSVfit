@@ -214,7 +214,9 @@ TH1* TransverseMassSVfitQuantity::createHistogram(const LorentzVector& vis1P4, c
 
 double TransverseMassSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
-  return TMath::Sqrt(2.0*tau1P4.pt()*tau2P4.pt()*(1.0 - TMath::Cos(tau1P4.phi() - tau2P4.phi())));
+  classic_svFit::LorentzVector fittedDiTauSystem = tau1P4 + tau2P4;
+  double transverseMass2 = square(tau1P4.Et() + tau2P4.Et()) - (square(fittedDiTauSystem.px()) + square(fittedDiTauSystem.py()));
+  return TMath::Sqrt(TMath::Max(1., transverseMass2));
 }
 
 

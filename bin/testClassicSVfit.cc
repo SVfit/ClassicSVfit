@@ -7,7 +7,7 @@
 #include "TauAnalysis/ClassicSVfit/interface/ClassicSVfit.h"
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredTauLepton.h"
 #include "TauAnalysis/ClassicSVfit/interface/svFitHistogramAdapter.h"
-#include "TauAnalysis/SVfitTF/interface/HadTauTFCrystalBall2.h"
+//#include "TauAnalysis/SVfitTF/interface/HadTauTFCrystalBall2.h"
 
 using namespace classic_svFit;
 
@@ -52,6 +52,8 @@ int main(int argc, char* argv[])
   svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
   svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
   bool isValidSolution = svFitAlgo.isValidSolution();
+  isValidSolution = true;
+
   double mass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMass();
   double massErr = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMassErr();
   double transverseMass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getTransverseMass();
@@ -65,4 +67,3 @@ int main(int argc, char* argv[])
 
   return 0;
 }
-

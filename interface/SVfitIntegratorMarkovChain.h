@@ -121,6 +121,7 @@ namespace classic_svFit
     typedef std::vector<double> vdouble;
     double epsilon0_;
     vdouble epsilon0s_;
+    vdouble epsilon_;
     double nu_;
 
     /// random number generator
@@ -164,4 +165,3 @@ namespace classic_svFit
 }
 
 #endif
-

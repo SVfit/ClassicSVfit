@@ -1,6 +1,7 @@
 #include "TauAnalysis/ClassicSVfit/interface/ClassicSVfit.h"
 
 #include "TauAnalysis/ClassicSVfit/interface/SVfitIntegratorMarkovChain.h"
+#include "TauAnalysis/ClassicSVfit/interface/SVfitCUBAIntegrator.h"
 
 #include <TGraphErrors.h>
 #include <TH1.h>
@@ -18,9 +19,31 @@ namespace
   double g_C(double* x, size_t dim, void* param)
   {
     //std::cout << "<g_C>:" << std::endl;
-    double retVal = ClassicSVfitIntegrand::gSVfitIntegrand->Eval(x);
+    double retVal = 1E16*ClassicSVfitIntegrand::gSVfitIntegrand->Eval(x);
+    retVal = x[0]*x[0];
     //std::cout << " retVal = " <<  retVal << std::endl;
     return retVal;
+  }
+
+  int cubaIntegrand(const int *ndim, const double qq[],
+                    const int *ncomp, double ff[], void *userdata)
+  {
+
+    float *testMass = (float*)userdata;
+
+    double xx[5];
+    double xMin_[] = {0,-3.14159,0,0,-3.14159};
+    double xMax_[] = {1,3.14159,3.14159,1,3.14159};
+
+    for ( unsigned iDimension = 0; iDimension < *ndim; ++iDimension ) {
+    double q_i = qq[iDimension];
+    xx[iDimension] = (1. - q_i)*xMin_[iDimension] + q_i*xMax_[iDimension];
+  }
+
+    ff[0] = 1E16*ClassicSVfitIntegrand::gSVfitIntegrand->Eval(xx, *testMass);
+    ff[0] = qq[0]*qq[0];
+
+    return 0;
   }
 }
 
@@ -278,7 +301,7 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
     verbosity_);
   intAlgo_->registerCallBackFunction(*histogramAdapter_);
 
-  intCubaAlgo_ = new SVfitCUBAIntegrator();
+  intCubaAlgo_ = new SVfitCUBAIntegrator(verbosity_);
 
   //std::cout << "numDimensions = " << numDimensions_ << std::endl;
   xl_ = new double[numDimensions_];
@@ -333,12 +356,39 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
     }
   }
 
+  xl_[0] = 0;
+  xl_[1] = 0;
+  xl_[2] = 0;
+  xl_[3] = 0;
+  xl_[4] = 0;
+
+  xu_[0] = 1;
+  xu_[1] = 1;
+  xu_[2] = 1;
+  xu_[3] = 1;
+  xu_[4] = 1;
+
+
   double integral = 0.;
   double integralErr = 0.;
   intAlgo_->integrate(&g_C, xl_, xu_, numDimensions_, integral, integralErr);
+  std::cout<<"MC integral: "<<integral<<" +- "<<integralErr<<std::endl;
 
-  intCubaAlgo_->integrate(&g_C, xl_, xu_, numDimensions_, integral, integralErr);
+  double cubaIntegral;
+  double cubaIntegralErr;
 
+  float maxMass = 0;
+  float maxIntegral = 0;
+  for(unsigned int iMassPoint=0;iMassPoint<1;++iMassPoint){
+    float testMass = 115 - 4 + iMassPoint*0.2;
+    intCubaAlgo_->integrate(&cubaIntegrand, xl_, xu_, numDimensions_, cubaIntegral, cubaIntegralErr, testMass);
+    if(cubaIntegral>maxIntegral){
+      maxIntegral = cubaIntegral;
+      maxMass = testMass;
+    }
+  }
+  std::cout<<"CUBA integral. Mass for max integral: "
+            <<maxMass<<" integral: "<<maxIntegral<<std::endl;
 
   if ( likelihoodFileName_ != "" ) {
     histogramAdapter_->writeHistograms(likelihoodFileName_);

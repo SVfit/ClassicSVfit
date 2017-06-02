@@ -251,7 +251,7 @@ ClassicSVfitIntegrand::setInputs(const std::vector<MeasuredTauLepton>& measuredT
 }
 
 double
-ClassicSVfitIntegrand::Eval(const double* x) const
+ClassicSVfitIntegrand::Eval(const double* x, float testMass) const
 {
   if ( verbosity_ >= 2 ) {
     std::cout << "<ClassicSVfitIntegrand::Eval(const double*)>:" << std::endl;
@@ -462,6 +462,9 @@ ClassicSVfitIntegrand::Eval(const double* x) const
   // CV: fill histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
   histogramAdapter_->setTau1P4(tau1P4);
   histogramAdapter_->setTau2P4(tau2P4);
+
+  float mass = (tau1P4 + tau2P4).M();
+  if(testMass>0) prob*=exp(-(mass-testMass)*(mass-testMass)/25);
 
   return prob;
 }

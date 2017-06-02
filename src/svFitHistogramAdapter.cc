@@ -41,7 +41,7 @@ void HistogramTools::extractHistogramProperties(
   }
 
   xMean = histogram->GetMean();
-  
+
   TH1* histogram_density = HistogramTools::compHistogramDensity(histogram);
   if ( histogram_density->Integral() > 0. ) {
     int binMaximum = histogram_density->GetMaximumBin();
@@ -264,12 +264,12 @@ void HistogramAdapter::writeHistograms(const std::string& likelihoodFileName) co
 {
   TFile* likelihoodFile = new TFile(likelihoodFileName.data(), "RECREATE");
   likelihoodFile->cd();
-  
+
   for (std::vector<SVfitQuantity*>::iterator quantity = quantities_.begin(); quantity != quantities_.end(); ++quantity)
   {
     (*quantity)->writeHistogram();
   }
-  
+
   likelihoodFile->Write();
   likelihoodFile->Close();
   delete likelihoodFile;

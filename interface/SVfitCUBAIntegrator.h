@@ -22,20 +22,25 @@ namespace classic_svFit
   class SVfitCUBAIntegrator
   {
    public:
-    SVfitCUBAIntegrator();
+    SVfitCUBAIntegrator(unsigned int verbosity);
     ~SVfitCUBAIntegrator();
 
     /// compute integral of function g
     /// the points xl and xh represent the lower left and upper right corner of a Hypercube in d-dimensional integration space
-    typedef double (*gPtr_C)(double*, size_t, void*);
-    void integrate(gPtr_C g, const double* xl, const double* xu, unsigned d, double& integral, double& integralErr);
+    typedef int (*integrand_t)(const int *ndim, const double xx[], const int *ncomp, double ff[], void *userdata);
+
+    void integrate(integrand_t g, const double* xl, const double* xu,
+      unsigned d, double& integral, double& integralErr, float testMass = -1);
 
     void print(std::ostream&) const;
 
   protected:
-    void setIntegrand(gPtr_C, const double*, const double*, unsigned);
 
-    gPtr_C integrand_;
+    void setIntegrand(integrand_t, const double*, const double*, unsigned);
+
+    int verbosity_; // flag to enable/disable debug output
+
+    integrand_t integrand_;
 
     /// parameters defining integration region
     ///  numDimensions: dimensionality of integration region (Hypercube)
@@ -47,7 +52,6 @@ namespace classic_svFit
     std::vector<double> xMin_; // index = dimension
     std::vector<double> xMax_; // index = dimension
 
-    int verbosity_; // flag to enable/disable debug output
   };
 }
 

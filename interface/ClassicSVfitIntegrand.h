@@ -32,7 +32,7 @@ namespace classic_svFit
     /// add an additional log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution (default is false)
     void addLogM_fixed(bool value, double power = 1.);
     void addLogM_dynamic(bool value, const std::string& power= "");
-    
+
     void setDiTauMassConstraint(double diTauMass);
 
     /// set pointer to histograms used to keep track of pT, eta, phi, mass and transverse mass of di-tau system
@@ -64,7 +64,7 @@ namespace classic_svFit
     void setInputs(const std::vector<classic_svFit::MeasuredTauLepton>&, double, double, const TMatrixD&);
 
     /// evaluate integrand for given value of integration variables x
-    double Eval(const double* x) const;
+    double Eval(const double* x, float testMass = -1) const;
 
     /// static pointer to this (needed for interfacing the likelihood function calls to Markov Chain integration)
     static const ClassicSVfitIntegrand* gSVfitIntegrand;
@@ -139,7 +139,7 @@ namespace classic_svFit
     double addLogM_fixed_power_;
     bool addLogM_dynamic_;
     TFormula* addLogM_dynamic_formula_;
-    
+
     double diTauMassConstraint_ = -1.0;
 
     /// error code that can be passed on

@@ -151,6 +151,7 @@ void SVfitIntegratorMarkovChain::setIntegrand(gPtr_C g, const double* xl, const 
   }
 
   epsilon0s_.resize(numDimensions_);
+  epsilon_.resize(numDimensions_);
   for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
     epsilon0s_[iDimension] = epsilon0_;
   }
@@ -452,9 +453,8 @@ void SVfitIntegratorMarkovChain::makeStochasticMove(unsigned idxMove, bool& isAc
     double C = rnd_.BreitWigner(0., 1.);
     exp_nu_times_C = TMath::Exp(nu_*C);
   } while ( TMath::IsNaN(exp_nu_times_C) || !TMath::Finite(exp_nu_times_C) || exp_nu_times_C > 1.e+6 );
-  vdouble epsilon(numDimensions_);
   for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
-    epsilon[iDimension] = epsilon0s_[iDimension]*exp_nu_times_C;
+    epsilon_[iDimension] = epsilon0s_[iDimension]*exp_nu_times_C;
   }
 
   // Metropolis algorithm: move according to eq. (27) in [2]
@@ -462,7 +462,7 @@ void SVfitIntegratorMarkovChain::makeStochasticMove(unsigned idxMove, bool& isAc
 //--- update position components
 //    by single step of chosen size in direction of the momentum components
   for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
-    qProposal_[iDimension] = q_[iDimension] + epsilon[iDimension]*p_[iDimension];
+    qProposal_[iDimension] = q_[iDimension] + epsilon_[iDimension]*p_[iDimension];
   }
 
 //--- ensure that proposed new point is within integration region
@@ -515,5 +515,3 @@ double SVfitIntegratorMarkovChain::evalProb(const std::vector<double>& q)
   double prob = (*integrand_)(x_, numDimensions_, 0);
   return prob;
 }
-
-

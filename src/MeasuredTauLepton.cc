@@ -1,7 +1,5 @@
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredTauLepton.h"
 
-#include "TauAnalysis/ClassicSVfit/interface/svFitAuxFunctions.h"
-
 #include <TMath.h>
 
 using namespace classic_svFit;
@@ -19,10 +17,10 @@ MeasuredTauLepton::MeasuredTauLepton()
 
 MeasuredTauLepton::MeasuredTauLepton(int type, double pt, double eta, double phi, double mass, int decayMode)
   : type_(type),
-    pt_(roundToNdigits(pt)),
-    eta_(roundToNdigits(eta)),
-    phi_(roundToNdigits(phi)),
-    mass_(roundToNdigits(mass)),
+    pt_(pt),
+    eta_(eta),
+    phi_(phi),
+    mass_(mass),
     decayMode_(decayMode)
 {
   //std::cout << "<MeasuredTauLepton>:" << std::endl;

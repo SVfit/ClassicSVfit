@@ -504,7 +504,7 @@ void SVfitIntegratorMarkovChain::makeStochasticMove(unsigned idxMove, bool& isAc
 void SVfitIntegratorMarkovChain::updateX(const std::vector<double>& q)
 {
   for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
-    double q_i = q[iDimension];
+    const double & q_i = q[iDimension];
     x_[iDimension] = (1. - q_i)*xMin_[iDimension] + q_i*xMax_[iDimension];
   }
 }

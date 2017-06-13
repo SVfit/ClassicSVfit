@@ -20,7 +20,7 @@ namespace
   {
     //std::cout << "<g_C>:" << std::endl;
     double retVal = 1E16*ClassicSVfitIntegrand::gSVfitIntegrand->Eval(x);
-    retVal = x[0]*x[0];
+    //double retVal = sqrt(x[0]);
     //std::cout << " retVal = " <<  retVal << std::endl;
     return retVal;
   }
@@ -41,8 +41,7 @@ namespace
   }
 
     ff[0] = 1E16*ClassicSVfitIntegrand::gSVfitIntegrand->Eval(xx, *testMass);
-    ff[0] = qq[0]*qq[0];
-
+    //ff[0] = xx[0];
     return 0;
   }
 }
@@ -356,39 +355,45 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
     }
   }
 
-  xl_[0] = 0;
-  xl_[1] = 0;
-  xl_[2] = 0;
-  xl_[3] = 0;
-  xl_[4] = 0;
-
-  xu_[0] = 1;
-  xu_[1] = 1;
-  xu_[2] = 1;
-  xu_[3] = 1;
-  xu_[4] = 1;
-
-
   double integral = 0.;
   double integralErr = 0.;
   intAlgo_->integrate(&g_C, xl_, xu_, numDimensions_, integral, integralErr);
   std::cout<<"MC integral: "<<integral<<" +- "<<integralErr<<std::endl;
 
+/////TEST
+/*
+TFile file("CubaTest.root","RECREATE");
+double visMass = ( measuredTauLeptons_rounded[0].p4() + measuredTauLeptons_rounded[1].p4()).mass();
+double minMass = visMass/1.0125;
+double maxMass = TMath::Max(1.e+4, 1.e+1*minMass);
+TH1D *h = (TH1D*)HistogramTools::makeHistogram("Cuba_histogramMass", minMass, maxMass, 1.025);
+
   double cubaIntegral;
   double cubaIntegralErr;
 
-  float maxMass = 0;
+  maxMass = 0;
   float maxIntegral = 0;
-  for(unsigned int iMassPoint=0;iMassPoint<1;++iMassPoint){
-    float testMass = 115 - 4 + iMassPoint*0.2;
+  for(unsigned int iMassPoint=1;iMassPoint<h->GetNbinsX();++iMassPoint){
+    float testMass = h->GetBinCenter(iMassPoint);
+    //testMass = 115;
     intCubaAlgo_->integrate(&cubaIntegrand, xl_, xu_, numDimensions_, cubaIntegral, cubaIntegralErr, testMass);
+    std::cout<<"iMassPoint: "<<iMassPoint
+             <<" testMass: "<< testMass
+             <<" integral: "<<cubaIntegral
+             <<" +- "<<cubaIntegralErr<<std::endl;
+    h->SetBinContent(iMassPoint, cubaIntegral);
     if(cubaIntegral>maxIntegral){
       maxIntegral = cubaIntegral;
       maxMass = testMass;
     }
+    //break;
   }
+
+  file.Write();
   std::cout<<"CUBA integral. Mass for max integral: "
             <<maxMass<<" integral: "<<maxIntegral<<std::endl;
+            ///////////
+            */
 
   if ( likelihoodFileName_ != "" ) {
     histogramAdapter_->writeHistograms(likelihoodFileName_);

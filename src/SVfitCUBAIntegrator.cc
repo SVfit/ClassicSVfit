@@ -67,7 +67,7 @@ const int ncomp = 1;
 
 void *userdata = &testMass;
 const int nvec = 1;
-const cubareal epsrel = 1E-2;
+const cubareal epsrel = 1E-3;
 const cubareal epsabs = 1E-12;
 const int flags = 2;
 const int seed = 0;
@@ -91,8 +91,22 @@ double flatness=25;
 int verbose = 0;
 int nregions = 5;
 
+int key1=47;
+int key2=1;
+int key3=1;
+int maxpass=5;
+double border=0.;
+double maxchisq=10.;
+double mindeviation=.25;
+int ngiven=0;
+int ldxdiven=ndim;
+int nextra=0;
+
 int key = 0;
 
+cubacores(1,1);
+
+/*
 Vegas(ndim, ncomp,
     integrand_,
     userdata, nvec,
@@ -103,7 +117,7 @@ Vegas(ndim, ncomp,
     gridno, statefile, spin,
     &neval, &fail,
     integralV, integralErrV, probV);
-/*
+
   printf("VEGAS RESULT:\tneval %d\tfail %d\n",
     neval, fail);
   for(unsigned int comp = 0; comp < ncomp; ++comp )
@@ -116,7 +130,7 @@ Vegas(ndim, ncomp,
     mineval, maxeval, nnew, nmin, flatness,
     statefile, spin,
     &nregions, &neval, &fail, integralV, integralErrV, probV);
-    */
+*/
 /*
     printf("SUAVE RESULT:\tnregions %d\tneval %d\tfail %d\n",
     nregions, neval, fail);
@@ -125,11 +139,31 @@ Vegas(ndim, ncomp,
       (double)integralV[comp], (double)integralErrV[comp], (double)probV[comp]);
 */
 
+
+Divonne(ndim, ncomp, integrand_, userdata, nvec,
+    epsrel, epsabs, verbose, seed,
+    mineval, maxeval, key1, key2, key3, maxpass,
+    border, maxchisq, mindeviation,
+    ngiven, ldxdiven, NULL, nextra, NULL,
+    statefile, spin,
+    &nregions, &neval, &fail, integralV, integralErrV, probV);
+
+/*
+  printf("DIVONNE RESULT:\tnregions %d\tneval %d\tfail %d\n",
+    nregions, neval, fail);
+  for(unsigned int comp = 0; comp < ncomp; ++comp )
+    printf("DIVONNE RESULT:\t%.8f +- %.8f\tp = %.3f\n",
+      (double)integralV[comp], (double)integralErrV[comp], (double)probV[comp]);
+*/
+
+
+/*
     Cuhre(ndim, ncomp, integrand_, userdata, nvec,
     epsrel, epsabs, verbose,
     mineval, maxeval, key,
     statefile, spin,
     &nregions, &neval, &fail, integralV, integralErrV, probV);
+*/
 /*
   printf("CUHRE RESULT:\tnregions %d\tneval %d\tfail %d\n",
     nregions, neval, fail);

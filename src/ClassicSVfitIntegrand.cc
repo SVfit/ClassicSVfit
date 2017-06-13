@@ -453,9 +453,9 @@ ClassicSVfitIntegrand::Eval(const double* x, float testMass) const
     std::cout << "prob: PS+decay = " << prob_PS_and_tauDecay << ","
               << " TF = " << prob_TF << ", log(M) = " << prob_logM << ", Jacobi = " << jacobiFactor << " --> returning " << prob << std::endl;
   }
-  if ( TMath::IsNaN(prob) ) {
-    std::cerr << "Warning: prob = " << prob << " (PS+decay = " << prob_PS_and_tauDecay << ","
-              << " TF = " << prob_TF << ", log(M) = " << prob_logM << ", Jacobi = " << jacobiFactor << ") --> setting prob = 0 !!" << std::endl;
+  if (TMath::IsNaN(prob) ) {
+    //std::cerr << "Warning: prob = " << prob << " (PS+decay = " << prob_PS_and_tauDecay << ","
+      //        << " TF = " << prob_TF << ", log(M) = " << prob_logM << ", Jacobi = " << jacobiFactor << ") --> setting prob = 0 !!" << std::endl;
     prob = 0.;
   }
 
@@ -464,6 +464,7 @@ ClassicSVfitIntegrand::Eval(const double* x, float testMass) const
   histogramAdapter_->setTau2P4(tau2P4);
 
   float mass = (tau1P4 + tau2P4).M();
+  //if(testMass>0 && std::abs(mass-testMass)<1E-3) return 1E-15;
   if(testMass>0) prob*=exp(-(mass-testMass)*(mass-testMass)/25);
 
   return prob;

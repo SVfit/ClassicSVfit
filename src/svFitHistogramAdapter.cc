@@ -3,6 +3,8 @@
 #include <TMath.h>
 #include <TFile.h>
 
+#include <numeric>
+
 using namespace classic_svFit;
 
 TH1* HistogramTools::compHistogramDensity(TH1 const* histogram)

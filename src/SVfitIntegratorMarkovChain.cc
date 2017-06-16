@@ -494,7 +494,7 @@ void SVfitIntegratorMarkovChain::makeStochasticMove(unsigned idxMove, bool& isAc
     for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
       q_[iDimension] = qProposal_[iDimension];
     }
-    prob_ = evalProb(q_);
+    prob_ = probProposal;
     isAccepted = true;
   } else {
     isAccepted = false;

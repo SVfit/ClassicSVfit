@@ -64,7 +64,7 @@ namespace classic_svFit
     void setInputs(const std::vector<classic_svFit::MeasuredTauLepton>&, double, double, const TMatrixD&);
 
     /// evaluate integrand for given value of integration variables x
-    double Eval(const double* x, float testMass = -1) const;
+    double Eval(const double* x) const;
 
     /// static pointer to this (needed for interfacing the likelihood function calls to Markov Chain integration)
     static const ClassicSVfitIntegrand* gSVfitIntegrand;

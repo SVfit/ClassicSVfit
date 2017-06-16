@@ -45,7 +45,7 @@ void SVfitCUBAIntegrator::setIntegrand(integrand_t g, const double* xl, const do
 //-------------------------------------------------------------------------------
 //
 void SVfitCUBAIntegrator::integrate(integrand_t g, const double* xl, const double* xu,
-  unsigned d, double& integral, double& integralErr, float testMass){
+  unsigned d, double& integral, double& integralErr){
   setIntegrand(g, xl, xu, d);
 
   if ( !integrand_ ) {
@@ -65,7 +65,7 @@ void SVfitCUBAIntegrator::integrate(integrand_t g, const double* xl, const doubl
 const int ndim =  numDimensions_;
 const int ncomp = 1;
 
-void *userdata = &testMass;
+void *userdata = NULL;
 const int nvec = 1;
 const cubareal epsrel = 1E-3;
 const cubareal epsabs = 1E-12;

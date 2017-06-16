@@ -9,6 +9,7 @@
 #include <TMatrixDSym.h>
 #include <TMatrixDSymEigen.h>
 #include <TVectorD.h>
+#include <TMinuit.h>
 
 #include <algorithm>
 
@@ -20,7 +21,6 @@ namespace
   {
     //std::cout << "<g_C>:" << std::endl;
     double retVal = 1E16*ClassicSVfitIntegrand::gSVfitIntegrand->Eval(x);
-    //double retVal = sqrt(x[0]);
     //std::cout << " retVal = " <<  retVal << std::endl;
     return retVal;
   }
@@ -29,19 +29,20 @@ namespace
                     const int *ncomp, double ff[], void *userdata)
   {
 
-    float *testMass = (float*)userdata;
-
     double xx[5];
-    double xMin_[] = {0,-3.14159,0,0,-3.14159};
-    double xMax_[] = {1,3.14159,3.14159,1,3.14159};
+    //double xMin_[] = {0,-3.14159,0,0,-3.14159};
+    //double xMax_[] = {1,3.14159,3.14159,1,3.14159};
+
+    double xMin_[] = {0,-3.14159,0,-3.14159};
+    double xMax_[] = {1,3.14159,3.14159,3.14159};
+
 
     for ( unsigned iDimension = 0; iDimension < *ndim; ++iDimension ) {
     double q_i = qq[iDimension];
     xx[iDimension] = (1. - q_i)*xMin_[iDimension] + q_i*xMax_[iDimension];
   }
 
-    ff[0] = 1E16*ClassicSVfitIntegrand::gSVfitIntegrand->Eval(xx, *testMass);
-    //ff[0] = xx[0];
+    ff[0] = 1E16*ClassicSVfitIntegrand::gSVfitIntegrand->Eval(xx);
     return 0;
   }
 }
@@ -133,6 +134,15 @@ bool ClassicSVfit::isValidSolution() const { return isValidSolution_; }
 double ClassicSVfit::getComputingTime_cpu() const { return numSeconds_cpu_; }
 double ClassicSVfit::getComputingTime_real() const { return numSeconds_real_; }
 
+void ClassicSVfit::fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
+{
+    double cubaIntegral;
+    double cubaIntegralErr;
+    setDiTauMassConstraint(par[0]);
+    intCubaAlgo_->integrate(&cubaIntegrand, xl_, xu_, numDimensions_, cubaIntegral, cubaIntegralErr);
+    f = cubaIntegral;
+}
+
 namespace
 {
   struct sortMeasuredTauLeptons
@@ -156,6 +166,8 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   }
   clock_->Reset();
   clock_->Start("<ClassicSVfit::integrate>");
+
+  setDiTauMassConstraint(115);
 
   std::vector<MeasuredTauLepton> measuredTauLeptons_rounded;
   for ( std::vector<MeasuredTauLepton>::const_iterator measuredTauLepton = measuredTauLeptons.begin();
@@ -361,7 +373,6 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   std::cout<<"MC integral: "<<integral<<" +- "<<integralErr<<std::endl;
 
 /////TEST
-/*
 TFile file("CubaTest.root","RECREATE");
 double visMass = ( measuredTauLeptons_rounded[0].p4() + measuredTauLeptons_rounded[1].p4()).mass();
 double minMass = visMass/1.0125;
@@ -375,25 +386,27 @@ TH1D *h = (TH1D*)HistogramTools::makeHistogram("Cuba_histogramMass", minMass, ma
   float maxIntegral = 0;
   for(unsigned int iMassPoint=1;iMassPoint<h->GetNbinsX();++iMassPoint){
     float testMass = h->GetBinCenter(iMassPoint);
-    //testMass = 115;
-    intCubaAlgo_->integrate(&cubaIntegrand, xl_, xu_, numDimensions_, cubaIntegral, cubaIntegralErr, testMass);
+    setDiTauMassConstraint(testMass);
+    intCubaAlgo_->integrate(&cubaIntegrand, xl_, xu_, numDimensions_, cubaIntegral, cubaIntegralErr);
+    /*
     std::cout<<"iMassPoint: "<<iMassPoint
              <<" testMass: "<< testMass
              <<" integral: "<<cubaIntegral
              <<" +- "<<cubaIntegralErr<<std::endl;
+             */
     h->SetBinContent(iMassPoint, cubaIntegral);
     if(cubaIntegral>maxIntegral){
       maxIntegral = cubaIntegral;
       maxMass = testMass;
     }
-    //break;
   }
-
   file.Write();
   std::cout<<"CUBA integral. Mass for max integral: "
             <<maxMass<<" integral: "<<maxIntegral<<std::endl;
-            ///////////
-            */
+
+  //TMinuit *gMinuit = new TMinuit(1);
+  //gMinuit->SetFCN(this->*fcn);
+  ///////////
 
   if ( likelihoodFileName_ != "" ) {
     histogramAdapter_->writeHistograms(likelihoodFileName_);

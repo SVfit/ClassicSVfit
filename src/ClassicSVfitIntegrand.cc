@@ -251,7 +251,7 @@ ClassicSVfitIntegrand::setInputs(const std::vector<MeasuredTauLepton>& measuredT
 }
 
 double
-ClassicSVfitIntegrand::Eval(const double* x, float testMass) const
+ClassicSVfitIntegrand::Eval(const double* x) const
 {
   if ( verbosity_ >= 2 ) {
     std::cout << "<ClassicSVfitIntegrand::Eval(const double*)>:" << std::endl;
@@ -446,7 +446,7 @@ ClassicSVfitIntegrand::Eval(const double* x, float testMass) const
 
   double jacobiFactor = 1./(visPtShift1*visPtShift2); // product of derrivatives dx1/dx1' and dx2/dx2' for parametrization of x1, x2 by x1', x2'
   if (diTauMassConstraint_ > 0.0) {
-    jacobiFactor *= (2.0*x2*diTauMassConstraint_);
+    jacobiFactor *= (2.0*x2/diTauMassConstraint_);
   }
   double prob = prob_PS_and_tauDecay*prob_TF*prob_logM*jacobiFactor;
   if ( verbosity_ >= 2 ) {
@@ -462,10 +462,6 @@ ClassicSVfitIntegrand::Eval(const double* x, float testMass) const
   // CV: fill histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
   histogramAdapter_->setTau1P4(tau1P4);
   histogramAdapter_->setTau2P4(tau2P4);
-
-  float mass = (tau1P4 + tau2P4).M();
-  //if(testMass>0 && std::abs(mass-testMass)<1E-3) return 1E-15;
-  if(testMass>0) prob*=exp(-(mass-testMass)*(mass-testMass)/25);
 
   return prob;
 }

@@ -30,7 +30,7 @@ namespace classic_svFit
     typedef int (*integrand_t)(const int *ndim, const double xx[], const int *ncomp, double ff[], void *userdata);
 
     void integrate(integrand_t g, const double* xl, const double* xu,
-      unsigned d, double& integral, double& integralErr, float testMass = -1);
+      unsigned d, double& integral, double& integralErr);
 
     void print(std::ostream&) const;
 

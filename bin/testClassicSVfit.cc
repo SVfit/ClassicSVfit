@@ -37,7 +37,7 @@ void updateX(const std::vector<double>& q)
 
 int main(int argc, char* argv[])
 {
-
+/*
 v8si q = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
 std::vector<double> q_ = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
 
@@ -45,8 +45,8 @@ for(unsigned int i=0;i<1E6;++i){
 updateXSIMD(q);
 updateX(q_);
 }
-
 return 0;
+*/
 
   /*
      This is a single event for testing purposes.
@@ -85,7 +85,7 @@ return 0;
   //svFitAlgo.addLogM_dynamic(true, "(m/1000.)*15.");
   //svFitAlgo.setMaxObjFunctionCalls(100000); // CV: default is 100000 evaluations of integrand per event
   svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
-  for(unsigned int iTry=0;iTry<5;++iTry) svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+  for(unsigned int iTry=0;iTry<1;++iTry) svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
   bool isValidSolution = svFitAlgo.isValidSolution();
   isValidSolution = true;
 

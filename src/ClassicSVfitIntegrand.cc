@@ -446,7 +446,7 @@ ClassicSVfitIntegrand::Eval(const double* x) const
 
   double jacobiFactor = 1./(visPtShift1*visPtShift2); // product of derrivatives dx1/dx1' and dx2/dx2' for parametrization of x1, x2 by x1', x2'
   if (diTauMassConstraint_ > 0.0) {
-    jacobiFactor *= (2.0*x2*diTauMassConstraint_);
+    jacobiFactor *= (2.0*x2/diTauMassConstraint_);
   }
   double prob = prob_PS_and_tauDecay*prob_TF*prob_logM*jacobiFactor;
   if ( verbosity_ >= 2 ) {

@@ -6,6 +6,7 @@
 #include "TauAnalysis/SVfitTF/interface/HadTauTFBase.h"
 #endif
 #include "TauAnalysis/ClassicSVfit/interface/svFitHistogramAdapter.h"
+#include "TauAnalysis/ClassicSVfit/interface/svFitAuxFunctions.h"
 
 #include <Math/Functor.h>
 #include <TMatrixD.h>
@@ -39,15 +40,12 @@ namespace classic_svFit
     /// during Markov Chain integration
     void setHistogramAdapter(HistogramAdapter* histogramAdapter);
 
-    void setIdxLeg1_X(int idx);
-    void setIdxLeg1_phi(int idx);
-    void setIdxLeg1VisPtShift(int idx);
-    void setIdxLeg1_mNuNu(int idx);
-    void setIdxLeg2_X(int idx);
-    void setIdxLeg2_phi(int idx);
-    void setIdxLeg2VisPtShift(int idx);
-    void setIdxLeg2_mNuNu(int idx);
+    void setLegIntegrationParams(unsigned int iLeg,
+                                 const classic_svFit::integrationParameters & aParams);
+
     void setNumDimensions(unsigned numDimensions);
+
+    void computeVisMom(const double & visPtShift1, const double & visPtShift2);
 
 #ifdef USE_SVFITTF
     /// set transfer functions for pT of hadronic tau decays
@@ -70,6 +68,13 @@ namespace classic_svFit
     static const ClassicSVfitIntegrand* gSVfitIntegrand;
 
    protected:
+
+    mutable LorentzVector vis1P4_, vis2P4_;
+    mutable LorentzVector nu1P4_, nu2P4_;
+    mutable LorentzVector tau1P4_, tau2P4_;
+    mutable double vis1P_, vis2P_;
+    mutable double vis1En_, vis2En_;
+
     /// measured tau leptons
     MeasuredTauLepton measuredTauLepton1_;
     bool leg1isLep_;
@@ -124,14 +129,7 @@ namespace classic_svFit
     double rhoHadTau_;
 #endif
 
-    int idxLeg1_X_;
-    int idxLeg1_phi_;
-    int idxLeg1VisPtShift_;
-    int idxLeg1_mNuNu_;
-    int idxLeg2_X_;
-    int idxLeg2_phi_;
-    int idxLeg2VisPtShift_;
-    int idxLeg2_mNuNu_;
+    classic_svFit::integrationParameters legIntegrationParams_[2];
     unsigned numDimensions_;
 
     /// flag to enable/disable addition of log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution

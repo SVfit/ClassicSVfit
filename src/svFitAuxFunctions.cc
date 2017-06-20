@@ -215,4 +215,11 @@ double compPSfactor_tauToHadDecay(double x, double visEn, double visP, double vi
   }
 }
 
+void integrationParameters::reset(){
+      idx_X_ = -1;
+      idx_phi_ = -1;
+      idx_VisPtShift_ = -1;
+      idx_mNuNu_ = -1;
+}
+
 }

@@ -1,4 +1,5 @@
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredTauLepton.h"
+#include "TauAnalysis/ClassicSVfit/interface/svFitAuxFunctions.h"
 
 #include <TMath.h>
 
@@ -104,6 +105,15 @@ Vector MeasuredTauLepton::p3() const { return p3_; }
 double MeasuredTauLepton::cosPhi_sinTheta() const { return cosPhi_sinTheta_; }
 double MeasuredTauLepton::sinPhi_sinTheta() const { return sinPhi_sinTheta_; }
 double MeasuredTauLepton::cosTheta() const { return cosTheta_; }
+
+void MeasuredTauLepton::roundToNdigits(unsigned int nDigis)
+{
+pt_ = classic_svFit::roundToNdigits(pt_, nDigis);
+eta_ = classic_svFit::roundToNdigits(eta_, nDigis);
+phi_ = classic_svFit::roundToNdigits(phi_, nDigis);
+mass_ = classic_svFit::roundToNdigits(mass_, nDigis);
+initialize();
+}
 
 void MeasuredTauLepton::initialize()
 {

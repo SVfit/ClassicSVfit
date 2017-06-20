@@ -39,6 +39,9 @@ class ClassicSVfit
   void setRhoHadTau(double rhoHadTau);
 #endif
 
+  ///use Cuba integration library instead of custom Markov Chain
+  void setUseCuba(bool useCuba);
+
   /// number of function calls for Markov Chain integration (default is 100000)
   void setMaxObjFunctionCalls(unsigned maxObjFunctionCalls);
 
@@ -66,10 +69,35 @@ class ClassicSVfit
 
  protected:
 
+   ///flag for choosing the integrator class
+   bool useCuba_;
+
+   /// initialize Matkov Chain integrator class
+   void initializeMCIntegrator();
+
+   /// print MET and its covariance matrix
+   void printMET() const;
+
+   /// print measured leptons
+   void printLeptons() const;
+
+   /// print integration range
+   void printIntegrationRange() const;
+
+    /// set integration indices and ranges for both legs
+   void setIntegrationParams();
+
+   /// set integration indices and ranges for given leg
+   void setLegIntegrationParams(unsigned int iLeg);
+
+   /// set integration ranges for given leg
+   void setIntegrationRanges(unsigned int iLeg);
+
   classic_svFit::ClassicSVfitIntegrand* integrand_;
 
   std::vector<classic_svFit::MeasuredTauLepton> measuredTauLeptons_;
   classic_svFit::Vector met_;
+  TMatrixD covMET_rounded;
 
   double diTauMassConstraint_ = -1.0;
 
@@ -83,12 +111,10 @@ class ClassicSVfit
   double precision_;
   std::string treeFileName_;
 
-  /// dimension of integration region
-  unsigned numDimensions_;
-
-  /// lower and upper boundary of integration region
-  double* xl_;
-  double* xu_;
+  /// variables indices and ranges for each leg
+  classic_svFit::integrationParameters legIntegrationParams_[2];
+  unsigned int numDimensions_ = 0;
+  double xl_[6], xu_[6];
 
   /// histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
   mutable classic_svFit::HistogramAdapter* histogramAdapter_;

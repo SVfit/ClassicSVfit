@@ -83,6 +83,10 @@ namespace classic_svFit
 
   const double GF = 1.166e-5; // in units of GeV^-2
 
+  const double conversionFactor = 1.e+10*square(hbar_c); // conversion factor from GeV^-2 to picobarn = 10^-40m//FIX ME store this
+  const double constFactor = 2.*conversionFactor/eigth(2.*M_PI);
+  const double matrixElementNorm = square(M_PI/(tauLeptonMass*GammaTau));// CV: multiply matrix element by factor (Pi/(mTau GammaTau))^2 from Luca's write-up
+
   //const double v2 = square(246.22); // GeV^2
   //-----------------------------------------------------------------------------
 
@@ -118,6 +122,17 @@ namespace classic_svFit
   double compCosThetaNuNu(double, double, double, double, double, double);
   double compPSfactor_tauToLepDecay(double, double, double, double, double, double, double);
   double compPSfactor_tauToHadDecay(double, double, double, double, double, double);
-}
 
+
+struct integrationParameters{
+
+    int idx_X_ = -1;
+    int idx_phi_ = -1;
+    int idx_VisPtShift_ = -1;
+    int idx_mNuNu_ = -1;
+
+    void reset();
+};
+
+}
 #endif

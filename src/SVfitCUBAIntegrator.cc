@@ -67,12 +67,12 @@ const int ncomp = 1;
 
 void *userdata = NULL;
 const int nvec = 1;
-const cubareal epsrel = 1E-3;
+const cubareal epsrel = 1E-1;
 const cubareal epsabs = 1E-12;
 const int flags = 2;
 const int seed = 0;
 const int mineval = 0;
-const int maxeval = 100000;
+const int maxeval = 1000;
 const int nstart =  1000;
 const int nincrease = 500;
 const int nbatch = 1000;

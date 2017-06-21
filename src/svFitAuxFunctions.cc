@@ -168,7 +168,6 @@ double compPSfactor_tauToLepDecay(double x, double visEn, double visP, double vi
   double visMass2 = square(visMass);
   double nunuMass2 = square(nunuMass);
   if ( x >= (visMass2/tauLeptonMass2) && x <= 1. && nunuMass2 < ((1. - x)*tauLeptonMass2) ) { // physical solution
-    const double GFfactor = square(GF)/square(TMath::Pi());
     double tauEn_rf = (tauLeptonMass2 + nunuMass2 - visMass2)/(2.*nunuMass);
     double visEn_rf = tauEn_rf - nunuMass;
     if ( !(tauEn_rf >= tauLeptonMass && visEn_rf >= visMass) ) return 0.;
@@ -205,9 +204,8 @@ double compPSfactor_tauToHadDecay(double x, double visEn, double visP, double vi
     double PSfactor = (visEn + nuEn)/(8.*visP*square(x)*TMath::Sqrt(square(visP) + square(nuP) + 2.*visP*nuP*cosThetaNu + tauLeptonMass2));
     //-------------------------------------------------------------------------
     // CV: multiply by constant matrix element,
-    //     chosen such that the branching fraction of the tau to decay into hadrons is reproduced
-    const double M2 = 16.*TMath::Pi()*cube(tauLeptonMass)*GammaTauToHad/(tauLeptonMass2 - visMass2);
-    PSfactor *= M2;
+    //     chosen such that the branching fraction of the tau to decay into hadrons is reproduced    
+    PSfactor *= M2/(tauLeptonMass2 - visMass2);
     //-------------------------------------------------------------------------
     return PSfactor;
   } else {

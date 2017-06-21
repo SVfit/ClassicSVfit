@@ -55,8 +55,21 @@ class ClassicSVfit
   void setHistogramAdapter(classic_svFit::HistogramAdapter* histogramAdapter);
   classic_svFit::HistogramAdapter* getHistogramAdapter() const;
 
-  /// run integration
-  void integrate(const std::vector<classic_svFit::MeasuredTauLepton>&, double, double, const TMatrixD&);
+  /// prepare the integrand
+  void prepareIntegrand(bool useHistoAdapter=true);
+
+  /// prepare input measurements
+  void prepareInput(const std::vector<classic_svFit::MeasuredTauLepton>& measuredTauLeptons,
+                    const double & measuredMETx, const double & measuredMETy,
+                    const TMatrixD& covMET);
+
+  /// run integration with Markov Chain
+  void integrate(const std::vector<classic_svFit::MeasuredTauLepton>&,
+                 const double &, const double &, const TMatrixD&);
+
+  /// run integration with Cuba library
+  float integrateCuba(const std::vector<classic_svFit::MeasuredTauLepton>&,
+                     const double &, const double &, const TMatrixD&);
 
   /// return flag indicating if algorithm succeeded to find valid solution
   bool isValidSolution() const;
@@ -72,8 +85,11 @@ class ClassicSVfit
    ///flag for choosing the integrator class
    bool useCuba_;
 
-   /// initialize Matkov Chain integrator class
+   /// initialize Markov Chain integrator class
    void initializeMCIntegrator();
+
+   /// initialize Cuba integrator class
+   void initializeCubaIntegrator();
 
    /// print MET and its covariance matrix
    void printMET() const;
@@ -85,19 +101,24 @@ class ClassicSVfit
    void printIntegrationRange() const;
 
     /// set integration indices and ranges for both legs
-   void setIntegrationParams();
+    /// when useMassConstraint is true reduce number of
+    ///dimension by using the mass contraint
+   void setIntegrationParams(bool useMassConstraint=false);
 
    /// set integration indices and ranges for given leg
-   void setLegIntegrationParams(unsigned int iLeg);
+   void setLegIntegrationParams(unsigned int iLeg, bool useMassConstraint=false);
 
    /// set integration ranges for given leg
    void setIntegrationRanges(unsigned int iLeg);
 
   classic_svFit::ClassicSVfitIntegrand* integrand_;
+  TH1 *hCubaMassShape;
 
   std::vector<classic_svFit::MeasuredTauLepton> measuredTauLeptons_;
   classic_svFit::Vector met_;
-  TMatrixD covMET_rounded;
+  TMatrixD covMET_;
+
+  double theIntegral, theIntegralErr;
 
   double diTauMassConstraint_ = -1.0;
 

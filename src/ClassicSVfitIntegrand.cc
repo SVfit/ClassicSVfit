@@ -140,9 +140,10 @@ namespace
 }
 
 void
-ClassicSVfitIntegrand::setInputs(const std::vector<MeasuredTauLepton>& measuredTauLeptons, double measuredMETx, double measuredMETy, const TMatrixD& covMET)
+ClassicSVfitIntegrand::setInputs(const std::vector<MeasuredTauLepton>& measuredTauLeptons,
+                                 double measuredMETx, double measuredMETy, const TMatrixD& covMET)
 {
-  if ( verbosity_ ) {
+  if ( verbosity_>=2 ) {
     std::cout << "<ClassicSVfitIntegrand::setInputs>:" << std::endl;
   }
 
@@ -210,22 +211,7 @@ ClassicSVfitIntegrand::setInputs(const std::vector<MeasuredTauLepton>& measuredT
 
   measuredMETx_ = measuredMETx;
   measuredMETy_ = measuredMETy;
-
-  // determine transfer matrix for MET
   invCovMET_ = covMET;
-  double covDet = invCovMET_.Determinant();
-  const_MET_ = 0.;
-  if ( covDet != 0 ) {
-    invCovMET_.Invert();
-    invCovMETxx_ = invCovMET_(0,0);
-    invCovMETxy_ = invCovMET_(0,1);
-    invCovMETyx_ = invCovMET_(1,0);
-    invCovMETyy_ = invCovMET_(1,1);
-    const_MET_ = 1./(2.*TMath::Pi()*TMath::Sqrt(covDet));
-  } else{
-    std::cerr << "Error: Cannot invert MET covariance Matrix (det=0) !!" << std::endl;
-    errorCode_ |= MatrixInversion;
-  }
 
 #ifdef USE_SVFITTF
   if ( useHadTauTF_ ) {
@@ -266,8 +252,59 @@ if(std::abs(visPtShift2-1)>1E-4 || vis2En_<0){
   }
 }
 
+double ClassicSVfitIntegrand::EvalMET_TF(const double & aMETx, const double & aMETy, const TMatrixD& covMET) const{
+
+// determine transfer matrix for MET
+  //double covDet = covMET.Determinant();
+
+    double invCovMETxx = covMET(1,1);
+    double invCovMETxy = -covMET(0,1);
+    double invCovMETyx = -covMET(1,0);
+    double invCovMETyy = covMET(0,0);
+    double covDet = invCovMETxx*invCovMETyy - invCovMETxy*invCovMETyx;
+
+  if( std::abs(covDet)<1E-10){
+    std::cerr << "Error: Cannot invert MET covariance Matrix (det=0) !!" << std::endl;
+    //errorCode_ |= MatrixInversion; FIXME
+    return 0;
+  }
+    double const_MET = 1./(2.*TMath::Pi()*TMath::Sqrt(covDet));
+
+// evaluate transfer function for MET/hadronic recoil
+  double residualX = aMETx - (nu1P4_.X() + nu2P4_.X());
+  double residualY = aMETy - (nu1P4_.Y() + nu2P4_.Y());
+#ifdef USE_SVFITTF
+  if ( rhoHadTau_ != 0. ) {
+
+    int tmpIndex = legIntegrationParams_[0].idx_VisPtShift_;
+    double visPtShift1 = ( tmpIndex != -1 && !leg1isLep_ ) ? (1./x[tmpIndex]) : 1.;
+
+    tmpIndex = legIntegrationParams_[1].idx_VisPtShift_;
+    double visPtShift2 = ( tmpIndex != -1 && !leg2isLep_ ) ? (1./x[tmpIndex]) : 1.;
+    if ( visPtShift1 < 1.e-2 || visPtShift2 < 1.e-2 ) return 0.;
+
+    residualX += (rhoHadTau_*((visPtShift1 - 1.)*measuredTauLepton1_.px() + (visPtShift2 - 1.)*measuredTauLepton2_.px()));
+    residualY += (rhoHadTau_*((visPtShift1 - 1.)*measuredTauLepton1_.py() + (visPtShift2 - 1.)*measuredTauLepton2_.py()));
+  }
+#endif
+  double pull2 = residualX*(invCovMETxx*residualX + invCovMETxy*residualY) +
+                 residualY*(invCovMETyx*residualX + invCovMETyy*residualY);
+  pull2/=covDet;
+
+  if ( verbosity_ >= 2 ) {
+      double sumNuPx = nu1P4_.X() + nu2P4_.X();
+      double sumNuPy = nu1P4_.Y() + nu2P4_.Y();
+    std::cout << "TF(met): recPx = " << measuredMETx_ << ", recPy = " << measuredMETy_
+                     << ", genPx = " << sumNuPx       << ", genPy = " << sumNuPy
+                     << " pull2 = "<<pull2
+                     << " prob = "<<const_MET*TMath::Exp(-0.5*pull2)
+                     <<std::endl;
+  }
+  return const_MET*TMath::Exp(-0.5*pull2);
+}
+
 double
-ClassicSVfitIntegrand::Eval(const double* x) const
+ClassicSVfitIntegrand::EvalPS(const double* x) const
 {
   if ( verbosity_ >= 2 ) {
     std::cout << "<ClassicSVfitIntegrand::Eval(const double*)>:" << std::endl;
@@ -280,9 +317,7 @@ ClassicSVfitIntegrand::Eval(const double* x) const
   }
 
   // in case of initialization errors don't start to do anything
-  if ( errorCode_ != 0 ) {
-    return 0.;
-  }
+  if ( errorCode_ != 0 ) { return 0.; }
 
   int tmpIndex = legIntegrationParams_[0].idx_VisPtShift_;
   double visPtShift1 = ( tmpIndex != -1 && !leg1isLep_ ) ? (1./x[tmpIndex]) : 1.;
@@ -291,7 +326,7 @@ ClassicSVfitIntegrand::Eval(const double* x) const
   double visPtShift2 = ( tmpIndex != -1 && !leg2isLep_ ) ? (1./x[tmpIndex]) : 1.;
   if ( visPtShift1 < 1.e-2 || visPtShift2 < 1.e-2 ) return 0.;
 
-  //FIXME AK computeVisMom(visPtShift1, visPtShift2);
+  //FIXME computeVisMom(visPtShift1, visPtShift2);
 
   // compute visible energy fractions for both taus
   tmpIndex = legIntegrationParams_[0].idx_X_;
@@ -353,8 +388,12 @@ ClassicSVfitIntegrand::Eval(const double* x) const
   nuEn = vis2En_*(1. - x2)/x2;
 
   tmpIndex = legIntegrationParams_[1].idx_mNuNu_;
-  double nu2Mass = ( tmpIndex != -1 ) ? TMath::Sqrt(x[tmpIndex]) : 0.;
-  double nu2P = TMath::Sqrt(TMath::Max(0., nuEn*nuEn - square(nu2Mass)));
+  double nu2Mass = 0;
+  double nu2P = nuEn;
+  if(tmpIndex != -1){
+    nu2Mass = TMath::Sqrt(x[tmpIndex]);
+    nu2P = TMath::Sqrt(TMath::Max(0., nuEn*nuEn - x[tmpIndex]));
+  }
 
   tmpIndex = legIntegrationParams_[1].idx_phi_;
   assert(tmpIndex != -1);
@@ -382,21 +421,7 @@ ClassicSVfitIntegrand::Eval(const double* x) const
   //std::cout << "tau2: En = " << tau2En << ", Pt = " << TMath::Sqrt(tau2Px*tau2Px + tau2Py*tau2Py) << std::endl;
   tau2P4_.SetPxPyPzE(tau2Px, tau2Py, tau2Pz, tau2En);
 
-  // evaluate transfer function for MET/hadronic recoil
-  double sumNuPx = nu1P4_.X() + nu2P4_.X();
-  double sumNuPy = nu1P4_.Y() + nu2P4_.Y();
-  double residualX = measuredMETx_ - sumNuPx;
-  double residualY = measuredMETy_ - sumNuPy;
-#ifdef USE_SVFITTF
-  if ( rhoHadTau_ != 0. ) {
-    residualX += (rhoHadTau_*((visPtShift1 - 1.)*measuredTauLepton1_.px() + (visPtShift2 - 1.)*measuredTauLepton2_.px()));
-    residualY += (rhoHadTau_*((visPtShift1 - 1.)*measuredTauLepton1_.py() + (visPtShift2 - 1.)*measuredTauLepton2_.py()));
-  }
-#endif
-  double pull2 = residualX*(invCovMETxx_*residualX + invCovMETxy_*residualY) + residualY*(invCovMETyx_*residualX + invCovMETyy_*residualY);
-  double prob_TF_met = const_MET_*TMath::Exp(-0.5*pull2);
   if ( verbosity_ >= 2 ) {
-    std::cout << "TF(met): recPx = " << measuredMETx_ << ", recPy = " << measuredMETy_ << ", genPx = " << sumNuPx << ", genPy = " << sumNuPy << " --> prob = " << prob_TF_met << std::endl;
     std::cout << "leg1: En = " << vis1P4_.energy() << ", Px = " << vis1P4_.px() << ", Py = " << vis1P4_.py() << ", Pz = " << vis1P4_.pz() << ";"
               << " Pt = " << vis1P4_.pt() << ", eta = " << vis1P4_.eta() << ", phi = " << vis1P4_.phi() << ", mass = " << vis1P4_.mass()
               << " (x = " << x1 << ")" << std::endl;
@@ -420,7 +445,7 @@ ClassicSVfitIntegrand::Eval(const double* x) const
     //double phiInvis2 = compPhiInvis(vis2P4_, nu2P4);
     //std::cout << "phiInvis2 = " << phiInvis2 << std::endl;
   }
-  double prob_TF = prob_TF_met;
+  double prob_TF = 1.0;
 
 #ifdef USE_SVFITTF
   // evaluate transfer functions for tau energy reconstruction
@@ -482,9 +507,17 @@ ClassicSVfitIntegrand::Eval(const double* x) const
     prob = 0.;
   }
 
-  // CV: fill histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
-  histogramAdapter_->setTau1P4(tau1P4_);
-  histogramAdapter_->setTau2P4(tau2P4_);
-
   return prob;
+}
+
+double ClassicSVfitIntegrand::Eval(const double* x) const
+{
+
+  // CV: fill histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
+    if(histogramAdapter_){
+      histogramAdapter_->setTau1P4(tau1P4_);
+      histogramAdapter_->setTau2P4(tau2P4_);
+    }
+  return EvalPS(x)*EvalMET_TF(measuredMETx_, measuredMETy_, invCovMET_);
+
 }

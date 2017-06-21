@@ -37,7 +37,10 @@ namespace classic_svFit
     virtual double fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const = 0;
 
     void bookHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met);
+    const TH1* getHistogram() const;
     void writeHistogram() const;
+
+    void fillHistogram(const double & value, const double & weight);
 
     void fillHistogram(
         const LorentzVector& tau1P4, const LorentzVector& tau2P4,
@@ -57,35 +60,35 @@ namespace classic_svFit
     virtual TH1* createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
     virtual double fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
   };
-  
+
   class DiTauSystemEtaSVfitQuantity : public SVfitQuantity
   {
    public:
     virtual TH1* createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
     virtual double fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
   };
-  
+
   class DiTauSystemPhiSVfitQuantity : public SVfitQuantity
   {
    public:
     virtual TH1* createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
     virtual double fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
   };
-  
+
   class DiTauSystemMassSVfitQuantity : public SVfitQuantity
   {
    public:
     virtual TH1* createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
     virtual double fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
   };
-  
+
   class TransverseMassSVfitQuantity : public SVfitQuantity
   {
    public:
     virtual TH1* createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
     virtual double fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
   };
-  
+
   class HistogramAdapter : public ROOT::Math::Functor
   {
    public:
@@ -97,11 +100,12 @@ namespace classic_svFit
     void setTau2P4(const LorentzVector& tau2P4);
 
     unsigned int registerQuantity(SVfitQuantity* quantity);
+    const SVfitQuantity* getQuantity(unsigned int iQuantity) const;
     inline unsigned int getNQuantities() const { return quantities_.size(); }
 
     void bookHistograms(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met);
     void writeHistograms(const std::string& likelihoodFileName) const;
-    
+
     double extractValue(size_t index) const;
     double extractUncertainty(size_t index) const;
     double extractLmax(size_t index) const;
@@ -117,15 +121,15 @@ namespace classic_svFit
 
    protected:
     mutable std::vector<SVfitQuantity*> quantities_;
-    
+
     LorentzVector vis1P4_;
     LorentzVector vis2P4_;
     Vector met_;
-    
+
     LorentzVector tau1P4_;
     LorentzVector tau2P4_;
   };
-  
+
   class DiTauSystemHistogramAdapter : public HistogramAdapter
   {
    public:
@@ -147,7 +151,7 @@ namespace classic_svFit
     double getTransverseMass() const;
     double getTransverseMassErr() const;
     double getTransverseMassLmax() const;
-   
+
    private:
     unsigned int indexPt_ = 0;
     unsigned int indexEta_ = 0;

@@ -126,9 +126,16 @@ void SVfitQuantity::bookHistogram(const LorentzVector& vis1P4, const LorentzVect
   histogram_ = createHistogram(vis1P4, vis2P4, met);
 }
 
+const TH1* SVfitQuantity::getHistogram() const { return histogram_;}
+
 void SVfitQuantity::writeHistogram() const
 {
   if (histogram_ != nullptr) histogram_->Write();
+}
+
+void SVfitQuantity::fillHistogram(const double & value, const double & weight)
+{
+  histogram_->Fill(value, weight);
 }
 
 void SVfitQuantity::fillHistogram(
@@ -241,6 +248,12 @@ unsigned int HistogramAdapter::registerQuantity(SVfitQuantity* quantity)
 {
   quantities_.push_back(quantity);
   return getNQuantities() - 1;
+}
+
+const SVfitQuantity* HistogramAdapter::getQuantity(unsigned int iQuantity) const
+{
+  if(iQuantity>=getNQuantities()) return 0;
+  else return  quantities_[iQuantity];
 }
 
 void HistogramAdapter::bookHistograms(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met)

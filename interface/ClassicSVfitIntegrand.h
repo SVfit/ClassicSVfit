@@ -61,7 +61,13 @@ namespace classic_svFit
     /// set momenta of visible tau decay products and of reconstructed missing transverse energy
     void setInputs(const std::vector<classic_svFit::MeasuredTauLepton>&, double, double, const TMatrixD&);
 
-    /// evaluate integrand for given value of integration variables x
+    /// evaluate Phase Space part of the integrand for given value of integration variables x
+    double EvalPS(const double* x) const;
+
+    /// evaluate the MET TF part of the integral.
+    double EvalMET_TF(const double & aMETx, const double & aMETy, const TMatrixD&) const;
+
+    /// evaluate the full integrand for given value of integration variables x
     double Eval(const double* x) const;
 
     /// static pointer to this (needed for interfacing the likelihood function calls to Markov Chain integration)

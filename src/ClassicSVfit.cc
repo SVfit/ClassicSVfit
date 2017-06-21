@@ -28,7 +28,7 @@ namespace
                     const int *ncomp, double ff[], void *userdata)
   {
 
-    double xx[5];
+    double xx[6];
     //double xMin_[] = {0,-3.14159,0,0,-3.14159};
     //double xMax_[] = {1,3.14159,3.14159,1,3.14159};
 
@@ -37,11 +37,13 @@ namespace
 
 
     for ( unsigned iDimension = 0; iDimension < *ndim; ++iDimension ) {
-    double q_i = qq[iDimension];
+    const double & q_i = qq[iDimension];
     xx[iDimension] = (1. - q_i)*xMin_[iDimension] + q_i*xMax_[iDimension];
   }
 
+    //double commonPart = 1E16*ClassicSVfitIntegrand::gSVfitIntegrand->Eval(xx);
     ff[0] = 1E16*ClassicSVfitIntegrand::gSVfitIntegrand->Eval(xx);
+
     return 0;
   }
 }
@@ -67,10 +69,7 @@ ClassicSVfit::ClassicSVfit(int verbosity)
   integrand_ = new ClassicSVfitIntegrand(verbosity_);
   clock_ = new TBenchmark();
 
-  covMET_rounded.ResizeTo(2,2);
-
-  if(!useCuba_) initializeMCIntegrator();
-  else  intCubaAlgo_ = new SVfitCUBAIntegrator(verbosity_);
+  covMET_.ResizeTo(2,2);
 
 }
 
@@ -123,7 +122,13 @@ void ClassicSVfit::setRhoHadTau(double rhoHadTau)
 }
 #endif
 
-void ClassicSVfit::setUseCuba(bool useCuba) { useCuba_ = useCuba;}
+void ClassicSVfit::setUseCuba(bool useCuba) {
+   useCuba_ = useCuba;
+
+   if(useCuba_) initializeCubaIntegrator();
+   else initializeMCIntegrator();
+
+ }
 
 void ClassicSVfit::setMaxObjFunctionCalls(unsigned maxObjFunctionCalls)
 {
@@ -154,7 +159,8 @@ void ClassicSVfit::fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, I
     f = cubaIntegral;
 }
 
-void ClassicSVfit::initializeMCIntegrator(){
+void ClassicSVfit::initializeMCIntegrator()
+{
   //unsigned numChains = TMath::Nint(maxObjFunctionCalls_/100000.);
   unsigned numChains = 1;
   unsigned numIterBurnin = TMath::Nint(0.10*maxObjFunctionCalls_/numChains);
@@ -175,16 +181,22 @@ void ClassicSVfit::initializeMCIntegrator(){
   intAlgo_->registerCallBackFunction(*histogramAdapter_);
 }
 
-void ClassicSVfit::printMET() const {
+void ClassicSVfit::initializeCubaIntegrator()
+{
+ intCubaAlgo_ = new SVfitCUBAIntegrator(verbosity_);
+}
+
+void ClassicSVfit::printMET() const
+{
 
   std::cout << "MET: Px = " << met_.X() << ", Py = " << met_.Y() << std::endl;
     std::cout << "covMET:" << std::endl;
-    covMET_rounded.Print();
+    covMET_.Print();
     TMatrixDSym covMET_sym(2);
-    covMET_sym(0,0) = covMET_rounded[0][0];
-    covMET_sym(0,1) = covMET_rounded[0][1];
-    covMET_sym(1,0) = covMET_rounded[1][0];
-    covMET_sym(1,1) = covMET_rounded[1][1];
+    covMET_sym(0,0) = covMET_[0][0];
+    covMET_sym(0,1) = covMET_[0][1];
+    covMET_sym(1,0) = covMET_[1][0];
+    covMET_sym(1,1) = covMET_[1][1];
     TMatrixD EigenVectors(2,2);
     EigenVectors = TMatrixDSymEigen(covMET_sym).GetEigenVectors();
     std::cout << "Eigenvectors =  { " << EigenVectors(0,0) << ", " << EigenVectors(1,0) << " (phi = " << TMath::ATan2(EigenVectors(1,0), EigenVectors(0,0)) << ") },"
@@ -208,6 +220,8 @@ void ClassicSVfit::printLeptons() const{
 
 void ClassicSVfit::printIntegrationRange() const {
 
+  std::cout<<"numDimensions_: "<<numDimensions_<<std::endl;
+
   for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
       std::cout << " fitParameter #" << iDimension << ": xl = " << xl_[iDimension] << ", xu = " << xu_[iDimension];
       if ( (int)iDimension == legIntegrationParams_[0].idx_X_         ) std::cout << " (leg1:X)";
@@ -222,21 +236,26 @@ void ClassicSVfit::printIntegrationRange() const {
     }
 }
 
-void ClassicSVfit::setIntegrationParams(){
+void ClassicSVfit::setIntegrationParams(bool useMassConstraint)
+{
 
   numDimensions_ = 0;
   legIntegrationParams_[0].reset();
    legIntegrationParams_[1].reset();
-   setLegIntegrationParams(0);
-   setLegIntegrationParams(1);
+   setLegIntegrationParams(0, false);
+   setLegIntegrationParams(1, useMassConstraint);
+   if ( verbosity_ >= 1 ) printIntegrationRange();
 }
 
-void ClassicSVfit::setLegIntegrationParams(unsigned int iLeg){
+void ClassicSVfit::setLegIntegrationParams(unsigned int iLeg, bool useMassConstraint)
+{
 
     const MeasuredTauLepton& measuredTauLepton = measuredTauLeptons_[iLeg];
 
-    if (!(iLeg == 1  && diTauMassConstraint_ > 0.0)) legIntegrationParams_[iLeg].idx_X_ = numDimensions_++;
+    if (!useMassConstraint) legIntegrationParams_[iLeg].idx_X_ = numDimensions_++;
+
     legIntegrationParams_[iLeg].idx_phi_ = numDimensions_++;
+
     if ( measuredTauLepton.type() == MeasuredTauLepton::kTauToHadDecay) {
 	      if ( useHadTauTF_ ) legIntegrationParams_[iLeg].idx_VisPtShift_ = numDimensions_++;
 	  } else {
@@ -249,11 +268,11 @@ void ClassicSVfit::setIntegrationRanges(unsigned int iLeg){
 
   const classic_svFit::integrationParameters & aIntParams = legIntegrationParams_[iLeg];
 
-  xl_[aIntParams.idx_X_] = 0.;
+  if(aIntParams.idx_X_!=-1) xl_[aIntParams.idx_X_] = 0.;
 #ifdef USE_SVFITTF
-  xu_[aIntParams.idx_X_] = 2.; // upper integration bound for x1' = visPtShift1*x1
+  if(aIntParams.idx_X_!=-1) xu_[aIntParams.idx_X_] = 2.; // upper integration bound for x1' = visPtShift1*x1
 #else
-  xu_[aIntParams.idx_X_] = 1.;
+  if(aIntParams.idx_X_!=-1) xu_[aIntParams.idx_X_] = 1.;
 #endif
   xl_[aIntParams.idx_phi_] = -TMath::Pi();
   xu_[aIntParams.idx_phi_] = +TMath::Pi();
@@ -282,15 +301,9 @@ namespace
   };
 }
 
-void
-ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons,
-                        double measuredMETx, double measuredMETy,
-                        const TMatrixD& covMET)
-{
-  if ( verbosity_ >= 1 ) std::cout << "<ClassicSVfit::integrate>:" << std::endl;
-
-  clock_->Reset();
-  clock_->Start("<ClassicSVfit::integrate>");
+void ClassicSVfit::prepareInput(const std::vector<MeasuredTauLepton>& measuredTauLeptons,
+                                const double & measuredMETx , const double & measuredMETy,
+                                const TMatrixD& covMET){
 
   measuredTauLeptons_ = measuredTauLeptons;
   for (std::vector<MeasuredTauLepton>::iterator measuredTauLepton = measuredTauLeptons_.begin();
@@ -301,23 +314,17 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   met_.SetX(roundToNdigits(measuredMETx));
   met_.SetY(roundToNdigits(measuredMETy));
   met_.SetZ(0.0);
-  covMET_rounded[0][0] = roundToNdigits(covMET[0][0]);
-  covMET_rounded[1][0] = roundToNdigits(covMET[1][0]);
-  covMET_rounded[0][1] = roundToNdigits(covMET[0][1]);
-  covMET_rounded[1][1] = roundToNdigits(covMET[1][1]);
+  covMET_[0][0] = roundToNdigits(covMET[0][0]);
+  covMET_[1][0] = roundToNdigits(covMET[1][0]);
+  covMET_[0][1] = roundToNdigits(covMET[0][1]);
+  covMET_[1][1] = roundToNdigits(covMET[1][1]);
   if ( verbosity_ >= 1 ) printMET();
+}
 
-  setIntegrationParams();
-  if ( verbosity_ >= 1 ) printIntegrationRange();
+void ClassicSVfit::prepareIntegrand(bool useHistoAdapter){
 
-  // CV: book histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
-  if ( measuredTauLeptons_.size() == 2 ) {
-    histogramAdapter_->setMeasurement(measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4(), met_);
-    histogramAdapter_->bookHistograms(measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4(), met_);
-  }
-
-  integrand_->setInputs(measuredTauLeptons_, met_.X(), met_.Y(), covMET_rounded);
-  integrand_->setHistogramAdapter(histogramAdapter_);
+  integrand_->setInputs(measuredTauLeptons_, met_.X(), met_.Y(), covMET_);
+  if(useHistoAdapter) integrand_->setHistogramAdapter(histogramAdapter_);
 #ifdef USE_SVFITTF
   if ( useHadTauTF_ ) integrand_->enableHadTauTF();
   else integrand_->disableHadTauTF();
@@ -327,38 +334,69 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   integrand_->setNumDimensions(numDimensions_);
   ClassicSVfitIntegrand::gSVfitIntegrand = integrand_;
 
-  double integral = 0.;
-  double integralErr = 0.;
-  intAlgo_->integrate(&g_C, xl_, xu_, numDimensions_, integral, integralErr);
+}
 
-/*
-/////TEST
-TFile file("CubaTest.root","RECREATE");
-double visMass = ( measuredTauLeptons_[0].p4() + measuredTauLeptons_[1].p4()).mass();
-double minMass = visMass/1.0125;
-double maxMass = TMath::Max(1.e+4, 1.e+1*minMass);
-TH1D *h = (TH1D*)HistogramTools::makeHistogram("Cuba_histogramMass", minMass, maxMass, 1.025);
 
-  double cubaIntegral;
-  double cubaIntegralErr;
+float ClassicSVfit::integrateCuba(const std::vector<MeasuredTauLepton>& measuredTauLeptons,
+                                  const double & measuredMETx, const double & measuredMETy,
+                                  const TMatrixD& covMET){
 
-  maxMass = 0;
+if ( verbosity_ >= 1 ) std::cout << "<ClassicSVfit::integrateCuba>:" << std::endl;
+
+  clock_->Reset();
+  clock_->Start("<ClassicSVfit::integrateCuba>");
+
+  prepareInput(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+  setIntegrationParams(true);
+  prepareIntegrand(false);
+  if(!intCubaAlgo_) initializeCubaIntegrator();
+
+  float maxMass = 0;
   float maxIntegral = 0;
-  for(unsigned int iMassPoint=1;iMassPoint<h->GetNbinsX();++iMassPoint){
-    float testMass = h->GetBinCenter(iMassPoint);
+  const TH1 *hMass = histogramAdapter_->getQuantity(3)->getHistogram();
+  for(unsigned int iMassPoint=1;iMassPoint<hMass->GetNbinsX();++iMassPoint){
+    float testMass = hMass->GetBinCenter(iMassPoint);
     setDiTauMassConstraint(testMass);
-    intCubaAlgo_->integrate(&cubaIntegrand, xl_, xu_, numDimensions_, cubaIntegral, cubaIntegralErr);
-
-    h->SetBinContent(iMassPoint, cubaIntegral);
-    if(cubaIntegral>maxIntegral){
-      maxIntegral = cubaIntegral;
+    intCubaAlgo_->integrate(&cubaIntegrand, xl_, xu_, numDimensions_, theIntegral, theIntegralErr);
+    if(theIntegral>maxIntegral){
+      maxIntegral = theIntegral;
       maxMass = testMass;
     }
   }
-  file.Write();
-  std::cout<<"CUBA integral. Mass for max integral: "
-            <<maxMass<<" integral: "<<maxIntegral<<std::endl;
-            */
+
+  clock_->Stop("<ClassicSVfit::integrateCuba>");
+  numSeconds_cpu_ = clock_->GetCpuTime("<ClassicSVfit::integrateCuba>");
+  numSeconds_real_ = clock_->GetRealTime("<ClassicSVfit::integrateCuba>");
+
+  if ( verbosity_ >= 1 ) {
+    clock_->Show("<ClassicSVfit::integrateCuba>");
+  }
+
+  return maxMass;
+}
+
+void
+ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons,
+                        const double & measuredMETx, const double & measuredMETy,
+                        const TMatrixD& covMET)
+{
+  if ( verbosity_ >= 1 ) std::cout << "<ClassicSVfit::integrate>:" << std::endl;
+
+  clock_->Reset();
+  clock_->Start("<ClassicSVfit::integrate>");
+
+  prepareInput(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+  setIntegrationParams();
+
+  // CV: book histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
+  if ( measuredTauLeptons_.size() == 2 ) {
+    histogramAdapter_->setMeasurement(measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4(), met_);
+    histogramAdapter_->bookHistograms(measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4(), met_);
+  }
+
+  prepareIntegrand();
+  if(!intAlgo_) initializeMCIntegrator();if(!intAlgo_) initializeMCIntegrator();
+  intAlgo_->integrate(&g_C, xl_, xu_, numDimensions_, theIntegral, theIntegralErr);
 
   if ( likelihoodFileName_ != "" ) {
     histogramAdapter_->writeHistograms(likelihoodFileName_);

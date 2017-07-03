@@ -73,7 +73,7 @@ return 0;
         10 three-prong without neutral pions
   */
 
-  int verbosity = 0;
+  int verbosity = 1;
   ClassicSVfit svFitAlgo(verbosity);
 #ifdef USE_SVFITTF
   //HadTauTFCrystalBall2* hadTauTF = new HadTauTFCrystalBall2();
@@ -84,13 +84,10 @@ return 0;
   svFitAlgo.addLogM_fixed(true, 6.);
   //svFitAlgo.addLogM_dynamic(true, "(m/1000.)*15.");
   //svFitAlgo.setMaxObjFunctionCalls(100000); // CV: default is 100000 evaluations of integrand per event
-  svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
+  //svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
 
 
   for(unsigned int iTry=0;iTry<1;++iTry) svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
-
-  float maxMass = 0;
-  for(unsigned int iTry=0;iTry<1;++iTry) maxMass = svFitAlgo.integrateCuba(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
 
   bool isValidSolution = svFitAlgo.isValidSolution();
   isValidSolution = true;
@@ -100,6 +97,10 @@ return 0;
   double massErr = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMassErr();
   double transverseMass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getTransverseMass();
   double transverseMassErr = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getTransverseMassErr();
+
+  float maxMass = 0;
+  for(unsigned int iTry=0;iTry<1;++iTry) maxMass = svFitAlgo.integrateCuba(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+
   if ( isValidSolution ) {
     std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 115.746 +/- 88.6066),"
               << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 114.242 +/- 87.4277)"

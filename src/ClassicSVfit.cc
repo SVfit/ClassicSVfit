@@ -336,21 +336,31 @@ if ( verbosity_ >= 1 ) std::cout << "<ClassicSVfit::integrateCuba>:" << std::end
   prepareInput(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
   setIntegrationParams(true);
   prepareIntegrand(false);
+
   if(!intCubaAlgo_) initializeCubaIntegrator();
 
   float maxMass = 0;
   float maxIntegral = 0;
+
+  if( measuredTauLeptons_.size() == 2 ) {
+    histogramAdapter_->setMeasurement(measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4(), met_);
+    histogramAdapter_->bookHistograms(measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4(), met_);
+  }
   const TH1 *hMass = histogramAdapter_->getQuantity(3)->getHistogram();
+  TH1 *hMassCuba = 0;
+  if(likelihoodFileName_.size()) hMassCuba = (TH1*)hMass->Clone("mass_Cuba");
+    
   for(unsigned int iMassPoint=1;iMassPoint<hMass->GetNbinsX();++iMassPoint){
     float testMass = hMass->GetBinCenter(iMassPoint);
     setDiTauMassConstraint(testMass);
     intCubaAlgo_->integrate(&cubaIntegrand, xl_, xu_, numDimensions_, theIntegral, theIntegralErr);
+    if(hMassCuba) hMassCuba->Fill(testMass,theIntegral);
     if(theIntegral>maxIntegral){
       maxIntegral = theIntegral;
       maxMass = testMass;
     }
   }
-
+  
   clock_->Stop("<ClassicSVfit::integrateCuba>");
   numSeconds_cpu_ = clock_->GetCpuTime("<ClassicSVfit::integrateCuba>");
   numSeconds_real_ = clock_->GetRealTime("<ClassicSVfit::integrateCuba>");
@@ -358,6 +368,12 @@ if ( verbosity_ >= 1 ) std::cout << "<ClassicSVfit::integrateCuba>:" << std::end
   if ( verbosity_ >= 1 ) {
     clock_->Show("<ClassicSVfit::integrateCuba>");
   }
+
+  if(likelihoodFileName_.size()){
+    TFile file(("Cuba_"+likelihoodFileName_).c_str(),"RECREATE");
+    hMassCuba->SetDirectory(&file);
+    file.Write();
+    }
 
   return maxMass;
 }
@@ -382,7 +398,7 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   }
 
   prepareIntegrand();
-  if(!intAlgo_) initializeMCIntegrator();if(!intAlgo_) initializeMCIntegrator();
+  if(!intAlgo_) initializeMCIntegrator();
   intAlgo_->integrate(&g_C, xl_, xu_, numDimensions_, theIntegral, theIntegralErr);
 
   if ( likelihoodFileName_ != "" ) {

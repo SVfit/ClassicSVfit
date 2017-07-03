@@ -278,8 +278,6 @@ return EvalMET_TF(measuredMETx_, measuredMETy_, invCovMET_);
 double ClassicSVfitIntegrand::EvalMET_TF(const double & aMETx, const double & aMETy, const TMatrixD& covMET) const{
 
 // determine transfer matrix for MET
-  //double covDet = covMET.Determinant();
-
     double invCovMETxx = covMET(1,1);
     double invCovMETxy = -covMET(0,1);
     double invCovMETyx = -covMET(1,0);
@@ -288,7 +286,7 @@ double ClassicSVfitIntegrand::EvalMET_TF(const double & aMETx, const double & aM
 
   if( std::abs(covDet)<1E-10){
     std::cerr << "Error: Cannot invert MET covariance Matrix (det=0) !!" << std::endl;
-    //errorCode_ |= MatrixInversion; FIXME
+    //errorCode_ |= MatrixInversion; FIXME violates const
     return 0;
   }
     double const_MET = 1./(2.*TMath::Pi()*TMath::Sqrt(covDet));
@@ -329,10 +327,9 @@ double ClassicSVfitIntegrand::EvalMET_TF(const double & aMETx, const double & aM
 double
 ClassicSVfitIntegrand::EvalPS(const double* q) const
 {
-
   rescaleX(q);
 
-  if ( verbosity_ >= 2 ) {
+  if ( verbosity_ >= 2 ) {   
     std::cout << "<ClassicSVfitIntegrand::Eval(const double*)>:" << std::endl;
     std::cout << " x = { ";
     for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
@@ -538,12 +535,11 @@ ClassicSVfitIntegrand::EvalPS(const double* q) const
 
 double ClassicSVfitIntegrand::Eval(const double* x) const
 {
-
   // CV: fill histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
     if(histogramAdapter_){
       histogramAdapter_->setTau1P4(tau1P4_);
       histogramAdapter_->setTau2P4(tau2P4_);
     }
-  return EvalPS(x)*EvalMET_TF();
 
+    return EvalPS(x)*EvalMET_TF();
 }

@@ -45,6 +45,8 @@ namespace classic_svFit
 
     void setNumDimensions(unsigned numDimensions);
 
+    void setIntegrationRanges(const double* xl, const double* xu);
+
     void computeVisMom(const double & visPtShift1, const double & visPtShift2);
 
 #ifdef USE_SVFITTF
@@ -67,8 +69,16 @@ namespace classic_svFit
     /// evaluate the MET TF part of the integral.
     double EvalMET_TF(const double & aMETx, const double & aMETy, const TMatrixD&) const;
 
-    /// evaluate the full integrand for given value of integration variables x
-    double Eval(const double* x) const;
+    /// evaluate the MET TF part of the integral using current values of the MET variables
+    double EvalMET_TF() const;
+
+    /// evaluate the full integrand for given value of integration variables q.
+    /// q is given in standarised range [0,1] for each dimension.
+    double Eval(const double* q) const;
+
+    ///Transform the values fo integration variables from [0,1] to
+    ///desires [xMin,xMax] range;
+    void rescaleX(const double* q) const;
 
     /// static pointer to this (needed for interfacing the likelihood function calls to Markov Chain integration)
     static const ClassicSVfitIntegrand* gSVfitIntegrand;
@@ -135,8 +145,11 @@ namespace classic_svFit
     double rhoHadTau_;
 #endif
 
-    classic_svFit::integrationParameters legIntegrationParams_[2];
+    classic_svFit::integrationParameters legIntegrationParams_[classic_svFit::numberOfLegs];
     unsigned numDimensions_;
+    mutable double xMin_[classic_svFit::maxNumberOfDimensions];
+    mutable double xMax_[classic_svFit::maxNumberOfDimensions];
+    mutable double x_[classic_svFit::maxNumberOfDimensions];
 
     /// flag to enable/disable addition of log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution
     bool addLogM_fixed_;

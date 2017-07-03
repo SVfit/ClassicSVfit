@@ -16,7 +16,7 @@ using namespace classic_svFit;
 
 namespace
 {
-  double g_C(double* x, size_t dim, void* param)
+  double g_C(const double* x, size_t dim, void* param)
   {
     //std::cout << "<g_C>:" << std::endl;
     double retVal = 1E16*ClassicSVfitIntegrand::gSVfitIntegrand->Eval(x);
@@ -26,23 +26,9 @@ namespace
 
   int cubaIntegrand(const int *ndim, const double qq[],
                     const int *ncomp, double ff[], void *userdata)
-  {
-
-    double xx[6];
-    //double xMin_[] = {0,-3.14159,0,0,-3.14159};
-    //double xMax_[] = {1,3.14159,3.14159,1,3.14159};
-
-    double xMin_[] = {0,-3.14159,0,-3.14159};
-    double xMax_[] = {1,3.14159,3.14159,3.14159};
-
-
-    for ( unsigned iDimension = 0; iDimension < *ndim; ++iDimension ) {
-    const double & q_i = qq[iDimension];
-    xx[iDimension] = (1. - q_i)*xMin_[iDimension] + q_i*xMax_[iDimension];
-  }
-
+  {        
     //double commonPart = 1E16*ClassicSVfitIntegrand::gSVfitIntegrand->Eval(xx);
-    ff[0] = 1E16*ClassicSVfitIntegrand::gSVfitIntegrand->Eval(xx);
+    ff[0] = 1E16*ClassicSVfitIntegrand::gSVfitIntegrand->Eval(qq);
 
     return 0;
   }
@@ -332,6 +318,7 @@ void ClassicSVfit::prepareIntegrand(bool useHistoAdapter){
   integrand_->setLegIntegrationParams(0,legIntegrationParams_[0]);
   integrand_->setLegIntegrationParams(1,legIntegrationParams_[1]);
   integrand_->setNumDimensions(numDimensions_);
+  integrand_->setIntegrationRanges(xl_, xu_);
   ClassicSVfitIntegrand::gSVfitIntegrand = integrand_;
 
 }

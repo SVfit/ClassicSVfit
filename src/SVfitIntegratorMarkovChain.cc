@@ -511,7 +511,7 @@ void SVfitIntegratorMarkovChain::updateX(const std::vector<double>& q)
 
 double SVfitIntegratorMarkovChain::evalProb(const std::vector<double>& q)
 {
-  updateX(q);
-  double prob = (*integrand_)(x_, numDimensions_, 0);
+  //updateX(q);
+  double prob = (*integrand_)(q.data(), numDimensions_, 0);
   return prob;
 }

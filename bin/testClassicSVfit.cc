@@ -84,13 +84,13 @@ return 0;
   svFitAlgo.addLogM_fixed(true, 6.);
   //svFitAlgo.addLogM_dynamic(true, "(m/1000.)*15.");
   //svFitAlgo.setMaxObjFunctionCalls(100000); // CV: default is 100000 evaluations of integrand per event
-  //svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
+  svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
 
 
-  for(unsigned int iTry=0;iTry<10;++iTry) svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+  for(unsigned int iTry=0;iTry<1;++iTry) svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
 
   float maxMass = 0;
-  //for(unsigned int iTry=0;iTry<1;++iTry) maxMass = svFitAlgo.integrateCuba(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+  for(unsigned int iTry=0;iTry<1;++iTry) maxMass = svFitAlgo.integrateCuba(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
 
   bool isValidSolution = svFitAlgo.isValidSolution();
   isValidSolution = true;

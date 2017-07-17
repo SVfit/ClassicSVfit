@@ -102,6 +102,13 @@ void ClassicSVfitIntegrand::setLegIntegrationParams(unsigned int iLeg,
                                                 { legIntegrationParams_[iLeg] = aParams;}
 void ClassicSVfitIntegrand::setNumDimensions(unsigned numDimensions) { numDimensions_ = numDimensions; }
 
+void ClassicSVfitIntegrand::setIntegrationRanges(const double* xl, const double* xu){
+ for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
+    xMin_[iDimension] = xl[iDimension];
+    xMax_[iDimension] = xu[iDimension];
+  }
+}
+
 #ifdef USE_SVFITTF
 void ClassicSVfitIntegrand::setHadTauTF(const HadTauTFBase* hadTauTF)
 {
@@ -252,11 +259,25 @@ if(std::abs(visPtShift2-1)>1E-4 || vis2En_<0){
   }
 }
 
+void ClassicSVfitIntegrand::rescaleX(const double* q) const
+{
+  for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
+    const double & q_i = q[iDimension];
+    x_[iDimension] = (1. - q_i)*xMin_[iDimension] + q_i*xMax_[iDimension];
+  }
+}
+
+
+double ClassicSVfitIntegrand::EvalMET_TF() const{
+
+return EvalMET_TF(measuredMETx_, measuredMETy_, invCovMET_);
+
+}
+
+
 double ClassicSVfitIntegrand::EvalMET_TF(const double & aMETx, const double & aMETy, const TMatrixD& covMET) const{
 
 // determine transfer matrix for MET
-  //double covDet = covMET.Determinant();
-
     double invCovMETxx = covMET(1,1);
     double invCovMETxy = -covMET(0,1);
     double invCovMETyx = -covMET(1,0);
@@ -265,7 +286,7 @@ double ClassicSVfitIntegrand::EvalMET_TF(const double & aMETx, const double & aM
 
   if( std::abs(covDet)<1E-10){
     std::cerr << "Error: Cannot invert MET covariance Matrix (det=0) !!" << std::endl;
-    //errorCode_ |= MatrixInversion; FIXME
+    //errorCode_ |= MatrixInversion; FIXME violates const
     return 0;
   }
     double const_MET = 1./(2.*TMath::Pi()*TMath::Sqrt(covDet));
@@ -277,10 +298,10 @@ double ClassicSVfitIntegrand::EvalMET_TF(const double & aMETx, const double & aM
   if ( rhoHadTau_ != 0. ) {
 
     int tmpIndex = legIntegrationParams_[0].idx_VisPtShift_;
-    double visPtShift1 = ( tmpIndex != -1 && !leg1isLep_ ) ? (1./x[tmpIndex]) : 1.;
+    double visPtShift1 = ( tmpIndex != -1 && !leg1isLep_ ) ? (1./x_[tmpIndex]) : 1.;
 
     tmpIndex = legIntegrationParams_[1].idx_VisPtShift_;
-    double visPtShift2 = ( tmpIndex != -1 && !leg2isLep_ ) ? (1./x[tmpIndex]) : 1.;
+    double visPtShift2 = ( tmpIndex != -1 && !leg2isLep_ ) ? (1./x_[tmpIndex]) : 1.;
     if ( visPtShift1 < 1.e-2 || visPtShift2 < 1.e-2 ) return 0.;
 
     residualX += (rhoHadTau_*((visPtShift1 - 1.)*measuredTauLepton1_.px() + (visPtShift2 - 1.)*measuredTauLepton2_.px()));
@@ -304,13 +325,15 @@ double ClassicSVfitIntegrand::EvalMET_TF(const double & aMETx, const double & aM
 }
 
 double
-ClassicSVfitIntegrand::EvalPS(const double* x) const
+ClassicSVfitIntegrand::EvalPS(const double* q) const
 {
-  if ( verbosity_ >= 2 ) {
+  rescaleX(q);
+
+  if ( verbosity_ >= 2 ) {   
     std::cout << "<ClassicSVfitIntegrand::Eval(const double*)>:" << std::endl;
     std::cout << " x = { ";
     for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
-      std::cout << x[iDimension];
+      std::cout << x_[iDimension];
       if ( iDimension < (numDimensions_ - 1) ) std::cout << ", ";
     }
     std::cout << " }" << std::endl;
@@ -320,10 +343,10 @@ ClassicSVfitIntegrand::EvalPS(const double* x) const
   if ( errorCode_ != 0 ) { return 0.; }
 
   int tmpIndex = legIntegrationParams_[0].idx_VisPtShift_;
-  double visPtShift1 = ( tmpIndex != -1 && !leg1isLep_ ) ? (1./x[tmpIndex]) : 1.;
+  double visPtShift1 = ( tmpIndex != -1 && !leg1isLep_ ) ? (1./x_[tmpIndex]) : 1.;
 
   tmpIndex = legIntegrationParams_[1].idx_VisPtShift_;
-  double visPtShift2 = ( tmpIndex != -1 && !leg2isLep_ ) ? (1./x[tmpIndex]) : 1.;
+  double visPtShift2 = ( tmpIndex != -1 && !leg2isLep_ ) ? (1./x_[tmpIndex]) : 1.;
   if ( visPtShift1 < 1.e-2 || visPtShift2 < 1.e-2 ) return 0.;
 
   //FIXME computeVisMom(visPtShift1, visPtShift2);
@@ -331,14 +354,14 @@ ClassicSVfitIntegrand::EvalPS(const double* x) const
   // compute visible energy fractions for both taus
   tmpIndex = legIntegrationParams_[0].idx_X_;
   assert(tmpIndex != -1);
-  double x1_dash = x[tmpIndex];
+  double x1_dash = x_[tmpIndex];
   double x1 = x1_dash/visPtShift1;
   if ( !(x1 >= 1.e-5 && x1 <= 1.) ) return 0.;
 
   double x2_dash = 0.0;
   tmpIndex = legIntegrationParams_[1].idx_X_;
   if (tmpIndex != -1) {
-    x2_dash = x[tmpIndex];
+    x2_dash = x_[tmpIndex];
   }
   else {
     x2_dash = (measuredTauLepton1_.p4() + measuredTauLepton2_.p4()).M2()/(diTauMassConstraint_ * diTauMassConstraint_)/x1_dash;
@@ -353,13 +376,13 @@ ClassicSVfitIntegrand::EvalPS(const double* x) const
   double nu1Mass = 0;
   double nu1P = nuEn;
   if(tmpIndex != -1){
-    nu1Mass = TMath::Sqrt(x[tmpIndex]);
-    nu1P = TMath::Sqrt(TMath::Max(0., nuEn*nuEn - x[tmpIndex]));
+    nu1Mass = TMath::Sqrt(x_[tmpIndex]);
+    nu1P = TMath::Sqrt(TMath::Max(0., nuEn*nuEn - x_[tmpIndex]));
   }
 
   tmpIndex = legIntegrationParams_[0].idx_phi_;
   assert(tmpIndex != -1);
-  double phiNu = x[tmpIndex];
+  double phiNu = x_[tmpIndex];
   double cosThetaNu = compCosThetaNuNu(vis1En_, vis1P_, leg1Mass2_, nuEn, nu1P, square(nu1Mass));
   if ( !(cosThetaNu >= -1. && cosThetaNu <= +1.) ) return 0.;
 
@@ -391,13 +414,13 @@ ClassicSVfitIntegrand::EvalPS(const double* x) const
   double nu2Mass = 0;
   double nu2P = nuEn;
   if(tmpIndex != -1){
-    nu2Mass = TMath::Sqrt(x[tmpIndex]);
-    nu2P = TMath::Sqrt(TMath::Max(0., nuEn*nuEn - x[tmpIndex]));
+    nu2Mass = TMath::Sqrt(x_[tmpIndex]);
+    nu2P = TMath::Sqrt(TMath::Max(0., nuEn*nuEn - x_[tmpIndex]));
   }
 
   tmpIndex = legIntegrationParams_[1].idx_phi_;
   assert(tmpIndex != -1);
-  phiNu = x[tmpIndex];
+  phiNu = x_[tmpIndex];
   cosThetaNu = compCosThetaNuNu(vis2En_, vis2P_, leg2Mass2_, nuEn, nu2P, square(nu2Mass));
   if ( !(cosThetaNu >= -1. && cosThetaNu <= +1.) ) return 0.;
 
@@ -512,12 +535,11 @@ ClassicSVfitIntegrand::EvalPS(const double* x) const
 
 double ClassicSVfitIntegrand::Eval(const double* x) const
 {
-
   // CV: fill histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
     if(histogramAdapter_){
       histogramAdapter_->setTau1P4(tau1P4_);
       histogramAdapter_->setTau2P4(tau2P4_);
     }
-  return EvalPS(x)*EvalMET_TF(measuredMETx_, measuredMETy_, invCovMET_);
 
+    return EvalPS(x)*EvalMET_TF();
 }

@@ -150,15 +150,6 @@ bool ClassicSVfit::isValidSolution() const { return isValidSolution_; }
 double ClassicSVfit::getComputingTime_cpu() const { return numSeconds_cpu_; }
 double ClassicSVfit::getComputingTime_real() const { return numSeconds_real_; }
 
-void ClassicSVfit::fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
-{
-    double cubaIntegral;
-    double cubaIntegralErr;
-    setDiTauMassConstraint(par[0]);
-    intCubaAlgo_->integrate(&cubaIntegrand, xl_, xu_, numDimensions_, cubaIntegral, cubaIntegralErr);
-    f = cubaIntegral;
-}
-
 void ClassicSVfit::initializeMCIntegrator()
 {
   //unsigned numChains = TMath::Nint(maxObjFunctionCalls_/100000.);
@@ -363,6 +354,7 @@ if ( verbosity_ >= 1 ) std::cout << "<ClassicSVfit::integrateCuba>:" << std::end
       maxMass = testMass;
     }
   }
+  isValidSolution_ = maxMass>1E-4;
 
   clock_->Stop("<ClassicSVfit::integrateCuba>");
   numSeconds_cpu_ = clock_->GetCpuTime("<ClassicSVfit::integrateCuba>");
@@ -396,6 +388,7 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   prepareIntegrand();
   if(!intAlgo_) initializeMCIntegrator();if(!intAlgo_) initializeMCIntegrator();
   intAlgo_->integrate(&g_C, xl_, xu_, numDimensions_, theIntegral, theIntegralErr);
+  isValidSolution_ = histogramAdapter_->isValidSolution();
 
   if ( likelihoodFileName_ != "" ) {
     histogramAdapter_->writeHistograms(likelihoodFileName_);

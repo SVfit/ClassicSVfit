@@ -87,10 +87,10 @@ return 0;
   //svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
 
 
-  for(unsigned int iTry=0;iTry<10;++iTry) svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+  for(unsigned int iTry=0;iTry<1;++iTry) svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
 
   float maxMass = 0;
-  //for(unsigned int iTry=0;iTry<1;++iTry) maxMass = svFitAlgo.integrateCuba(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+  for(unsigned int iTry=0;iTry<1;++iTry) maxMass = svFitAlgo.integrateCuba(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
 
   bool isValidSolution = svFitAlgo.isValidSolution();
   isValidSolution = true;

@@ -28,21 +28,7 @@ namespace
                     const int *ncomp, double ff[], void *userdata)
   {
 
-    double xx[6];
-    //double xMin_[] = {0,-3.14159,0,0,-3.14159};
-    //double xMax_[] = {1,3.14159,3.14159,1,3.14159};
-
-    double xMin_[] = {0,-3.14159,0,-3.14159};
-    double xMax_[] = {1,3.14159,3.14159,3.14159};
-
-
-    for ( unsigned iDimension = 0; iDimension < *ndim; ++iDimension ) {
-    const double & q_i = qq[iDimension];
-    xx[iDimension] = (1. - q_i)*xMin_[iDimension] + q_i*xMax_[iDimension];
-  }
-
-    //double commonPart = 1E16*ClassicSVfitIntegrand::gSVfitIntegrand->Eval(xx);
-    ff[0] = 1E16*ClassicSVfitIntegrand::gSVfitIntegrand->Eval(xx);
+    ff[0] = 1E16*ClassicSVfitIntegrand::gSVfitIntegrand->Eval(qq);
 
     return 0;
   }

@@ -371,7 +371,6 @@ if ( verbosity_ >= 1 ) std::cout << "<ClassicSVfit::integrateCuba>:" << std::end
   if ( verbosity_ >= 1 ) {
     clock_->Show("<ClassicSVfit::integrateCuba>");
   }
-
   return maxMass;
 }
 
@@ -413,7 +412,7 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
 
 void ClassicSVfit::setHistogramAdapter(classic_svFit::HistogramAdapter* histogramAdapter)
 {
-  if (histogramAdapter_) delete histogramAdapter_;
+  if ( histogramAdapter_ ) delete histogramAdapter_;
   histogramAdapter_ = histogramAdapter;
 }
 

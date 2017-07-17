@@ -3,6 +3,8 @@
 #include <TMath.h>
 #include <TFile.h>
 
+#include <numeric>
+
 using namespace classic_svFit;
 
 TH1* HistogramTools::compHistogramDensity(TH1 const* histogram)
@@ -161,6 +163,11 @@ double SVfitQuantity::extractLmax() const
   return HistogramTools::extractLmax(histogram_);
 }
 
+bool SVfitQuantity::isValidSolution() const
+{
+  return (extractLmax() > 0.0);
+}
+
 TH1* DiTauSystemPtSVfitQuantity::createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
   return HistogramTools::makeHistogram("ClassicSVfitIntegrand_histogramPt", 1., 1.e+3, 1.025);
@@ -216,7 +223,9 @@ TH1* TransverseMassSVfitQuantity::createHistogram(const LorentzVector& vis1P4, c
 
 double TransverseMassSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
-  return TMath::Sqrt(2.0*tau1P4.pt()*tau2P4.pt()*(1.0 - TMath::Cos(tau1P4.phi() - tau2P4.phi())));
+  classic_svFit::LorentzVector fittedDiTauSystem = tau1P4 + tau2P4;
+  double transverseMass2 = square(tau1P4.Et() + tau2P4.Et()) - (square(fittedDiTauSystem.px()) + square(fittedDiTauSystem.py()));
+  return TMath::Sqrt(TMath::Max(1., transverseMass2));
 }
 
 
@@ -331,6 +340,12 @@ std::vector<double> HistogramAdapter::extractLmaxima() const
   std::transform(quantities_.begin(), quantities_.end(), results.begin(),
                  [](SVfitQuantity* quantity) { return quantity->extractLmax(); });
   return results;
+}
+
+bool HistogramAdapter::isValidSolution() const
+{
+  return std::accumulate(quantities_.begin(), quantities_.end(), true,
+                         [](bool result, SVfitQuantity* quantity) { return result && quantity->isValidSolution(); });
 }
 
 DiTauSystemHistogramAdapter::DiTauSystemHistogramAdapter(std::vector<SVfitQuantity*> const& quantities) :

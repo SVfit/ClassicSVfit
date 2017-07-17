@@ -93,7 +93,6 @@ return 0;
   for(unsigned int iTry=0;iTry<1;++iTry) maxMass = svFitAlgo.integrateCuba(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
 
   bool isValidSolution = svFitAlgo.isValidSolution();
-  isValidSolution = true;
 
   double lMax = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMassLmax();
   double mass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMass();

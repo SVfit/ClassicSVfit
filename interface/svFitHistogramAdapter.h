@@ -51,6 +51,8 @@ namespace classic_svFit
     double extractUncertainty() const;
     double extractLmax() const;
 
+    bool isValidSolution() const;
+
     mutable TH1* histogram_ = nullptr;
   };
 
@@ -113,6 +115,8 @@ namespace classic_svFit
     std::vector<double> extractValues() const;
     std::vector<double> extractUncertainties() const;
     std::vector<double> extractLmaxima() const;
+
+    bool isValidSolution() const;
 
    private:
     virtual double DoEval(const double* x) const;

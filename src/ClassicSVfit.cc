@@ -28,6 +28,7 @@ namespace
                     const int *ncomp, double ff[], void *userdata){
 
     ff[0] = 1E16*ClassicSVfitIntegrand::gSVfitIntegrand->Eval(qq);
+    //ff[1] = 1E16*ClassicSVfitIntegrand::gSVfitIntegrand->Eval(qq);
     return 0;
 }
 }
@@ -67,6 +68,12 @@ ClassicSVfit::~ClassicSVfit()
   if(intCubaAlgo_) delete intCubaAlgo_;
 
   delete clock_;
+}
+
+void ClassicSVfit::setVerbosity(int aVerbosity) {
+  verbosity_ = aVerbosity;
+  integrand_->setVerbosity(verbosity_);
+
 }
 
 void ClassicSVfit::addLogM_fixed(bool value, double power)
@@ -326,6 +333,8 @@ if ( verbosity_ >= 1 ) std::cout << "<ClassicSVfit::integrateCuba>:" << std::end
   setIntegrationParams(true);
   prepareIntegrand(false);
 
+
+
   if(!intCubaAlgo_) initializeCubaIntegrator();
 
   float maxMass = 0;
@@ -335,14 +344,19 @@ if ( verbosity_ >= 1 ) std::cout << "<ClassicSVfit::integrateCuba>:" << std::end
     histogramAdapter_->setMeasurement(measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4(), met_);
     histogramAdapter_->bookHistograms(measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4(), met_);
   }
+
   const TH1 *hMass = histogramAdapter_->getQuantity(3)->getHistogram();
   TH1 *hMassCuba = 0;
+
   if(likelihoodFileName_.size()) hMassCuba = (TH1*)hMass->Clone("mass_Cuba");
 
   for(unsigned int iMassPoint=1;iMassPoint<hMass->GetNbinsX();++iMassPoint){
     float testMass = hMass->GetBinCenter(iMassPoint);
+
     setDiTauMassConstraint(testMass);
+
     intCubaAlgo_->integrate(&cubaIntegrand, xl_, xu_, numDimensions_, theIntegral, theIntegralErr);
+
     if(hMassCuba) hMassCuba->Fill(testMass,theIntegral);
     if(theIntegral>maxIntegral){
       maxIntegral = theIntegral;
@@ -378,6 +392,7 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   clock_->Reset();
   clock_->Start("<ClassicSVfit::integrate>");
 
+  setDiTauMassConstraint(-1);
   prepareInput(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
   setIntegrationParams();
 

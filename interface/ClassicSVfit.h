@@ -39,6 +39,10 @@ class ClassicSVfit
   void setRhoHadTau(double rhoHadTau);
 #endif
 
+  ///set verbosity level.
+  ///Level 0 - mute, level 1 - print inputs, level 2 - print integration details
+  void setVerbosity(int aVerbosity);
+
   ///use Cuba integration library instead of custom Markov Chain
   void setUseCuba(bool useCuba);
 

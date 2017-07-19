@@ -45,6 +45,8 @@ namespace classic_svFit
 
     void setNumDimensions(unsigned numDimensions);
 
+    void setVerbosity(int aVerbosity);
+
     void setIntegrationRanges(const double* xl, const double* xu);
 
     void computeVisMom(const double & visPtShift1, const double & visPtShift2);

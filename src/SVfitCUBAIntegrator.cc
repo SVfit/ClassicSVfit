@@ -1,6 +1,7 @@
 #include "TauAnalysis/ClassicSVfit/interface/SVfitCUBAIntegrator.h"
 
 #include <TMath.h>
+#include <TUUID.h>
 
 #include <iostream>
 #include <iomanip>
@@ -62,6 +63,10 @@ void SVfitCUBAIntegrator::integrate(integrand_t g, const double* xl, const doubl
     }
   }
 
+//TUUID myID;
+//UChar_t uuid[16];
+//myID.GetUUID(uuid);
+
 const int ndim =  numDimensions_;
 const int ncomp = 1;
 
@@ -70,9 +75,9 @@ const int nvec = 1;
 const cubareal epsrel = 1E-3;
 const cubareal epsabs = 1E-12;
 const int flags = 2;
-const int seed = 0;
+const int seed = 0;//UInt_t(uuid[1])*256 + UInt_t(uuid[0]);
 const int mineval = 0;
-const int maxeval = 1000;
+const int maxeval = 10000;
 const int nstart =  500;
 const int nincrease = 500;
 const int nbatch = 1000;
@@ -104,7 +109,7 @@ int nextra=0;
 
 int key = 0;
 
-cubacores(1,1);
+cubacores(0,1);
 
 /*
 Vegas(ndim, ncomp,
@@ -139,7 +144,6 @@ Vegas(ndim, ncomp,
       (double)integralV[comp], (double)integralErrV[comp], (double)probV[comp]);
 */
 
-
 Divonne(ndim, ncomp, integrand_, userdata, nvec,
     epsrel, epsabs, verbose, seed,
     mineval, maxeval, key1, key2, key3, maxpass,
@@ -147,6 +151,7 @@ Divonne(ndim, ncomp, integrand_, userdata, nvec,
     ngiven, ldxdiven, NULL, nextra, NULL,
     statefile, spin,
     &nregions, &neval, &fail, integralV, integralErrV, probV);
+
 
 /*
   printf("DIVONNE RESULT:\tnregions %d\tneval %d\tfail %d\n",
@@ -172,7 +177,7 @@ Divonne(ndim, ncomp, integrand_, userdata, nvec,
       (double)integralV[comp], (double)integralErrV[comp], (double)probV[comp]);
 */
       integral = integralV[0];
-      integralErr = integralErrV[0];
+      integralErr = integralV[1];
 }
 //
 //-------------------------------------------------------------------------------

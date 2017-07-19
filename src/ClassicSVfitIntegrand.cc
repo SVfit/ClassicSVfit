@@ -56,6 +56,9 @@ ClassicSVfitIntegrand::~ClassicSVfitIntegrand()
   delete addLogM_dynamic_formula_;
 }
 
+
+void ClassicSVfitIntegrand::setVerbosity(int aVerbosity){ verbosity_ = aVerbosity;}
+
 void ClassicSVfitIntegrand::addLogM_fixed(bool value, double power)
 {
   addLogM_fixed_ = value;
@@ -236,7 +239,6 @@ ClassicSVfitIntegrand::setInputs(const std::vector<MeasuredTauLepton>& measuredT
 
 void ClassicSVfitIntegrand::computeVisMom(const double & visPtShift1, const double & visPtShift2){
 
-  if(std::abs(visPtShift1-1)>1E-4 || vis1En_<0){
 // compute four-vector of visible decay products for first tau
   double vis1Px = visPtShift1*measuredTauLepton1_.px();
   double vis1Py = visPtShift1*measuredTauLepton1_.py();
@@ -245,9 +247,7 @@ void ClassicSVfitIntegrand::computeVisMom(const double & visPtShift1, const doub
   //std::cout << "vis1: En = " << vis1En << ", Pt = " << TMath::Sqrt(vis1Px*vis1Px + vis1Py*vis1Py) << std::endl;
   vis1P4_.SetPxPyPzE(vis1Px, vis1Py, vis1Pz, vis1En_);
   vis1P_ = vis1P4_.P();
-}
 
-if(std::abs(visPtShift2-1)>1E-4 || vis2En_<0){
   // compute four-vector of visible decay products for second tau
   double vis2Px = visPtShift2*measuredTauLepton2_.px();
   double vis2Py = visPtShift2*measuredTauLepton2_.py();
@@ -256,7 +256,6 @@ if(std::abs(visPtShift2-1)>1E-4 || vis2En_<0){
   //std::cout << "vis2: En = " << vis2En << ", Pt = " << TMath::Sqrt(vis2Px*vis2Px + vis2Py*vis2Py) << std::endl;
   vis2P4_.SetPxPyPzE(vis2Px, vis2Py, vis2Pz, vis2En_);
   vis2P_ = vis2P4_.P();
-  }
 }
 
 void ClassicSVfitIntegrand::rescaleX(const double* q) const
@@ -270,6 +269,7 @@ void ClassicSVfitIntegrand::rescaleX(const double* q) const
 
 double ClassicSVfitIntegrand::EvalMET_TF() const{
 
+return 1.0;
 return EvalMET_TF(measuredMETx_, measuredMETy_, invCovMET_);
 
 }
@@ -329,7 +329,7 @@ ClassicSVfitIntegrand::EvalPS(const double* q) const
 {
   rescaleX(q);
 
-  if ( verbosity_ >= 2 ) {   
+  if ( verbosity_ >= 2 ) {
     std::cout << "<ClassicSVfitIntegrand::Eval(const double*)>:" << std::endl;
     std::cout << " x = { ";
     for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
@@ -349,7 +349,7 @@ ClassicSVfitIntegrand::EvalPS(const double* q) const
   double visPtShift2 = ( tmpIndex != -1 && !leg2isLep_ ) ? (1./x_[tmpIndex]) : 1.;
   if ( visPtShift1 < 1.e-2 || visPtShift2 < 1.e-2 ) return 0.;
 
-  //FIXME computeVisMom(visPtShift1, visPtShift2);
+  //FIX ME violates const computeVisMom(visPtShift1, visPtShift2);
 
   // compute visible energy fractions for both taus
   tmpIndex = legIntegrationParams_[0].idx_X_;
@@ -519,11 +519,15 @@ ClassicSVfitIntegrand::EvalPS(const double* q) const
   if (diTauMassConstraint_ > 0.0) {
     jacobiFactor *= (2.0*x2/diTauMassConstraint_);
   }
+
   double prob = prob_PS_and_tauDecay*prob_TF*prob_logM*jacobiFactor;
   if ( verbosity_ >= 2 ) {
-    std::cout << "prob: PS+decay = " << prob_PS_and_tauDecay << ","
+    if(mTauTau<70){
+    std::cout << "mTauTau = "<<mTauTau
+              << " prob: PS+decay = " << prob_PS_and_tauDecay << ","
               << " TF = " << prob_TF << ", log(M) = " << prob_logM << ", Jacobi = " << jacobiFactor << " --> returning " << prob << std::endl;
   }
+}
   if (TMath::IsNaN(prob) ) {
     //std::cerr << "Warning: prob = " << prob << " (PS+decay = " << prob_PS_and_tauDecay << ","
       //        << " TF = " << prob_TF << ", log(M) = " << prob_logM << ", Jacobi = " << jacobiFactor << ") --> setting prob = 0 !!" << std::endl;

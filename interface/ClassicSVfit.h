@@ -67,6 +67,11 @@ class ClassicSVfit
                     const double & measuredMETx, const double & measuredMETy,
                     const TMatrixD& covMET);
 
+  /// add MET estimate, i.e systematic effect variation
+  void addMETEstimate(const double & measuredMETx,
+                      const double & measuredMETy,
+                      const TMatrixD& covMET);
+
   /// run integration with Markov Chain
   void integrate(const std::vector<classic_svFit::MeasuredTauLepton>&,
                  const double &, const double &, const TMatrixD&);

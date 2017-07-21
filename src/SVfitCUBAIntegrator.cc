@@ -9,8 +9,6 @@
 #include <limits>
 #include <assert.h>
 
-#include "cuba.h"
-
 using namespace classic_svFit;
 
 
@@ -18,172 +16,123 @@ using namespace classic_svFit;
 //-------------------------------------------------------------------------------
 //
 SVfitCUBAIntegrator::SVfitCUBAIntegrator(unsigned int verbosity)
-  : integrand_(0), verbosity_(verbosity), x_(0){ }
+        : integrand_(0), verbosity_(verbosity), x_(0){
+
+
+        ///Disable multithread calculation, as this can affect the grid running.
+        cubacores(0,1);
+
+}
 //
 //-------------------------------------------------------------------------------
 //
 SVfitCUBAIntegrator::~SVfitCUBAIntegrator()
-{ delete [] x_; }
+{
+        delete [] x_;
+}
 //
 //-------------------------------------------------------------------------------
 //
 void SVfitCUBAIntegrator::setIntegrand(integrand_t g, const double* xl, const double* xu, unsigned d){
-  numDimensions_ = d;
 
-  delete [] x_;
-  x_ = new double[numDimensions_];
+        ndim = d;
 
-  xMin_.resize(numDimensions_);
-  xMax_.resize(numDimensions_);
-  for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
-    xMin_[iDimension] = xl[iDimension];
-    xMax_[iDimension] = xu[iDimension];
-  }
+        delete [] x_;
+        x_ = new double[ndim];
 
-  integrand_ = g;
+        xMin_.resize(ndim);
+        xMax_.resize(ndim);
+        for ( unsigned iDimension = 0; iDimension < ndim; ++iDimension ) {
+                xMin_[iDimension] = xl[iDimension];
+                xMax_[iDimension] = xu[iDimension];
+                if ( verbosity_ >= 2 ) {
+                        std::cout << "dimension #" << iDimension << ": min = " << xMin_[iDimension] << ", max = " << xMax_[iDimension] << std::endl;
+                }
+        }
+
+        integrand_ = g;
+
+        if ( !integrand_ ) {
+                std::cerr << "<SVfitCUBAIntegrator>:"
+                          << "No integrand function has been set yet --> ABORTING !!\n";
+                assert(0);
+        }
+}
+//
+//-------------------------------------------------------------------------------
+//
+void SVfitCUBAIntegrator::setNumberOfComponents(unsigned int aNumberOfComp){
+
+        ncomp = aNumberOfComp;
+
 }
 //
 //-------------------------------------------------------------------------------
 //
 void SVfitCUBAIntegrator::integrate(integrand_t g, const double* xl, const double* xu,
-  unsigned d, double& integral, double& integralErr){
-  setIntegrand(g, xl, xu, d);
+                                    unsigned d, double& integral, double& integralErr){
 
-  if ( !integrand_ ) {
-    std::cerr << "<SVfitCUBAIntegrator>:"
-              << "No integrand function has been set yet --> ABORTING !!\n";
-    assert(0);
-  }
+        setIntegrand(g, xl, xu, d);
 
-  for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
-    xMin_[iDimension] = xl[iDimension];
-    xMax_[iDimension] = xu[iDimension];
-    if ( verbosity_ >= 2 ) {
-      std::cout << "dimension #" << iDimension << ": min = " << xMin_[iDimension] << ", max = " << xMax_[iDimension] << std::endl;
-    }
-  }
-
-//TUUID myID;
-//UChar_t uuid[16];
-//myID.GetUUID(uuid);
-
-const int ndim =  numDimensions_;
-const int ncomp = 1;
-
-void *userdata = NULL;
-const int nvec = 1;
-const cubareal epsrel = 1E-3;
-const cubareal epsabs = 1E-12;
-const int flags = 2;
-const int seed = 0;//UInt_t(uuid[1])*256 + UInt_t(uuid[0]);
-const int mineval = 0;
-const int maxeval = 10000;
-const int nstart =  500;
-const int nincrease = 500;
-const int nbatch = 1000;
-const int gridno =  0;
-const char *statefile = NULL;
-void *spin = NULL;
-int neval;
-int fail;
-double probV[10];
-double integralV[10];
-double integralErrV[10];
-
-int nnew=1000;
-int nmin=2;
-double flatness=25;
-int verbose = 0;
-int nregions = 5;
-
-int key1=47;
-int key2=1;
-int key3=1;
-int maxpass=5;
-double border=0.;
-double maxchisq=10.;
-double mindeviation=.25;
-int ngiven=0;
-int ldxdiven=ndim;
-int nextra=0;
-
-int key = 0;
-
-cubacores(0,1);
+        Divonne(ndim, ncomp, integrand_, userdata, nvec,
+                epsrel, epsabs, verbose, seed,
+                mineval, maxeval, key1, key2, key3, maxpass,
+                border, maxchisq, mindeviation,
+                ngiven, ldxdiven, xgiven, nextra, peakfinder,
+                statefile, spin,
+                &nregions, &neval, &fail,
+                integralResult, integralError, integralProbability);
 
 /*
-Vegas(ndim, ncomp,
-    integrand_,
-    userdata, nvec,
-    epsrel, epsabs,
-    verbose,  seed,
-    mineval, maxeval,
+   Vegas(ndim, ncomp, integrand_,
+    userdata, nvec, epsrel, epsabs,
+    verbose,  seed, mineval, maxeval,
     nstart, nincrease, nbatch,
     gridno, statefile, spin,
     &neval, &fail,
     integralV, integralErrV, probV);
 
-  printf("VEGAS RESULT:\tneval %d\tfail %d\n",
-    neval, fail);
-  for(unsigned int comp = 0; comp < ncomp; ++comp )
-    printf("VEGAS RESULT:\t%.8f +- %.8f\tp = %.3f\n",
-      integralV[comp], integralErrV[comp], probV[comp]);
-*/
-/*
-  Suave(ndim, ncomp, integrand_, userdata, nvec,
+   Suave(ndim, ncomp, integrand_, userdata, nvec,
     epsrel, epsabs, verbose, seed,
     mineval, maxeval, nnew, nmin, flatness,
     statefile, spin,
-    &nregions, &neval, &fail, integralV, integralErrV, probV);
-*/
-/*
-    printf("SUAVE RESULT:\tnregions %d\tneval %d\tfail %d\n",
-    nregions, neval, fail);
-  for(unsigned int comp = 0; comp < ncomp; ++comp )
-    printf("SUAVE RESULT:\t%.8f +- %.8f\tp = %.3f\n",
-      (double)integralV[comp], (double)integralErrV[comp], (double)probV[comp]);
-*/
+    &nregions, &neval, &fail, integralResult, integralError, integralProbability);
 
-Divonne(ndim, ncomp, integrand_, userdata, nvec,
-    epsrel, epsabs, verbose, seed,
-    mineval, maxeval, key1, key2, key3, maxpass,
-    border, maxchisq, mindeviation,
-    ngiven, ldxdiven, NULL, nextra, NULL,
-    statefile, spin,
-    &nregions, &neval, &fail, integralV, integralErrV, probV);
-
-
-/*
-  printf("DIVONNE RESULT:\tnregions %d\tneval %d\tfail %d\n",
-    nregions, neval, fail);
-  for(unsigned int comp = 0; comp < ncomp; ++comp )
-    printf("DIVONNE RESULT:\t%.8f +- %.8f\tp = %.3f\n",
-      (double)integralV[comp], (double)integralErrV[comp], (double)probV[comp]);
-*/
-
-
-/*
     Cuhre(ndim, ncomp, integrand_, userdata, nvec,
     epsrel, epsabs, verbose,
     mineval, maxeval, key,
     statefile, spin,
-    &nregions, &neval, &fail, integralV, integralErrV, probV);
-*/
-/*
-  printf("CUHRE RESULT:\tnregions %d\tneval %d\tfail %d\n",
-    nregions, neval, fail);
-  for(unsigned int comp = 0; comp < ncomp; ++comp )
-    printf("CUHRE RESULT:\t%.8f +- %.8f\tp = %.3f\n",
-      (double)integralV[comp], (double)integralErrV[comp], (double)probV[comp]);
-*/
-      integral = integralV[0];
-      integralErr = integralV[1];
+    &nregions, &neval, &fail, integralResult, integralError, integralProbability);
+ */
+
+        integral = integralResult[0];
+        integralErr = integralError[0];
 }
 //
 //-------------------------------------------------------------------------------
 //
-void SVfitCUBAIntegrator::print(std::ostream& stream) const{
-  stream<<"VfitCUBAIntegrator::print"<<std::endl;}
+void SVfitCUBAIntegrator::integrateVector(integrand_t g, const double* xl, const double* xu, unsigned d,
+                                          double aIntegral[],
+                                          double aIntegralErr[]){
+
+        setIntegrand(g, xl, xu, d);
+
+        Divonne(ndim, ncomp, integrand_, userdata, nvec,
+                epsrel, epsabs, verbose, seed,
+                mineval, maxeval, key1, key2, key3, maxpass,
+                border, maxchisq, mindeviation,
+                ngiven, ldxdiven, xgiven, nextra, peakfinder,
+                statefile, spin,
+                &nregions, &neval, &fail,
+                aIntegral, aIntegralErr, integralProbability);
+
+}
+//
+//-------------------------------------------------------------------------------
+//
+void SVfitCUBAIntegrator::print(std::ostream& stream) const {
+        stream<<"SVfitCUBAIntegrator::print"<<std::endl;
+}
 //
 //-------------------------------------------------------------------------------
 //

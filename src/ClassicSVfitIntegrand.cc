@@ -15,7 +15,6 @@ const ClassicSVfitIntegrand* ClassicSVfitIntegrand::gSVfitIntegrand = 0;
 
 ClassicSVfitIntegrand::ClassicSVfitIntegrand(int verbosity)
   : beamAxis_(0., 0., 1.),
-    invCovMET_(2,2),
 #ifdef USE_SVFITTF
     hadTauTF1_(0),
     hadTauTF2_(0),
@@ -34,6 +33,12 @@ ClassicSVfitIntegrand::ClassicSVfitIntegrand(int verbosity)
   if ( verbosity_ ) {
     std::cout << "<ClassicSVfitIntegrand::ClassicSVfitIntegrand>:" << std::endl;
   }
+
+
+  /// measured MET
+  measuredMETx_.resize(1);
+  measuredMETy_.resize(1);
+  covMET_.resize(1, TMatrixD(2,2));
 
   vis1En_ = -1;
   vis2En_ = -1;
@@ -219,9 +224,15 @@ ClassicSVfitIntegrand::setInputs(const std::vector<MeasuredTauLepton>& measuredT
 
   computeVisMom(1.0, 1.0);
 
-  measuredMETx_ = measuredMETx;
-  measuredMETy_ = measuredMETy;
-  invCovMET_ = covMET;
+  measuredMETx_.resize(1);
+  measuredMETy_.resize(1);
+  covMET_.resize(1, TMatrixD(2,2));
+
+  measuredMETx_[0] = measuredMETx;
+  measuredMETy_[0] = measuredMETy;
+  covMET_[0] = covMET;
+
+  phaseSpaceComponentCache_ = 0;
 
 #ifdef USE_SVFITTF
   if ( useHadTauTF_ ) {
@@ -236,6 +247,15 @@ ClassicSVfitIntegrand::setInputs(const std::vector<MeasuredTauLepton>& measuredT
   }
 #endif
 }
+
+void ClassicSVfitIntegrand::addMETEstimate(double measuredMETx, double measuredMETy, const TMatrixD& covMET){
+
+  measuredMETx_.push_back(measuredMETx);
+  measuredMETy_.push_back(measuredMETy);
+  covMET_.push_back(covMET);
+}
+
+int ClassicSVfitIntegrand::getMETComponentsSize() const {return measuredMETx_.size();}
 
 void ClassicSVfitIntegrand::computeVisMom(const double & visPtShift1, const double & visPtShift2){
 
@@ -267,11 +287,9 @@ void ClassicSVfitIntegrand::rescaleX(const double* q) const
 }
 
 
-double ClassicSVfitIntegrand::EvalMET_TF() const{
-
-return 1.0;
-return EvalMET_TF(measuredMETx_, measuredMETy_, invCovMET_);
-
+double ClassicSVfitIntegrand::EvalMET_TF(unsigned int iComponent) const{
+  return EvalMET_TF(measuredMETx_[iComponent], measuredMETy_[iComponent],
+                    covMET_[iComponent]);
 }
 
 
@@ -315,7 +333,7 @@ double ClassicSVfitIntegrand::EvalMET_TF(const double & aMETx, const double & aM
   if ( verbosity_ >= 2 ) {
       double sumNuPx = nu1P4_.X() + nu2P4_.X();
       double sumNuPy = nu1P4_.Y() + nu2P4_.Y();
-    std::cout << "TF(met): recPx = " << measuredMETx_ << ", recPy = " << measuredMETy_
+    std::cout << "TF(met): recPx = " << aMETx << ", recPy = " << aMETy
                      << ", genPx = " << sumNuPx       << ", genPy = " << sumNuPy
                      << " pull2 = "<<pull2
                      << " prob = "<<const_MET*TMath::Exp(-0.5*pull2)
@@ -537,7 +555,7 @@ ClassicSVfitIntegrand::EvalPS(const double* q) const
   return prob;
 }
 
-double ClassicSVfitIntegrand::Eval(const double* x) const
+double ClassicSVfitIntegrand::Eval(const double* x, unsigned int iComponent) const
 {
   // CV: fill histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
     if(histogramAdapter_){
@@ -545,5 +563,11 @@ double ClassicSVfitIntegrand::Eval(const double* x) const
       histogramAdapter_->setTau2P4(tau2P4_);
     }
 
-    return EvalPS(x)*EvalMET_TF();
+    //if(iComponent==0) phaseSpaceComponentCache_ = EvalPS(x);
+    phaseSpaceComponentCache_ = EvalPS(x);
+    double metTF = EvalMET_TF(iComponent);
+
+    //std::cout<<phaseSpaceComponentCache_<<" "<<metTF<<std::endl;
+
+    return phaseSpaceComponentCache_*metTF;
 }

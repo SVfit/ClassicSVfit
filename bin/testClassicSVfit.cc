@@ -113,9 +113,9 @@ return 0;
    testFile.Write();
 
   if ( isValidSolution ) {
-    std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 115.746 +/- 88.6066),"
-              << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 114.242 +/- 87.4277)"
-              << std::endl<<"  solution with Cuba: mass = "<<maxMass
+    std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 115.746 +/- 88.6115),"
+              << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 114.242 +/- 87.4328)"
+              << std::endl<<"  solution with Cuba: mass = "<<maxMass << " (expected value = 110.169)"
               << std::endl;
   } else {
     std::cout << "sorry, failed to find valid solution !!" << std::endl;

@@ -65,6 +65,9 @@ namespace classic_svFit
     /// set momenta of visible tau decay products and of reconstructed missing transverse energy
     void setInputs(const std::vector<classic_svFit::MeasuredTauLepton>&, double, double, const TMatrixD&);
 
+    /// add MET alternative estimates, i.e. systematic effect variations
+    void addMETEstimate(double, double, const TMatrixD&);
+
     /// evaluate Phase Space part of the integrand for given value of integration variables x
     double EvalPS(const double* x) const;
 
@@ -72,15 +75,18 @@ namespace classic_svFit
     double EvalMET_TF(const double & aMETx, const double & aMETy, const TMatrixD&) const;
 
     /// evaluate the MET TF part of the integral using current values of the MET variables
-    double EvalMET_TF() const;
+    /// iComponent is ans index to MET estimate, i.e. systamtic effect variation
+    double EvalMET_TF(unsigned int iComponent=0) const;
 
-    /// evaluate the full integrand for given value of integration variables q.
+    /// evaluate the iComponent of the full integrand for given value of integration variables q.
     /// q is given in standarised range [0,1] for each dimension.
-    double Eval(const double* q) const;
+    double Eval(const double* q, unsigned int iComponent=0) const;
 
     ///Transform the values fo integration variables from [0,1] to
     ///desires [xMin,xMax] range;
     void rescaleX(const double* q) const;
+
+    int getMETComponentsSize() const;
 
     /// static pointer to this (needed for interfacing the likelihood function calls to Markov Chain integration)
     static const ClassicSVfitIntegrand* gSVfitIntegrand;
@@ -127,11 +133,13 @@ namespace classic_svFit
     Vector beamAxis_;
 
     /// measured MET
-    double measuredMETx_;
-    double measuredMETy_;
+    std::vector<double> measuredMETx_;
+    std::vector<double> measuredMETy_;
 
-    /// inverse of MET covariance matrix
-    TMatrixD invCovMET_;
+    ///MET covariance matrix
+    std::vector<TMatrixD> covMET_;
+
+    ///Inverse covariance matix elements
     double invCovMETxx_;
     double invCovMETxy_;
     double invCovMETyx_;
@@ -165,6 +173,8 @@ namespace classic_svFit
     int errorCode_;
 
     HistogramAdapter* histogramAdapter_;
+
+    mutable double phaseSpaceComponentCache_;
 
     /// verbosity level
     int verbosity_;

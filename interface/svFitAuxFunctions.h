@@ -125,10 +125,9 @@ namespace classic_svFit
   double compPSfactor_tauToLepDecay(double, double, double, double, double, double, double);
   double compPSfactor_tauToHadDecay(double, double, double, double, double, double);
 
-
-
   const int maxNumberOfDimensions = 6;
   const int numberOfLegs = 2;
+  const int maxNumberOfComponents = 512;
 
 struct integrationParameters{
 

@@ -1,4 +1,5 @@
 <use   name="TauAnalysis/SVfitTF"/>
+<use   name="boost"/>
 <use   name="root"/>
 <use   name="roofit"/>
 <Flags CPPDEFINES="USE_SVFITTF"/>

@@ -2,8 +2,11 @@
 
 #include <TMath.h>
 #include <TFile.h>
+#include <TObject.h>
 
 #include <numeric>
+
+#include <boost/algorithm/string/replace.hpp>
 
 using namespace classic_svFit;
 
@@ -113,7 +116,10 @@ TH1* HistogramTools::makeHistogram(const std::string& histogramName, double xMin
   return histogram;
 }
 
-SVfitQuantity::SVfitQuantity()
+int SVfitQuantity::nInstances = 0;
+
+SVfitQuantity::SVfitQuantity() :
+  uniqueName("_SVfitQuantity_"+std::to_string(++SVfitQuantity::nInstances))
 {
 }
 
@@ -126,11 +132,17 @@ void SVfitQuantity::bookHistogram(const LorentzVector& vis1P4, const LorentzVect
 {
   if (histogram_ != nullptr) delete histogram_;
   histogram_ = createHistogram(vis1P4, vis2P4, met);
+  histogram_->SetName((histogram_->GetName()+uniqueName).c_str());
 }
 
 void SVfitQuantity::writeHistogram() const
 {
-  if (histogram_ != nullptr) histogram_->Write();
+  if (histogram_ != nullptr)
+  {
+    std::string histogramName = histogram_->GetName();
+    boost::replace_all(histogramName, uniqueName, "");
+    histogram_->Write(histogramName.c_str(), TObject::kWriteDelete);
+  }
 }
 
 void SVfitQuantity::fillHistogram(

@@ -34,6 +34,7 @@ namespace classic_svFit
     void addLogM_dynamic(bool value, const std::string& power= "");
     
     void setDiTauMassConstraint(double diTauMass);
+    void setTau1Constraint(bool tau1Constraint);  
 
     /// set pointer to histograms used to keep track of pT, eta, phi, mass and transverse mass of di-tau system
     /// during Markov Chain integration
@@ -141,6 +142,7 @@ namespace classic_svFit
     TFormula* addLogM_dynamic_formula_;
     
     double diTauMassConstraint_ = -1.0;
+    bool tau1Constraint_ = false;
 
     /// error code that can be passed on
     int errorCode_;

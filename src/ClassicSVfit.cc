@@ -70,6 +70,12 @@ void ClassicSVfit::setDiTauMassConstraint(double diTauMass)
   integrand_->setDiTauMassConstraint(diTauMassConstraint_);
 }
 
+void ClassicSVfit::setTau1Constraint(bool tau1Constraint)
+{
+   tau1Constraint_ = tau1Constraint;
+   integrand_->setTau1Constraint(tau1Constraint_);
+}
+
 #ifdef USE_SVFITTF
 void ClassicSVfit::setHadTauTF(const HadTauTFBase* hadTauTF)
 {
@@ -204,8 +210,16 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   for ( size_t idx = 0; idx < measuredTauLeptons_.size(); ++idx ) {
     const MeasuredTauLepton& measuredTauLepton = measuredTauLeptons_[idx];
     if ( idx == 0 ) {
-      idxLeg1_X = numDimensions_;
-      numDimensions_ += 1;
+      if (tau1Constraint_) {
+         if (diTauMassConstraint_ < 0.0) {
+            idxLeg1_X = numDimensions_;
+            numDimensions_ += 1;
+         }
+      }
+      else {
+        idxLeg1_X = numDimensions_;
+        numDimensions_ += 1;
+      }
       idxLeg1_phi = numDimensions_;
       numDimensions_ += 1;
       if ( measuredTauLepton.type() == MeasuredTauLepton::kTauToHadDecay ) {
@@ -219,7 +233,13 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
 	    }
     }
     if ( idx == 1 ) {
-      if (diTauMassConstraint_ < 0.0) {
+      if (!tau1Constraint_) {
+       if (diTauMassConstraint_ < 0.0) {
+        idxLeg2_X = numDimensions_;
+        numDimensions_ += 1;
+       }
+      }
+      else {
         idxLeg2_X = numDimensions_;
         numDimensions_ += 1;
       }
@@ -281,12 +301,14 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   //std::cout << "numDimensions = " << numDimensions_ << std::endl;
   xl_ = new double[numDimensions_];
   xu_ = new double[numDimensions_];
-  xl_[idxLeg1_X] = 0.;
+  if (idxLeg1_X != -1) {
+    xl_[idxLeg1_X] = 0.;
 #ifdef USE_SVFITTF
-  xu_[idxLeg1_X] = 2.; // upper integration bound for x1' = visPtShift1*x1
+    xu_[idxLeg1_X] = 2.; // upper integration bound for x1' = visPtShift1*x1
 #else
-  xu_[idxLeg1_X] = 1.;
+    xu_[idxLeg1_X] = 1.;
 #endif
+  }
   xl_[idxLeg1_phi] = 0.;
   xl_[idxLeg1_phi] = -TMath::Pi();
   xu_[idxLeg1_phi] = +TMath::Pi();
@@ -333,7 +355,7 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
 
   double integral = 0.;
   double integralErr = 0.;
-  intAlgo_->integrate(&g_C, xl_, xu_, numDimensions_, integral, integralErr);  
+  intAlgo_->integrate(&g_C, xl_, xu_, numDimensions_, integral, integralErr);
   isValidSolution_ = histogramAdapter_->isValidSolution();
 
   if ( likelihoodFileName_ != "" ) {

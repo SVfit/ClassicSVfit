@@ -50,6 +50,10 @@ namespace classic_svFit
 
     bool isValidSolution() const;
 
+   private:
+    static int nInstances;
+    std::string uniqueName;
+    
     mutable TH1* histogram_ = nullptr;
   };
 

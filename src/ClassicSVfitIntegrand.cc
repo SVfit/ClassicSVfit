@@ -318,7 +318,7 @@ ClassicSVfitIntegrand::Eval(const double* x) const
    if ( !(x1 >= 1.e-5 && x1 <= 1.) ) return 0.;
   }
   else {
-   //assert(idxLeg1_X_ != -1);
+   assert(idxLeg1_X_ != -1);
    double x1_dash = x[idxLeg1_X_];
    x1 = x1_dash/visPtShift1;
    if ( !(x1 >= 1.e-5 && x1 <= 1.) ) return 0.;
@@ -329,13 +329,12 @@ ClassicSVfitIntegrand::Eval(const double* x) const
    }
    else {
       x2_dash = (measuredTauLepton1_.p4() + measuredTauLepton2_.p4()).M2()/(diTauMassConstraint_ * diTauMassConstraint_)/x1_dash;
-      //if ( verbosity_ >= 2 )
-      std::cout << "#x2 constrained:" << x2_dash << "#x1 unconstrained:" << x1_dash << std::endl;
+      if ( verbosity_ > 2 ) std::cout << "#x2 constrained:" << x2_dash << "#x1 unconstrained:" << x1_dash << std::endl;
    }
    x2 = x2_dash/visPtShift2;
    if ( !(x2 >= 1.e-5 && x2 <= 1.) ) return 0.;
   }
-  
+
 
   // compute neutrino and tau lepton four-vector for first tau
   double nu1En = vis1En*(1. - x1)/x1;

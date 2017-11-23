@@ -210,7 +210,7 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
   for ( size_t idx = 0; idx < measuredTauLeptons_.size(); ++idx ) {
     const MeasuredTauLepton& measuredTauLepton = measuredTauLeptons_[idx];
     if ( idx == 0 ) {
-      if (tau1Constraint_) {
+      if ((tau1Constraint_ == true) || (tau1Constraint_ == 1)) {
          if (diTauMassConstraint_ < 0.0) {
             idxLeg1_X = numDimensions_;
             numDimensions_ += 1;

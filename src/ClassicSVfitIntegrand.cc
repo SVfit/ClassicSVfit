@@ -300,7 +300,7 @@ ClassicSVfitIntegrand::Eval(const double* x) const
   double x1 = 0;
   double x2 = 0;
 
-  if (tau1Constraint_ == 1) {
+  if ((tau1Constraint_ == true) || (tau1Constraint_ == 1)) {
    assert(idxLeg2_X_ != -1);
    double x2_dash = x[idxLeg2_X_];
    x2 = x2_dash/visPtShift2;

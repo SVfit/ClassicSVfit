@@ -103,18 +103,33 @@ return 0;
   double transverseMassErr = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getTransverseMassErr();
   hMCMass->Fill(mass);
 
-  for(unsigned int iComponent=0;iComponent<20;++iComponent){
-    svFitAlgo.addMETEstimate(measuredMETx, measuredMETy, covMET); //TEST
+  for(unsigned int iTry=0;iTry<10;++iTry){
+      svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+      double mass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMass();
+      hMCMass->Fill(mass);
   }
 
-  std::vector<float> massCuba = svFitAlgo.integrateCuba(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
-  hCubaMass->Fill(massCuba[0]);
+ ///Cuba integration with multiple MET estimates
+  svFitAlgo.setMaxObjFunctionCalls(1000);
+  svFitAlgo.prepareLeptonInput(measuredTauLeptons);
+  svFitAlgo.clearMET();
+  unsigned int nMETComponents = 1;
+  for(unsigned int iComponent=0;iComponent<nMETComponents;++iComponent){
+    svFitAlgo.addMETEstimate(measuredMETx, measuredMETy, covMET);
+  }
+  std::vector<float> massCuba;
+  for(unsigned int iTry=0;iTry<10;++iTry){
+    massCuba = svFitAlgo.integrateCuba();
+    hCubaMass->Fill(massCuba[0]);
+  }
   testFile.Write();
 
   if ( isValidSolution ) {
-    std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 115.746 +/- 88.6115),"
-              << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 114.242 +/- 87.4328)"
-              << std::endl<<"  solution with Cuba: mass = "<<massCuba[1] << " (expected value = 110.169)"
+    std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 115.746 +/- 92.8784),"
+              << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 114.242 +/- 91.5567)"
+              << std::endl<<"  solution with Cuba: mass = "<<massCuba[0] << " (expected value = 115.746)"
+              << std::endl<<"  solution with Cuba: mass = "<<massCuba[1] << " (expected value = 115.746)"
+              << std::endl<<"  solution with Cuba: mass = "<<massCuba[2] << " (expected value = 115.746)"
               << std::endl;
   } else {
     std::cout << "sorry, failed to find valid solution !!" << std::endl;

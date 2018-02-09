@@ -15,12 +15,14 @@ using namespace classic_svFit;
 //
 //-------------------------------------------------------------------------------
 //
-SVfitCUBAIntegrator::SVfitCUBAIntegrator(unsigned int verbosity)
+SVfitCUBAIntegrator::SVfitCUBAIntegrator(unsigned int verbosity, unsigned int maxObjFunctionCalls)
         : integrand_(0), verbosity_(verbosity), x_(0){
-
 
         ///Disable multithread calculation, as this can affect the grid running.
         cubacores(0,1);
+
+        ///Set approximate maximum number of integrand calls
+        maxeval = maxObjFunctionCalls;
 
 }
 //

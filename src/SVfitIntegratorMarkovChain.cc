@@ -200,7 +200,7 @@ void SVfitIntegratorMarkovChain::integrate(gPtr_C g, const double* xl, const dou
 
 //--- CV: set random number generator used to initialize starting-position
 //        for each integration, in order to make integration results independent of processing history
-  rnd_.SetSeed(12345);
+  //TEST rnd_.SetSeed(12345);
 
   numMoves_accepted_ = 0;
   numMoves_rejected_ = 0;

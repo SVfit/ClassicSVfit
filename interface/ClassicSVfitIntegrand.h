@@ -62,11 +62,14 @@ namespace classic_svFit
     void setRhoHadTau(double rhoHadTau);
 #endif
 
-    /// set momenta of visible tau decay products and of reconstructed missing transverse energy
-    void setInputs(const std::vector<classic_svFit::MeasuredTauLepton>&, double, double, const TMatrixD&);
+    /// set momenta of visible tau decay products
+    void setLeptonInputs(const std::vector<classic_svFit::MeasuredTauLepton>&);
 
-    /// add MET alternative estimates, i.e. systematic effect variations
+    /// add MET  estimates, i.e. systematic effect variations
     void addMETEstimate(double, double, const TMatrixD&);
+
+    /// remove MET estimates
+    void clearMET();
 
     /// evaluate Phase Space part of the integrand for given value of integration variables x
     double EvalPS(const double* x) const;

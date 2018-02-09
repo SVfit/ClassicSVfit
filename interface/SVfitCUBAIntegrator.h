@@ -25,7 +25,7 @@ namespace classic_svFit
 class SVfitCUBAIntegrator
 {
 public:
-SVfitCUBAIntegrator(unsigned int verbosity);
+SVfitCUBAIntegrator(unsigned int verbosity, unsigned int maxObjFunctionCalls);
 ~SVfitCUBAIntegrator();
 
 /// compute integral of function g
@@ -170,7 +170,7 @@ int nextra=0;
 int key = 0;
 //////////////////////
 
-///Interagtion output variables.
+///Integration output variables.
 ///Vectors holdig integration result
 double integralResult[classic_svFit::maxNumberOfComponents];
 double integralError[classic_svFit::maxNumberOfComponents];

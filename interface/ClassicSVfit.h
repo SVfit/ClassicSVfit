@@ -63,22 +63,22 @@ classic_svFit::HistogramAdapter* getHistogramAdapter() const;
 void prepareIntegrand(bool useHistoAdapter=true);
 
 /// prepare input measurements
-void prepareInput(const std::vector<classic_svFit::MeasuredTauLepton>& measuredTauLeptons,
-                  const double & measuredMETx, const double & measuredMETy,
-                  const TMatrixD& covMET);
+void prepareLeptonInput(const std::vector<classic_svFit::MeasuredTauLepton>& measuredTauLeptons);
 
 /// add MET estimate, i.e systematic effect variation
 void addMETEstimate(const double & measuredMETx,
                     const double & measuredMETy,
                     const TMatrixD& covMET);
 
+/// remove MET estimated from integrand
+void clearMET();
+
 /// run integration with Markov Chain
 void integrate(const std::vector<classic_svFit::MeasuredTauLepton>&,
                const double &, const double &, const TMatrixD&);
 
 /// run integration with Cuba library
-std::vector<float> integrateCuba(const std::vector<classic_svFit::MeasuredTauLepton>&,
-                                 const double &, const double &, const TMatrixD&);
+std::vector<float> integrateCuba();
 
 /// return flag indicating if algorithm succeeded to find valid solution
 bool isValidSolution() const;
@@ -99,7 +99,7 @@ void initializeMCIntegrator();
 void initializeCubaIntegrator();
 
 /// print MET and its covariance matrix
-void printMET() const;
+void printMET(double measuredMETx, double measuredMETy, const TMatrixD& covMET) const;
 
 /// print measured leptons
 void printLeptons() const;

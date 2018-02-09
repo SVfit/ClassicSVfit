@@ -342,9 +342,9 @@ void ClassicSVfit::addMETEstimate(const double & measuredMETx,
         integrand_->addMETEstimate(metX, metY, aCovMET);
 }
 
-float ClassicSVfit::integrateCuba(const std::vector<MeasuredTauLepton>& measuredTauLeptons,
-                                  const double & measuredMETx, const double & measuredMETy,
-                                  const TMatrixD& covMET){
+std::vector<float> ClassicSVfit::integrateCuba(const std::vector<MeasuredTauLepton>& measuredTauLeptons,
+  const double & measuredMETx, const double & measuredMETy,
+  const TMatrixD& covMET){
 
         if ( verbosity_ >= 1 ) std::cout << "<ClassicSVfit::integrateCuba>:" << std::endl;
 
@@ -356,23 +356,14 @@ float ClassicSVfit::integrateCuba(const std::vector<MeasuredTauLepton>& measured
         setIntegrationParams(true);
         prepareIntegrand(false);
 
-        for(unsigned int iComponent=0;iComponent<2;++iComponent){
-                  addMETEstimate(measuredMETx, measuredMETy, covMET); //TEST
-        }
+        if(!intCubaAlgo_) initializeCubaIntegrator();
 
         int numberOfComponents = integrand_->getMETComponentsSize();
 
-        if(!intCubaAlgo_) initializeCubaIntegrator();
-
-
-
-        float maxMass = 0;
-        float maxIntegral = 0;
-        float meanMass = 0;
-        float meanMassNorm = 0;
-
         double theIntegralVector[numberOfComponents];
         double theIntegralErrVector[numberOfComponents];
+        std::vector<float> maxMass(numberOfComponents);
+        std::vector<float> maxIntegral(numberOfComponents);
 
         if( measuredTauLeptons_.size() == 2 ) {
                 histogramAdapter_->setMeasurement(measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4(), met_);
@@ -389,27 +380,18 @@ float ClassicSVfit::integrateCuba(const std::vector<MeasuredTauLepton>& measured
 
                 setDiTauMassConstraint(testMass);
 
-                intCubaAlgo_->setNumberOfComponents(1);
-                intCubaAlgo_->integrate(&cubaIntegrand, xl_, xu_, numDimensions_, theIntegral, theIntegralErr);
-                intCubaAlgo_->setNumberOfComponents(1);
+                intCubaAlgo_->setNumberOfComponents(numberOfComponents);
                 intCubaAlgo_->integrateVector(&cubaIntegrand, xl_, xu_, numDimensions_, theIntegralVector, theIntegralErrVector);
 
-                std::cout<<"integral = "<<theIntegral<<" ";
+                if(hMassCuba) hMassCuba->Fill(testMass,theIntegralVector[0]);
                 for(unsigned int iComponent=0;iComponent<numberOfComponents;++iComponent){
-                std::cout<<" iComponent = "<<iComponent<<" integral = "<<theIntegralVector[iComponent];
-              }
-                std::cout<<std::endl;
-
-                meanMass+=testMass*theIntegral;
-                meanMassNorm+=theIntegral;
-
-                if(hMassCuba) hMassCuba->Fill(testMass,theIntegral);
-                if(theIntegral>maxIntegral) {
-                        maxIntegral = theIntegral;
-                        maxMass = testMass;
+                  if(theIntegralVector[iComponent]>maxIntegral[iComponent]) {
+                    maxIntegral[iComponent] = theIntegralVector[iComponent];
+                    maxMass[iComponent] = testMass;
+                  }
                 }
         }
-        isValidSolution_ = maxMass>1E-4;
+        isValidSolution_ = maxMass[0]>1E-4;
 
         clock_->Stop("<ClassicSVfit::integrateCuba>");
         numSeconds_cpu_ = clock_->GetCpuTime("<ClassicSVfit::integrateCuba>");
@@ -425,7 +407,6 @@ float ClassicSVfit::integrateCuba(const std::vector<MeasuredTauLepton>& measured
                 file.Write();
         }
 
-        //return meanMass/meanMassNorm;
         return maxMass;
 }
 
@@ -451,7 +432,7 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
 
         prepareIntegrand();
         if(!intAlgo_) initializeMCIntegrator();
-        for(unsigned int iTry=0;iTry<1;++iTry) intAlgo_->integrate(&g_C, xl_, xu_, numDimensions_, theIntegral, theIntegralErr);
+        intAlgo_->integrate(&g_C, xl_, xu_, numDimensions_, theIntegral, theIntegralErr);
         isValidSolution_ = histogramAdapter_->isValidSolution();
 
         if ( likelihoodFileName_ != "" ) {

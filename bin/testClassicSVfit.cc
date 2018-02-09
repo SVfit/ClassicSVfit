@@ -92,11 +92,8 @@ return 0;
   TH1F *hCubaMass = new TH1F("hCubaMass","",30,100,130);
   TH1F *hMCMass = new TH1F("hMCMass","",30,100,130);
 
-  for(unsigned int iTry=0;iTry<1;++iTry){
-    svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
-    double mass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMass();
-    hMCMass->Fill(mass);
-  }
+  svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+
   bool isValidSolution = svFitAlgo.isValidSolution();
 
   double lMax = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMassLmax();
@@ -104,18 +101,20 @@ return 0;
   double massErr = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMassErr();
   double transverseMass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getTransverseMass();
   double transverseMassErr = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getTransverseMassErr();
+  hMCMass->Fill(mass);
 
-  float maxMass = 0;
-  for(unsigned int iTry=0;iTry<1;++iTry){
-     maxMass = svFitAlgo.integrateCuba(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
-     hCubaMass->Fill(maxMass);
-   }
-   testFile.Write();
+  for(unsigned int iComponent=0;iComponent<20;++iComponent){
+    svFitAlgo.addMETEstimate(measuredMETx, measuredMETy, covMET); //TEST
+  }
+
+  std::vector<float> massCuba = svFitAlgo.integrateCuba(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+  hCubaMass->Fill(massCuba[0]);
+  testFile.Write();
 
   if ( isValidSolution ) {
     std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 115.746 +/- 88.6115),"
               << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 114.242 +/- 87.4328)"
-              << std::endl<<"  solution with Cuba: mass = "<<maxMass << " (expected value = 110.169)"
+              << std::endl<<"  solution with Cuba: mass = "<<massCuba[1] << " (expected value = 110.169)"
               << std::endl;
   } else {
     std::cout << "sorry, failed to find valid solution !!" << std::endl;

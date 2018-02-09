@@ -246,6 +246,7 @@ ClassicSVfitIntegrand::setInputs(const std::vector<MeasuredTauLepton>& measuredT
     }
   }
 #endif
+
 }
 
 void ClassicSVfitIntegrand::addMETEstimate(double measuredMETx, double measuredMETy, const TMatrixD& covMET){
@@ -540,11 +541,9 @@ ClassicSVfitIntegrand::EvalPS(const double* q) const
 
   double prob = prob_PS_and_tauDecay*prob_TF*prob_logM*jacobiFactor;
   if ( verbosity_ >= 2 ) {
-    if(mTauTau<70){
     std::cout << "mTauTau = "<<mTauTau
               << " prob: PS+decay = " << prob_PS_and_tauDecay << ","
               << " TF = " << prob_TF << ", log(M) = " << prob_logM << ", Jacobi = " << jacobiFactor << " --> returning " << prob << std::endl;
-  }
 }
   if (TMath::IsNaN(prob) ) {
     //std::cerr << "Warning: prob = " << prob << " (PS+decay = " << prob_PS_and_tauDecay << ","
@@ -563,11 +562,16 @@ double ClassicSVfitIntegrand::Eval(const double* x, unsigned int iComponent) con
       histogramAdapter_->setTau2P4(tau2P4_);
     }
 
-    //if(iComponent==0) phaseSpaceComponentCache_ = EvalPS(x);
-    phaseSpaceComponentCache_ = EvalPS(x);
+    if(iComponent==0) phaseSpaceComponentCache_ = EvalPS(x);
+    //phaseSpaceComponentCache_ = EvalPS(x);
     double metTF = EvalMET_TF(iComponent);
-
-    //std::cout<<phaseSpaceComponentCache_<<" "<<metTF<<std::endl;
-
+/*
+    std::cout<<"iComponent: "<<iComponent<<std::endl;
+    for(unsigned int i=0;i<5;++i){
+      std::cout<<"x["<<i<<"]: "<<x[i]<<" ";
+    }
+    std::cout<<"PS: "<<phaseSpaceComponentCache_<<" EvalPS(x): "<<EvalPS(x)<<std::endl;
+*/
+  
     return phaseSpaceComponentCache_*metTF;
 }

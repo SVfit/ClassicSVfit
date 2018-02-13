@@ -204,7 +204,9 @@ double compPSfactor_tauToHadDecay(double x, double visEn, double visP, double vi
     double PSfactor = (visEn + nuEn)/(8.*visP*square(x)*TMath::Sqrt(square(visP) + square(nuP) + 2.*visP*nuP*cosThetaNu + tauLeptonMass2));
     //-------------------------------------------------------------------------
     // CV: multiply by constant matrix element,
-    //     chosen such that the branching fraction of the tau to decay into hadrons is reproduced    
+    //     chosen such that the branching fraction of the tau to decay into hadrons is reproduced
+    //const double M2 = 16.*TMath::Pi()*cube(tauLeptonMass)*GammaTauToHad/(tauLeptonMass2 - visMass2);
+    //Remove multiplication as it add to execution time, and does not alter the result.
     PSfactor *= M2/(tauLeptonMass2 - visMass2);
     //-------------------------------------------------------------------------
     return PSfactor;

@@ -150,7 +150,6 @@ void SVfitIntegratorMarkovChain::setIntegrand(gPtr_C g, const double* xl, const 
     xMax_[iDimension] = xu[iDimension];
   }
 
-  epsilon_.resize(numDimensions_);
   epsilon0s_.resize(numDimensions_);
   epsilon_.resize(numDimensions_);
   for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {

@@ -17,15 +17,14 @@ namespace
 {
 double g_C(const double* x, size_t dim, void* param)
 {
-        double retVal = 1E16*ClassicSVfitIntegrand::gSVfitIntegrand->Eval(x);
-        return retVal;
+        return ClassicSVfitIntegrand::gSVfitIntegrand->Eval(x);
 }
 }
 
 ClassicSVfit::ClassicSVfit(int verbosity)
         : integrand_(0),
         intAlgo_(0),
-        maxObjFunctionCalls_(100000),        
+        maxObjFunctionCalls_(100000),
         treeFileName_(""),
         numDimensions_(0),
         histogramAdapter_(new DiTauSystemHistogramAdapter()),

@@ -49,7 +49,8 @@ namespace classic_svFit
 
     void setIntegrationRanges(const double* xl, const double* xu);
 
-    void computeVisMom(const double & visPtShift1, const double & visPtShift2);
+    void computeVisMom(LorentzVector &, LorentzVector &,
+                       const double & visPtShift1, const double & visPtShift2) const;
 
 #ifdef USE_SVFITTF
     /// set transfer functions for pT of hadronic tau decays
@@ -99,8 +100,6 @@ namespace classic_svFit
     mutable LorentzVector vis1P4_, vis2P4_;
     mutable LorentzVector nu1P4_, nu2P4_;
     mutable LorentzVector tau1P4_, tau2P4_;
-    mutable double vis1P_, vis2P_;
-    mutable double vis1En_, vis2En_;
 
     /// measured tau leptons
     MeasuredTauLepton measuredTauLepton1_;

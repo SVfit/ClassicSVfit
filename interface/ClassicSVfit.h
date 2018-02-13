@@ -16,6 +16,8 @@
 #include <TMatrixD.h>
 #include <TMath.h>
 
+#define MAX_CUBA_COMPONENTS 256
+
 class ClassicSVfit
 {
 public:
@@ -78,7 +80,7 @@ void integrate(const std::vector<classic_svFit::MeasuredTauLepton>&,
                const double &, const double &, const TMatrixD&);
 
 /// run integration with Cuba library
-std::vector<float> integrateCuba();
+const std::vector<float> & integrateCuba();
 
 /// return flag indicating if algorithm succeeded to find valid solution
 bool isValidSolution() const;
@@ -125,8 +127,6 @@ std::vector<classic_svFit::MeasuredTauLepton> measuredTauLeptons_;
 classic_svFit::Vector met_;
 TMatrixD covMET_;
 
-double theIntegral, theIntegralErr;
-
 double diTauMassConstraint_ = -1.0;
 
 /// interface to Markov Chain integration algorithm
@@ -134,6 +134,13 @@ classic_svFit::SVfitIntegratorMarkovChain* intAlgo_;
 
 /// interface to CUBA integration algorithm
 classic_svFit::SVfitCUBAIntegrator* intCubaAlgo_;
+
+double theIntegralVector_[MAX_CUBA_COMPONENTS];
+double theIntegralErrVector_[MAX_CUBA_COMPONENTS];
+std::vector<float> maxMass_;
+std::vector<float> maxIntegral_;
+
+double theIntegral, theIntegralErr;
 
 unsigned maxObjFunctionCalls_;
 double precision_;

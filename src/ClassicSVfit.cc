@@ -57,6 +57,9 @@ ClassicSVfit::ClassicSVfit(int verbosity)
 
         covMET_.ResizeTo(2,2);
 
+        maxMass_.resize(MAX_CUBA_COMPONENTS);
+        maxIntegral_.resize(MAX_CUBA_COMPONENTS);
+
 }
 
 ClassicSVfit::~ClassicSVfit()
@@ -333,7 +336,7 @@ void ClassicSVfit::addMETEstimate(const double & measuredMETx,
         integrand_->addMETEstimate(metX, metY, aCovMET);
 }
 
-std::vector<float> ClassicSVfit::integrateCuba(){
+const std::vector<float> & ClassicSVfit::integrateCuba(){
 
         if ( verbosity_ >= 1 ) std::cout << "<ClassicSVfit::integrateCuba>:" << std::endl;
 
@@ -346,11 +349,10 @@ std::vector<float> ClassicSVfit::integrateCuba(){
         if(!intCubaAlgo_) initializeCubaIntegrator();
 
         int numberOfComponents = integrand_->getMETComponentsSize();
-
-        double theIntegralVector[numberOfComponents];
-        double theIntegralErrVector[numberOfComponents];
-        std::vector<float> maxMass(numberOfComponents);
-        std::vector<float> maxIntegral(numberOfComponents);
+        for(unsigned int iComponent=0;iComponent<numberOfComponents;++iComponent){
+          maxIntegral_[iComponent] = 0;
+          maxMass_[iComponent] = 0;
+        }
 
         if( measuredTauLeptons_.size() == 2 ) {
                 histogramAdapter_->setMeasurement(measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4(), met_);
@@ -361,25 +363,25 @@ std::vector<float> ClassicSVfit::integrateCuba(){
         TH1 *hMassCuba = 0;
 
         if(likelihoodFileName_.size()) hMassCuba = (TH1*)hMass->Clone("mass_Cuba");
-        
+
         for(unsigned int iMassPoint=1; iMassPoint<hMass->GetNbinsX(); ++iMassPoint) {
                 float testMass = hMass->GetBinCenter(iMassPoint);
 
                 setDiTauMassConstraint(testMass);
 
                 intCubaAlgo_->setNumberOfComponents(numberOfComponents);
-                intCubaAlgo_->integrateVector(&cubaIntegrand, xl_, xu_, numDimensions_, theIntegralVector, theIntegralErrVector);
+                intCubaAlgo_->integrateVector(&cubaIntegrand, xl_, xu_, numDimensions_,
+                                              theIntegralVector_, theIntegralErrVector_);
 
-                if(hMassCuba) hMassCuba->Fill(testMass,theIntegralVector[0]);
+                if(hMassCuba) hMassCuba->Fill(testMass,theIntegralVector_[0]);
                 for(unsigned int iComponent=0;iComponent<numberOfComponents;++iComponent){
-                  std::cout<<"mass: "<<testMass<<" integral: "<<theIntegralVector[iComponent]<<std::endl;
-                  if(theIntegralVector[iComponent]>maxIntegral[iComponent]) {
-                    maxIntegral[iComponent] = theIntegralVector[iComponent];
-                    maxMass[iComponent] = testMass;
+                  if(theIntegralVector_[iComponent]>maxIntegral_[iComponent]) {
+                    maxIntegral_[iComponent] = theIntegralVector_[iComponent];
+                    maxMass_[iComponent] = testMass;
                   }
-                }
+                }              
         }
-        isValidSolution_ = maxMass[0]>1E-4;
+        isValidSolution_ = maxMass_[0]>1E-4;
 
         clock_->Stop("<ClassicSVfit::integrateCuba>");
         numSeconds_cpu_ = clock_->GetCpuTime("<ClassicSVfit::integrateCuba>");
@@ -395,7 +397,7 @@ std::vector<float> ClassicSVfit::integrateCuba(){
                 file.Write();
         }
 
-        return maxMass;
+        return maxMass_;
 }
 
 void

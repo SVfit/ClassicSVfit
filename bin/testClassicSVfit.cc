@@ -13,43 +13,8 @@
 
 using namespace classic_svFit;
 
-typedef double v8si __attribute__ ((vector_size (8*sizeof(double))));
-
-v8si xMin = {0,0,0,0,0,0,0,0};
-v8si xMax = {1,1,1,1,1,1,1,1};
-v8si x = {0,0,0,0,0,0,0,0};
-
-std::vector<double> xMin_ = {0,0,0,0,0,0,0,0};
-std::vector<double> xMax_ = {1,1,1,1,1,1,1,1};
-std::vector<double> x_ = {0,0,0,0,0,0,0,0};
-
-void updateXSIMD(const v8si & q){
-
-x = xMin*(1-q) + xMax;
-
-}
-
-void updateX(const std::vector<double>& q)
-{
-  for ( unsigned iDimension = 0; iDimension < 6; ++iDimension ) {
-    const double & q_i = q[iDimension];
-    x_[iDimension] = (1. - q_i)*xMin_[iDimension] + q_i*xMax_[iDimension];
-  }
-}
-
 int main(int argc, char* argv[])
 {
-/*
-v8si q = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
-std::vector<double> q_ = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
-
-for(unsigned int i=0;i<1E6;++i){
-updateXSIMD(q);
-updateX(q_);
-}
-return 0;
-*/
-
   /*
      This is a single event for testing purposes.
   */
@@ -86,7 +51,7 @@ return 0;
   svFitAlgo.addLogM_fixed(true, 6.);
   //svFitAlgo.addLogM_dynamic(true, "(m/1000.)*15.");
   //svFitAlgo.setMaxObjFunctionCalls(100000); // CV: default is 100000 evaluations of integrand per event
-  svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
+  //svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
 
   TFile testFile("Test.root","RECREATE");
   TH1F *hCubaMass = new TH1F("hCubaMass","",30,100,130);
@@ -102,23 +67,29 @@ return 0;
   double transverseMass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getTransverseMass();
   double transverseMassErr = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getTransverseMassErr();
   hMCMass->Fill(mass);
-
-  for(unsigned int iTry=0;iTry<10;++iTry){
+/*
+  for(unsigned int iTry=0;iTry<1;++iTry){
       svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
       double mass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMass();
       hMCMass->Fill(mass);
   }
-
+*/
  ///Cuba integration with multiple MET estimates
-  svFitAlgo.setMaxObjFunctionCalls(1000);
+  svFitAlgo.setMaxObjFunctionCalls(2000);
   svFitAlgo.prepareLeptonInput(measuredTauLeptons);
   svFitAlgo.clearMET();
-  unsigned int nMETComponents = 1;
+
+  for(unsigned int i=1;i<2;i+=2){
+  unsigned int nMETComponents = i;
+  svFitAlgo.clearMET();
   for(unsigned int iComponent=0;iComponent<nMETComponents;++iComponent){
     svFitAlgo.addMETEstimate(measuredMETx, measuredMETy, covMET);
   }
+  svFitAlgo.integrateCuba();
+}
+
   std::vector<float> massCuba;
-  for(unsigned int iTry=0;iTry<10;++iTry){
+  for(unsigned int iTry=0;iTry<1;++iTry){
     massCuba = svFitAlgo.integrateCuba();
     hCubaMass->Fill(massCuba[0]);
   }

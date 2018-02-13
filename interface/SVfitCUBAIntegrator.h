@@ -59,7 +59,6 @@ std::vector<double> xMax_;     // index = dimension
 
 
 ///Cuba library configuration parameters.
-
 int verbose = 0;
 
 ///the number of dimensions of the integral.
@@ -77,11 +76,11 @@ int nvec = 1;
 ///the requested relative and absolute accuracies.
 ///The integrator tries to find an estimate Iˆ for the integral I which for every
 //component c fulfills |Iˆc − Ic |< max(epsabs, epsrel*|Ic |).
-cubareal epsrel = 1E-3;
+cubareal epsrel = 1E-1;
 cubareal epsabs = 1E-12;
 
 //flags governing the integration.
-int flags = 2;
+int flags = 0;
 
 ///the seed for the pseudo-random-number generator.
 ///seed = 0 corresponds to Sobol (quasi-random)

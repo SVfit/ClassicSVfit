@@ -51,11 +51,7 @@ int main(int argc, char* argv[])
   svFitAlgo.addLogM_fixed(true, 6.);
   //svFitAlgo.addLogM_dynamic(true, "(m/1000.)*15.");
   //svFitAlgo.setMaxObjFunctionCalls(100000); // CV: default is 100000 evaluations of integrand per event
-  //svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
-
-  TFile testFile("Test.root","RECREATE");
-  TH1F *hCubaMass = new TH1F("hCubaMass","",30,100,130);
-  TH1F *hMCMass = new TH1F("hMCMass","",30,100,130);
+  svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
 
   svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
 
@@ -66,41 +62,10 @@ int main(int argc, char* argv[])
   double massErr = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMassErr();
   double transverseMass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getTransverseMass();
   double transverseMassErr = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getTransverseMassErr();
-  hMCMass->Fill(mass);
-/*
-  for(unsigned int iTry=0;iTry<1;++iTry){
-      svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
-      double mass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMass();
-      hMCMass->Fill(mass);
-  }
-*/
- ///Cuba integration with multiple MET estimates
-  svFitAlgo.setMaxObjFunctionCalls(2000);
-  svFitAlgo.prepareLeptonInput(measuredTauLeptons);
-  svFitAlgo.clearMET();
-
-  for(unsigned int i=1;i<2;i+=2){
-  unsigned int nMETComponents = i;
-  svFitAlgo.clearMET();
-  for(unsigned int iComponent=0;iComponent<nMETComponents;++iComponent){
-    svFitAlgo.addMETEstimate(measuredMETx, measuredMETy, covMET);
-  }
-  svFitAlgo.integrateCuba();
-}
-
-  std::vector<float> massCuba;
-  for(unsigned int iTry=0;iTry<1;++iTry){
-    massCuba = svFitAlgo.integrateCuba();
-    hCubaMass->Fill(massCuba[0]);
-  }
-  testFile.Write();
 
   if ( isValidSolution ) {
     std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 115.746 +/- 92.8784),"
-              << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 114.242 +/- 91.5567)"
-              << std::endl<<"  solution with Cuba: mass = "<<massCuba[0] << " (expected value = 115.746)"
-              << std::endl<<"  solution with Cuba: mass = "<<massCuba[1] << " (expected value = 115.746)"
-              << std::endl<<"  solution with Cuba: mass = "<<massCuba[2] << " (expected value = 115.746)"
+              << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 114.242 +/- 91.5567)"            
               << std::endl;
   } else {
     std::cout << "sorry, failed to find valid solution !!" << std::endl;

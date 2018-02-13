@@ -4,7 +4,6 @@
 #include "TauAnalysis/ClassicSVfit/interface/ClassicSVfitIntegrand.h"
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredTauLepton.h"
 #include "TauAnalysis/ClassicSVfit/interface/SVfitIntegratorMarkovChain.h"
-#include "TauAnalysis/ClassicSVfit/interface/SVfitCUBAIntegrator.h"
 #ifdef USE_SVFITTF
 #include "TauAnalysis/SVfitTF/interface/HadTauTFBase.h"
 #endif
@@ -15,8 +14,6 @@
 #include <TGraphErrors.h>
 #include <TMatrixD.h>
 #include <TMath.h>
-
-#define MAX_CUBA_COMPONENTS 256
 
 class ClassicSVfit
 {
@@ -44,9 +41,6 @@ void setRhoHadTau(double rhoHadTau);
 ///set verbosity level.
 ///Level 0 - mute, level 1 - print inputs, level 2 - print integration details
 void setVerbosity(int aVerbosity);
-
-///use Cuba integration library instead of custom Markov Chain
-void setUseCuba(bool useCuba);
 
 /// number of function calls for Markov Chain integration (default is 100000)
 void setMaxObjFunctionCalls(unsigned maxObjFunctionCalls);
@@ -79,9 +73,6 @@ void clearMET();
 void integrate(const std::vector<classic_svFit::MeasuredTauLepton>&,
                const double &, const double &, const TMatrixD&);
 
-/// run integration with Cuba library
-const std::vector<float> & integrateCuba();
-
 /// return flag indicating if algorithm succeeded to find valid solution
 bool isValidSolution() const;
 
@@ -96,9 +87,6 @@ bool useCuba_;
 
 /// initialize Markov Chain integrator class
 void initializeMCIntegrator();
-
-/// initialize Cuba integrator class
-void initializeCubaIntegrator();
 
 /// print MET and its covariance matrix
 void printMET(double measuredMETx, double measuredMETy, const TMatrixD& covMET) const;
@@ -121,7 +109,6 @@ void setLegIntegrationParams(unsigned int iLeg, bool useMassConstraint=false);
 void setIntegrationRanges(unsigned int iLeg);
 
 classic_svFit::ClassicSVfitIntegrand* integrand_;
-TH1 *hCubaMassShape;
 
 std::vector<classic_svFit::MeasuredTauLepton> measuredTauLeptons_;
 classic_svFit::Vector met_;
@@ -132,18 +119,9 @@ double diTauMassConstraint_ = -1.0;
 /// interface to Markov Chain integration algorithm
 classic_svFit::SVfitIntegratorMarkovChain* intAlgo_;
 
-/// interface to CUBA integration algorithm
-classic_svFit::SVfitCUBAIntegrator* intCubaAlgo_;
-
-double theIntegralVector_[MAX_CUBA_COMPONENTS];
-double theIntegralErrVector_[MAX_CUBA_COMPONENTS];
-std::vector<float> maxMass_;
-std::vector<float> maxIntegral_;
-
 double theIntegral, theIntegralErr;
 
 unsigned maxObjFunctionCalls_;
-double precision_;
 std::string treeFileName_;
 
 /// variables indices and ranges for each leg

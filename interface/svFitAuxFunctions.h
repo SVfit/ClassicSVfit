@@ -45,6 +45,7 @@ namespace classic_svFit
     return x*x*x*x*x*x*x*x;
   }
 
+  const double epsilon = 1E-3;
   //-----------------------------------------------------------------------------
   // define masses, widths and lifetimes of particles
   // relevant for computing values of likelihood functions in SVfit algorithm

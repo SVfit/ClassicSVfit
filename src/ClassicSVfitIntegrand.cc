@@ -556,14 +556,22 @@ ClassicSVfitIntegrand::EvalPS(const double* q) const
 
 double ClassicSVfitIntegrand::Eval(const double* x, unsigned int iComponent) const
 {
-  // CV: fill histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
-    if(histogramAdapter_){
+
+    if(iComponent==0) phaseSpaceComponentCache_ = EvalPS(x);
+    if(phaseSpaceComponentCache_<1E-300) return 0.0;
+    double value = phaseSpaceComponentCache_ * EvalMET_TF(iComponent);
+
+    if(verbosity_>=2){
+      std::cout<<" metTF: "<<EvalMET_TF(iComponent)
+               <<" phaseSpaceComponentCache_: "<<phaseSpaceComponentCache_
+               <<" --> returning "<<value
+               <<std::endl;
+  }
+/*
+  if(histogramAdapter_ && value>1E-300){
       histogramAdapter_->setTau1P4(tau1P4_);
       histogramAdapter_->setTau2P4(tau2P4_);
     }
-
-    if(iComponent==0) phaseSpaceComponentCache_ = EvalPS(x);
-    double metTF = EvalMET_TF(iComponent);
-
-    return phaseSpaceComponentCache_*metTF;
+*/
+    return value;
 }

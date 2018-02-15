@@ -39,7 +39,6 @@ ClassicSVfit::ClassicSVfit(int verbosity)
         integrand_ = new ClassicSVfitIntegrand(verbosity_);
         clock_ = new TBenchmark();
 
-        covMET_.ResizeTo(2,2);
 }
 
 ClassicSVfit::~ClassicSVfit()
@@ -324,6 +323,8 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
 
         // CV: book histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
         if ( measuredTauLeptons_.size() == 2 ) {
+                met_.SetX(measuredMETx);
+                met_.SetY(measuredMETy);
                 histogramAdapter_->setMeasurement(measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4(), met_);
                 histogramAdapter_->bookHistograms(measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4(), met_);
         }

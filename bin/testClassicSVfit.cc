@@ -53,8 +53,9 @@ int main(int argc, char* argv[])
   //svFitAlgo.setMaxObjFunctionCalls(100000); // CV: default is 100000 evaluations of integrand per event
   svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
 
+for(int iTry=0;iTry<1;++iTry){
   svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
-
+}
   bool isValidSolution = svFitAlgo.isValidSolution();
 
   double lMax = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMassLmax();
@@ -65,7 +66,7 @@ int main(int argc, char* argv[])
 
   if ( isValidSolution ) {
     std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 115.746 +/- 92.5252),"
-              << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 114.242 +/- 91.2066)"            
+              << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 114.242 +/- 91.2066)"
               << std::endl;
   } else {
     std::cout << "sorry, failed to find valid solution !!" << std::endl;

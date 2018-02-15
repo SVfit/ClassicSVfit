@@ -112,7 +112,6 @@ classic_svFit::ClassicSVfitIntegrand* integrand_;
 
 std::vector<classic_svFit::MeasuredTauLepton> measuredTauLeptons_;
 classic_svFit::Vector met_;
-TMatrixD covMET_;
 
 double diTauMassConstraint_ = -1.0;
 

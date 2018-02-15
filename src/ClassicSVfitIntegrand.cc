@@ -568,8 +568,7 @@ double ClassicSVfitIntegrand::Eval(const double* x, unsigned int iComponent) con
                <<std::endl;
   }
   if(histogramAdapter_ && value>1E-300){
-      histogramAdapter_->setTau1P4(tau1P4_);
-      histogramAdapter_->setTau2P4(tau2P4_);
+      histogramAdapter_->setTau1And2P4(tau1P4_, tau2P4_);
     }
     return value;
 }

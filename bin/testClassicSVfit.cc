@@ -53,9 +53,7 @@ int main(int argc, char* argv[])
   //svFitAlgo.setMaxObjFunctionCalls(100000); // CV: default is 100000 evaluations of integrand per event
   svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
 
-for(int iTry=0;iTry<1;++iTry){
   svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
-}
   bool isValidSolution = svFitAlgo.isValidSolution();
 
   double lMax = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMassLmax();

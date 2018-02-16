@@ -286,7 +286,7 @@ void SVfitIntegratorMarkovChain::integrate(gPtr_C g, const double* xl, const dou
         ++numMoves_rejected_;
       }
 
-      updateX(q_);
+      updateX(q_);      
       for ( std::vector<const ROOT::Math::Functor*>::const_iterator callBackFunction = callBackFunctions_.begin();
             callBackFunction != callBackFunctions_.end(); ++callBackFunction ) {
         (**callBackFunction)(x_);

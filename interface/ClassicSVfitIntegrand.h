@@ -86,6 +86,10 @@ namespace classic_svFit
     /// q is given in standarised range [0,1] for each dimension.
     double Eval(const double* q, unsigned int iComponent=0) const;
 
+    /// evaluate all components of the full integrand for given value of integration variables q.
+    /// q is given in standarised range [0,1] for each dimension.
+    void Eval(const double* x, double value[]) const;
+
     ///Transform the values fo integration variables from [0,1] to
     ///desires [xMin,xMax] range;
     void rescaleX(const double* q) const;

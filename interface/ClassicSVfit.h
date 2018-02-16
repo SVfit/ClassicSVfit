@@ -4,6 +4,12 @@
 #include "TauAnalysis/ClassicSVfit/interface/ClassicSVfitIntegrand.h"
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredTauLepton.h"
 #include "TauAnalysis/ClassicSVfit/interface/SVfitIntegratorMarkovChain.h"
+
+#ifdef USE_CUBA
+#include "TauAnalysis/ClassicSVfit/interface/SVfitCUBAIntegrator.h"
+#define MAX_CUBA_COMPONENTS 256
+#endif
+
 #ifdef USE_SVFITTF
 #include "TauAnalysis/SVfitTF/interface/HadTauTFBase.h"
 #endif
@@ -11,7 +17,6 @@
 
 #include <TBenchmark.h>
 #include <TFile.h>
-#include <TGraphErrors.h>
 #include <TMatrixD.h>
 #include <TMath.h>
 
@@ -73,6 +78,11 @@ void clearMET();
 void integrate(const std::vector<classic_svFit::MeasuredTauLepton>&,
                const double &, const double &, const TMatrixD&);
 
+#ifdef USE_CUBA
+/// run integration with Cuba library
+const std::vector<double> & integrateCuba();
+#endif
+
 /// return flag indicating if algorithm succeeded to find valid solution
 bool isValidSolution() const;
 
@@ -82,11 +92,13 @@ double getComputingTime_real() const;
 
 protected:
 
-///flag for choosing the integrator class
-bool useCuba_;
-
 /// initialize Markov Chain integrator class
 void initializeMCIntegrator();
+
+#ifdef USE_CUBA
+/// initialize Cuba integrator class
+void initializeCubaIntegrator();
+#endif
 
 /// print MET and its covariance matrix
 void printMET(double measuredMETx, double measuredMETy, const TMatrixD& covMET) const;
@@ -117,6 +129,16 @@ double diTauMassConstraint_ = -1.0;
 
 /// interface to Markov Chain integration algorithm
 classic_svFit::SVfitIntegratorMarkovChain* intAlgo_;
+
+#ifdef USE_CUBA
+/// interface to CUBA integration algorithm
+classic_svFit::SVfitCUBAIntegrator* intCubaAlgo_;
+
+double theIntegralVector_[MAX_CUBA_COMPONENTS];
+double theIntegralErrVector_[MAX_CUBA_COMPONENTS];
+std::vector<double> maxMass_;
+std::vector<double> maxIntegral_;
+#endif
 
 double theIntegral, theIntegralErr;
 

@@ -572,3 +572,22 @@ double ClassicSVfitIntegrand::Eval(const double* x, unsigned int iComponent) con
     }
     return value;
 }
+
+
+void ClassicSVfitIntegrand::Eval(const double* x, double value[]) const
+{
+  int numberOfComponents = getMETComponentsSize();
+  phaseSpaceComponentCache_ = EvalPS(x);
+
+  for(unsigned int iComponent=0;iComponent<numberOfComponents;++iComponent){
+    if(phaseSpaceComponentCache_<1E-300) value[iComponent] = 0.0;
+    else value[iComponent] = phaseSpaceComponentCache_ * EvalMET_TF(iComponent);
+
+    if(verbosity_>=2){
+      std::cout<<" metTF: "<<EvalMET_TF(iComponent)
+      <<" phaseSpaceComponentCache_: "<<phaseSpaceComponentCache_
+      <<" --> returning "<<value[iComponent]
+      <<std::endl;
+    }
+  }
+}

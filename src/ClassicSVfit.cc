@@ -19,6 +19,19 @@ double g_C(const double* x, size_t dim, void* param)
 {
         return ClassicSVfitIntegrand::gSVfitIntegrand->Eval(x);
 }
+#ifdef USE_CUBA
+int cubaIntegrand(const int *ndim, const double qq[],
+                  const int *ncomp, double ff[], void *userdata){
+
+        ClassicSVfitIntegrand::gSVfitIntegrand->Eval(qq, ff);
+/*
+        for(unsigned int iComponent=0; iComponent<*ncomp; ++iComponent) {
+                ff[iComponent] = ClassicSVfitIntegrand::gSVfitIntegrand->Eval(qq);
+        }
+  */
+        return 0;
+}
+#endif
 }
 
 ClassicSVfit::ClassicSVfit(int verbosity)
@@ -39,6 +52,12 @@ ClassicSVfit::ClassicSVfit(int verbosity)
         integrand_ = new ClassicSVfitIntegrand(verbosity_);
         clock_ = new TBenchmark();
 
+        #ifdef USE_CUBA
+        maxMass_.resize(MAX_CUBA_COMPONENTS);
+        maxIntegral_.resize(MAX_CUBA_COMPONENTS);
+        intCubaAlgo_ = 0;
+        #endif
+
 }
 
 ClassicSVfit::~ClassicSVfit()
@@ -48,6 +67,9 @@ ClassicSVfit::~ClassicSVfit()
         delete integrand_;
 
         if(intAlgo_) delete intAlgo_;
+        #ifdef USE_CUBA
+        if(intCubaAlgo_) delete intCubaAlgo_;
+        #endif
 
         delete clock_;
 }
@@ -144,6 +166,12 @@ void ClassicSVfit::initializeMCIntegrator()
         intAlgo_->registerCallBackFunction(*histogramAdapter_);
 }
 
+#ifdef USE_CUBA
+void ClassicSVfit::initializeCubaIntegrator()
+{
+        intCubaAlgo_ = new SVfitCUBAIntegrator(verbosity_, maxObjFunctionCalls_);
+}
+#endif
 
 void ClassicSVfit::printMET(double measuredMETx, double measuredMETy, const TMatrixD& covMET) const
 {
@@ -344,6 +372,71 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
                 clock_->Show("<ClassicSVfit::integrate>");
         }
 }
+
+#ifdef USE_CUBA
+const std::vector<double> & ClassicSVfit::integrateCuba(){
+
+        if ( verbosity_ >= 1 ) std::cout << "<ClassicSVfit::integrateCuba>:" << std::endl;
+
+        clock_->Reset();
+        clock_->Start("<ClassicSVfit::integrateCuba>");
+
+        int numberOfComponents = integrand_->getMETComponentsSize();
+        for(unsigned int iComponent=0;iComponent<numberOfComponents;++iComponent){
+          maxIntegral_[iComponent] = 0;
+          maxMass_[iComponent] = 0;
+        }
+
+        if( measuredTauLeptons_.size() == 2 ) {
+                histogramAdapter_->setMeasurement(measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4(), met_);
+                histogramAdapter_->bookHistograms(measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4(), met_);
+        }
+
+        setIntegrationParams(true);
+        prepareIntegrand(false);
+        if(!intCubaAlgo_) initializeCubaIntegrator();
+        intCubaAlgo_->setNumberOfComponents(numberOfComponents);
+
+        const TH1 *hMass = histogramAdapter_->getQuantity(3)->getHistogram();
+        TH1 *hMassCuba = 0;
+
+        if(likelihoodFileName_.size()) hMassCuba = (TH1*)hMass->Clone("mass_Cuba");
+
+        for(unsigned int iMassPoint=1; iMassPoint<hMass->GetNbinsX(); ++iMassPoint) {
+                float testMass = hMass->GetBinCenter(iMassPoint);
+                setDiTauMassConstraint(testMass);
+
+                intCubaAlgo_->integrateVector(&cubaIntegrand, xl_, xu_, numDimensions_,
+                                              theIntegralVector_, theIntegralErrVector_);
+
+                if(hMassCuba) hMassCuba->Fill(testMass,theIntegralVector_[0]);
+                for(unsigned int iComponent=0;iComponent<numberOfComponents;++iComponent){
+                  if(theIntegralVector_[iComponent]>maxIntegral_[iComponent]) {
+                    maxIntegral_[iComponent] = theIntegralVector_[iComponent];
+                    maxMass_[iComponent] = testMass;
+                  }
+                }
+        }
+        isValidSolution_ = maxMass_[0]>classic_svFit::epsilon;
+
+        clock_->Stop("<ClassicSVfit::integrateCuba>");
+        numSeconds_cpu_ = clock_->GetCpuTime("<ClassicSVfit::integrateCuba>");
+        numSeconds_real_ = clock_->GetRealTime("<ClassicSVfit::integrateCuba>");
+
+        if ( verbosity_ >= 1 ) {
+                clock_->Show("<ClassicSVfit::integrateCuba>");
+        }
+
+        if(likelihoodFileName_.size()) {
+                TFile file(("Cuba_"+likelihoodFileName_).c_str(),"RECREATE");
+                hMassCuba->SetDirectory(&file);
+                file.Write();
+        }
+
+        return maxMass_;
+}
+#endif
+
 
 void ClassicSVfit::setHistogramAdapter(classic_svFit::HistogramAdapter* histogramAdapter)
 {

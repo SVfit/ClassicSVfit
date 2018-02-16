@@ -54,6 +54,7 @@ int main(int argc, char* argv[])
   svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
 
   svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+  svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
   bool isValidSolution = svFitAlgo.isValidSolution();
 
   double lMax = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMassLmax();
@@ -62,10 +63,32 @@ int main(int argc, char* argv[])
   double transverseMass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getTransverseMass();
   double transverseMassErr = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getTransverseMassErr();
 
+#ifdef USE_CUBA
+  ///Cuba integration with multiple MET estimates
+  svFitAlgo.setMaxObjFunctionCalls(2000);
+  svFitAlgo.prepareLeptonInput(measuredTauLeptons);
+  svFitAlgo.clearMET();
+
+  ///Here we add many MET components for the same tau p4.
+  ///It this example components are the same
+  unsigned int nMETComponents = 10;
+  for(unsigned int iComponent=0;iComponent<nMETComponents;++iComponent){
+    svFitAlgo.addMETEstimate(measuredMETx, measuredMETy, covMET);
+  }
+  std::vector<double> massCuba = svFitAlgo.integrateCuba();
+#endif
+
   if ( isValidSolution ) {
     std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 115.746 +/- 92.5252),"
               << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 114.242 +/- 91.2066)"
               << std::endl;
+    #ifdef USE_CUBA
+    for(unsigned int iComponent=0;iComponent<nMETComponents;++iComponent){
+      std::cout <<"  solution with Cuba. Component: "<<iComponent
+                <<" mass = "<<massCuba[iComponent] << " (expected value = 115.746)"
+                <<std::endl;
+    }
+    #endif
   } else {
     std::cout << "sorry, failed to find valid solution !!" << std::endl;
   }

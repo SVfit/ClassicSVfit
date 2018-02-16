@@ -128,6 +128,7 @@ namespace classic_svFit
 
   const int maxNumberOfDimensions = 6;
   const int numberOfLegs = 2;
+  const int maxNumberOfComponents = 512;
 
 struct integrationParameters{
 

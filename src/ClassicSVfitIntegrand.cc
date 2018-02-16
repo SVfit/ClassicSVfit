@@ -576,7 +576,7 @@ double ClassicSVfitIntegrand::Eval(const double* x, unsigned int iComponent) con
 
 void ClassicSVfitIntegrand::Eval(const double* x, double value[]) const
 {
-  int numberOfComponents = getMETComponentsSize();
+  unsigned int numberOfComponents = getMETComponentsSize();
   phaseSpaceComponentCache_ = EvalPS(x);
 
   for(unsigned int iComponent=0;iComponent<numberOfComponents;++iComponent){

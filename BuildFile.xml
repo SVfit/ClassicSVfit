@@ -5,6 +5,9 @@
 <Flags CPPDEFINES="USE_SVFITTF"/>
 <Flags LDFLAGS="-rdynamic" />
 <Flags ADD_SUBDIR="1"/>
+<Flags CXXFLAGS="-I Cuba-4.2/include"/>
+<Flags CXXFLAGS="-L Cuba-4.2/lib"/>
+<Flags CXXFLAGS="-lcuba"/>
 <export>
   <lib   name="1"/>
 </export>

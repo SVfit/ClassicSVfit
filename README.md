@@ -17,3 +17,13 @@ In order to install the code, execute:
 
 In case of compilation problems, please contact christian.veelken AT cern.ch .
 
+To use the Cuba integration library please do following steps before calling scram b.
+Please note that scram b has to be called with additional parameter.
+
+  wget http://www.feynarts.de/cuba/Cuba-4.2.tar.gz
+  tar -xvzf Cuba-4.2.tar.gz
+  cd Cuba-4.2
+  ./configure --prefix=$PWD
+  sed -i s/"-O3"/"-fPIC -O3"/ makefile > makefile
+  make install
+	scram b CPPDEFINES="-DUSE_CUBA"

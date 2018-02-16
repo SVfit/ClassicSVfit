@@ -1,3 +1,4 @@
+#ifdef USE_CUBA
 #include "TauAnalysis/ClassicSVfit/interface/SVfitCUBAIntegrator.h"
 
 #include <TMath.h>
@@ -15,7 +16,7 @@ using namespace classic_svFit;
 //-------------------------------------------------------------------------------
 //
 SVfitCUBAIntegrator::SVfitCUBAIntegrator(unsigned int verbosity, unsigned int maxObjFunctionCalls)
-        : integrand_(0), verbosity_(verbosity), x_(0){
+        :  verbosity_(verbosity), integrand_(0), x_(0){
 
         ///Disable multithread calculation, as this can affect the grid running.
         cubacores(0,1);
@@ -43,7 +44,7 @@ void SVfitCUBAIntegrator::setIntegrand(integrand_t g, const double* xl, const do
 
         xMin_.resize(ndim);
         xMax_.resize(ndim);
-        for ( unsigned iDimension = 0; iDimension < ndim; ++iDimension ) {
+        for (int iDimension = 0; iDimension < ndim; ++iDimension ) {
                 xMin_[iDimension] = xl[iDimension];
                 xMax_[iDimension] = xu[iDimension];
                 if ( verbosity_ >= 2 ) {
@@ -137,3 +138,4 @@ void SVfitCUBAIntegrator::print(std::ostream& stream) const {
 //
 //-------------------------------------------------------------------------------
 //
+#endif

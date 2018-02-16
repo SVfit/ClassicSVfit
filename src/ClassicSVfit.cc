@@ -381,7 +381,7 @@ const std::vector<double> & ClassicSVfit::integrateCuba(){
         clock_->Reset();
         clock_->Start("<ClassicSVfit::integrateCuba>");
 
-        int numberOfComponents = integrand_->getMETComponentsSize();
+        unsigned int numberOfComponents = integrand_->getMETComponentsSize();
         for(unsigned int iComponent=0;iComponent<numberOfComponents;++iComponent){
           maxIntegral_[iComponent] = 0;
           maxMass_[iComponent] = 0;
@@ -402,7 +402,7 @@ const std::vector<double> & ClassicSVfit::integrateCuba(){
 
         if(likelihoodFileName_.size()) hMassCuba = (TH1*)hMass->Clone("mass_Cuba");
 
-        for(unsigned int iMassPoint=1; iMassPoint<hMass->GetNbinsX(); ++iMassPoint) {
+        for(int iMassPoint=1; iMassPoint<hMass->GetNbinsX(); ++iMassPoint) {
                 float testMass = hMass->GetBinCenter(iMassPoint);
                 setDiTauMassConstraint(testMass);
 

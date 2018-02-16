@@ -3,4 +3,5 @@
   <use name="TauAnalysis/SVfitTF"/>
   <use name="root"/>
   <Flags CPPDEFINES="USE_SVFITTF"/>
+  <Flags CXXFLAGS="-I Cuba-4.2/include"/>
 </bin>

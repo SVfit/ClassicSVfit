@@ -1,4 +1,4 @@
-
+#ifdef USE_CUBA
 #ifndef TauAnalysis_ClassicSVfit_SVfitCUBAIntegrator_h
 #define TauAnalysis_ClassicSVfit_SVfitCUBAIntegrator_h
 
@@ -187,4 +187,5 @@ int fail = -1;
 };
 }
 
+#endif
 #endif

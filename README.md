@@ -7,11 +7,11 @@ It depends on the following other packages:
 	TauAnalysis/SVfitTF
 
 In order to install the code, execute:
-	cmsrel CMSSW_7_6_3
-	cd CMSSW_7_6_3/src
+	cmsrel CMSSW_9_4_4
+	cd CMSSW_9_4_4/src
 	cmsenv
-	git clone https://github.com/veelken/ClassicSVfit TauAnalysis/ClassicSVfit
-	git clone https://github.com/veelken/SVfitTF TauAnalysis/SVfitTF
+	git clone https://github.com/SVfit/ClassicSVfit TauAnalysis/ClassicSVfit
+	git clone https://github.com/SVfit/SVfitTF TauAnalysis/SVfitTF
 	cd $CMSSW_BASE/src
 	scram b -j 4
 
@@ -24,6 +24,6 @@ Please note that scram b has to be called with additional parameter.
   tar -xvzf Cuba-4.2.tar.gz
   cd Cuba-4.2
   ./configure --prefix=$PWD
-  sed -i s/"-O3"/"-fPIC -O3"/ makefile > makefile
+  sed -i s/"-O3"/"-fPIC -O3"/ makefile
   make install
 	scram b CPPDEFINES="-DUSE_CUBA"

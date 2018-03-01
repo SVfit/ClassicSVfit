@@ -6,6 +6,7 @@
 #include "TauAnalysis/SVfitTF/interface/HadTauTFBase.h"
 #endif
 #include "TauAnalysis/ClassicSVfit/interface/svFitHistogramAdapter.h"
+#include "TauAnalysis/ClassicSVfit/interface/svFitAuxFunctions.h"
 
 #include <Math/Functor.h>
 #include <TMatrixD.h>
@@ -32,22 +33,24 @@ namespace classic_svFit
     /// add an additional log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution (default is false)
     void addLogM_fixed(bool value, double power = 1.);
     void addLogM_dynamic(bool value, const std::string& power= "");
-    
+
     void setDiTauMassConstraint(double diTauMass);
 
     /// set pointer to histograms used to keep track of pT, eta, phi, mass and transverse mass of di-tau system
     /// during Markov Chain integration
     void setHistogramAdapter(HistogramAdapter* histogramAdapter);
 
-    void setIdxLeg1_X(int idx);
-    void setIdxLeg1_phi(int idx);
-    void setIdxLeg1VisPtShift(int idx);
-    void setIdxLeg1_mNuNu(int idx);
-    void setIdxLeg2_X(int idx);
-    void setIdxLeg2_phi(int idx);
-    void setIdxLeg2VisPtShift(int idx);
-    void setIdxLeg2_mNuNu(int idx);
+    void setLegIntegrationParams(unsigned int iLeg,
+                                 const classic_svFit::integrationParameters & aParams);
+
     void setNumDimensions(unsigned numDimensions);
+
+    void setVerbosity(int aVerbosity);
+
+    void setIntegrationRanges(const double* xl, const double* xu);
+
+    void computeVisMom(LorentzVector &, LorentzVector &,
+                       const double & visPtShift1, const double & visPtShift2) const;
 
 #ifdef USE_SVFITTF
     /// set transfer functions for pT of hadronic tau decays
@@ -60,16 +63,44 @@ namespace classic_svFit
     void setRhoHadTau(double rhoHadTau);
 #endif
 
-    /// set momenta of visible tau decay products and of reconstructed missing transverse energy
-    void setInputs(const std::vector<classic_svFit::MeasuredTauLepton>&, double, double, const TMatrixD&);
+    /// set momenta of visible tau decay products
+    void setLeptonInputs(const std::vector<classic_svFit::MeasuredTauLepton>&);
 
-    /// evaluate integrand for given value of integration variables x
-    double Eval(const double* x) const;
+    /// add MET  estimates, i.e. systematic effect variations
+    void addMETEstimate(double, double, const TMatrixD&);
+
+    /// remove MET estimates
+    void clearMET();
+
+    /// evaluate Phase Space part of the integrand for given value of integration variables x
+    double EvalPS(const double* x) const;
+
+    /// evaluate the MET TF part of the integral.
+    double EvalMET_TF(const double & aMETx, const double & aMETy, const TMatrixD&) const;
+
+    /// evaluate the MET TF part of the integral using current values of the MET variables
+    /// iComponent is ans index to MET estimate, i.e. systamtic effect variation
+    double EvalMET_TF(unsigned int iComponent=0) const;
+
+    /// evaluate the iComponent of the full integrand for given value of integration variables q.
+    /// q is given in standarised range [0,1] for each dimension.
+    double Eval(const double* q, unsigned int iComponent=0) const;
+
+    ///Transform the values fo integration variables from [0,1] to
+    ///desires [xMin,xMax] range;
+    void rescaleX(const double* q) const;
+
+    int getMETComponentsSize() const;
 
     /// static pointer to this (needed for interfacing the likelihood function calls to Markov Chain integration)
     static const ClassicSVfitIntegrand* gSVfitIntegrand;
 
    protected:
+
+    mutable LorentzVector vis1P4_, vis2P4_;
+    mutable LorentzVector nu1P4_, nu2P4_;
+    mutable LorentzVector tau1P4_, tau2P4_;
+
     /// measured tau leptons
     MeasuredTauLepton measuredTauLepton1_;
     bool leg1isLep_;
@@ -104,11 +135,13 @@ namespace classic_svFit
     Vector beamAxis_;
 
     /// measured MET
-    double measuredMETx_;
-    double measuredMETy_;
+    std::vector<double> measuredMETx_;
+    std::vector<double> measuredMETy_;
 
-    /// inverse of MET covariance matrix
-    TMatrixD invCovMET_;
+    ///MET covariance matrix
+    std::vector<TMatrixD> covMET_;
+
+    ///Inverse covariance matix elements
     double invCovMETxx_;
     double invCovMETxy_;
     double invCovMETyx_;
@@ -124,28 +157,26 @@ namespace classic_svFit
     double rhoHadTau_;
 #endif
 
-    int idxLeg1_X_;
-    int idxLeg1_phi_;
-    int idxLeg1VisPtShift_;
-    int idxLeg1_mNuNu_;
-    int idxLeg2_X_;
-    int idxLeg2_phi_;
-    int idxLeg2VisPtShift_;
-    int idxLeg2_mNuNu_;
+    classic_svFit::integrationParameters legIntegrationParams_[classic_svFit::numberOfLegs];
     unsigned numDimensions_;
+    mutable double xMin_[classic_svFit::maxNumberOfDimensions];
+    mutable double xMax_[classic_svFit::maxNumberOfDimensions];
+    mutable double x_[classic_svFit::maxNumberOfDimensions];
 
     /// flag to enable/disable addition of log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution
     bool addLogM_fixed_;
     double addLogM_fixed_power_;
     bool addLogM_dynamic_;
     TFormula* addLogM_dynamic_formula_;
-    
+
     double diTauMassConstraint_ = -1.0;
 
     /// error code that can be passed on
     int errorCode_;
 
     HistogramAdapter* histogramAdapter_;
+
+    mutable double phaseSpaceComponentCache_;
 
     /// verbosity level
     int verbosity_;

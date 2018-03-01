@@ -62,6 +62,8 @@ namespace classic_svFit
     double sinPhi_sinTheta() const;
     double cosTheta() const;
 
+    void roundToNdigits(unsigned int nDigis = 3);
+
    protected:
     /// set visible momentum in all coordinates systems
     void initialize();

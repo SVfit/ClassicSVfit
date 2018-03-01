@@ -214,11 +214,10 @@ void SVfitIntegratorMarkovChain::integrate(gPtr_C g, const double* xl, const dou
     tree_ = new TTree("tree", "Markov Chain transitions");
     for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
       std::string branchName = Form("x%u", iDimension);
-      std::string branchName_and_option = Form("%s/F", branchName.data());
-      tree_->Branch(branchName.data(), &x_[iDimension], branchName_and_option.data());
+      tree_->Branch(branchName.data(), &x_[iDimension]);
     }
-    tree_->Branch("move", &treeMove_, "move/I");
-    tree_->Branch("integrand", &treeIntegrand_, "integrand/F");
+    tree_->Branch("move", &treeMove_);
+    tree_->Branch("integrand", &treeIntegrand_);
   }
 
   for ( unsigned iChain = 0; iChain < numChains_; ++iChain ) {
@@ -504,14 +503,13 @@ void SVfitIntegratorMarkovChain::makeStochasticMove(unsigned idxMove, bool& isAc
 void SVfitIntegratorMarkovChain::updateX(const std::vector<double>& q)
 {
   for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
-    double q_i = q[iDimension];
+    const double & q_i = q[iDimension];
     x_[iDimension] = (1. - q_i)*xMin_[iDimension] + q_i*xMax_[iDimension];
   }
 }
 
 double SVfitIntegratorMarkovChain::evalProb(const std::vector<double>& q)
 {
-  updateX(q);
-  double prob = (*integrand_)(x_, numDimensions_, 0);
+  double prob = (*integrand_)(q.data(), numDimensions_, 0);
   return prob;
 }

@@ -51,7 +51,7 @@ namespace classic_svFit
 
     /// compute integral of function g
     /// the points xl and xh represent the lower left and upper right corner of a Hypercube in d-dimensional integration space
-    typedef double (*gPtr_C)(double*, size_t, void*);
+    typedef double (*gPtr_C)(const double*, size_t, void*);
     void integrate(gPtr_C g, const double* xl, const double* xu, unsigned d, double& integral, double& integralErr);
 
     void print(std::ostream&) const;

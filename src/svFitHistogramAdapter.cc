@@ -136,6 +136,8 @@ void SVfitQuantity::bookHistogram(const LorentzVector& vis1P4, const LorentzVect
   histogram_->SetName((histogram_->GetName()+uniqueName).c_str());
 }
 
+const TH1* SVfitQuantity::getHistogram() const { return histogram_;}
+
 void SVfitQuantity::writeHistogram() const
 {
   if (histogram_ != nullptr)
@@ -146,12 +148,17 @@ void SVfitQuantity::writeHistogram() const
   }
 }
 
+void SVfitQuantity::fillHistogram(const double & value, const double & weight)
+{
+  histogram_->Fill(value, weight);
+}
+
 void SVfitQuantity::fillHistogram(
-    const LorentzVector& tau1P4, const LorentzVector& tau2P4,
+    const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& tauSumP4,
     const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met
 )
 {
-  histogram_->Fill(fitFunction(tau1P4, tau2P4, vis1P4, vis2P4, met));
+  histogram_->Fill(fitFunction(tau1P4, tau2P4, tauSumP4, vis1P4, vis2P4, met));
 }
 
 double SVfitQuantity::extractValue() const
@@ -179,9 +186,10 @@ TH1* DiTauSystemPtSVfitQuantity::createHistogram(const LorentzVector& vis1P4, co
   return HistogramTools::makeHistogram("ClassicSVfitIntegrand_histogramPt", 1., 1.e+3, 1.025);
 }
 
-double DiTauSystemPtSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
+double DiTauSystemPtSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& tauSumP4,
+                                               const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
-  return (tau1P4 + tau2P4).pt();
+  return tauSumP4.pt();
 }
 
 TH1* DiTauSystemEtaSVfitQuantity::createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
@@ -189,9 +197,10 @@ TH1* DiTauSystemEtaSVfitQuantity::createHistogram(const LorentzVector& vis1P4, c
   return new TH1D("ClassicSVfitIntegrand_histogramEta", "ClassicSVfitIntegrand_histogramEta", 198, -9.9, +9.9);
 }
 
-double DiTauSystemEtaSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
+double DiTauSystemEtaSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& tauSumP4,
+                                                const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
-  return (tau1P4 + tau2P4).eta();
+  return tauSumP4.eta();
 }
 
 TH1* DiTauSystemPhiSVfitQuantity::createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
@@ -199,9 +208,10 @@ TH1* DiTauSystemPhiSVfitQuantity::createHistogram(const LorentzVector& vis1P4, c
   return new TH1D("ClassicSVfitIntegrand_histogramPhi", "ClassicSVfitIntegrand_histogramPhi", 180, -TMath::Pi(), +TMath::Pi());
 }
 
-double DiTauSystemPhiSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
+double DiTauSystemPhiSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& tauSumP4,
+                                                const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
-  return (tau1P4 + tau2P4).phi();
+  return tauSumP4.phi();
 }
 
 TH1* DiTauSystemMassSVfitQuantity::createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
@@ -212,9 +222,10 @@ TH1* DiTauSystemMassSVfitQuantity::createHistogram(const LorentzVector& vis1P4, 
   return HistogramTools::makeHistogram("ClassicSVfitIntegrand_histogramMass", minMass, maxMass, 1.025);
 }
 
-double DiTauSystemMassSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
+double DiTauSystemMassSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& tauSumP4,
+                                                 const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
-  return (tau1P4 + tau2P4).mass();
+  return tauSumP4.mass();
 }
 
 TH1* TransverseMassSVfitQuantity::createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
@@ -227,10 +238,11 @@ TH1* TransverseMassSVfitQuantity::createHistogram(const LorentzVector& vis1P4, c
   return HistogramTools::makeHistogram("ClassicSVfitIntegrand_histogramTransverseMass", minTransverseMass, maxTransverseMass, 1.025);
 }
 
-double TransverseMassSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
+double TransverseMassSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& tauSumP4,
+                                                const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
-  classic_svFit::LorentzVector fittedDiTauSystem = tau1P4 + tau2P4;
-  double transverseMass2 = square(tau1P4.Et() + tau2P4.Et()) - (square(fittedDiTauSystem.px()) + square(fittedDiTauSystem.py()));
+
+  double transverseMass2 = square(tau1P4.Et() + tau2P4.Et()) - (square(tauSumP4.px()) + square(tauSumP4.py()));
   return TMath::Sqrt(TMath::Max(1., transverseMass2));
 }
 
@@ -249,7 +261,8 @@ TH1* TauESVfitQuantity::createHistogram(const classic_svFit::LorentzVector& vis1
   double visEnergy = (m_tauIndex == 0 ? vis1P4 : vis2P4).E();
   return classic_svFit::HistogramTools::makeHistogram(std::string("svfitAlgorithm_histogram"+m_tauLabel+"E").c_str(), visEnergy/1.025, TMath::Max(1.e+3, 1.e+1*visEnergy/1.025), 1.025);
 }
-double TauESVfitQuantity::fitFunction(const classic_svFit::LorentzVector& tau1P4, const classic_svFit::LorentzVector& tau2P4, const classic_svFit::LorentzVector& vis1P4, const classic_svFit::LorentzVector& vis2P4, const classic_svFit::Vector& met) const
+double TauESVfitQuantity::fitFunction(const classic_svFit::LorentzVector& tau1P4, const classic_svFit::LorentzVector& tau2P4, const classic_svFit::LorentzVector& tauSumP4,
+                                      const classic_svFit::LorentzVector& vis1P4, const classic_svFit::LorentzVector& vis2P4, const classic_svFit::Vector& met) const
 {
   return (m_tauIndex == 0 ? tau1P4 : tau2P4).E();
 }
@@ -261,7 +274,8 @@ TH1* TauERatioSVfitQuantity::createHistogram(const classic_svFit::LorentzVector&
 {
   return new TH1D(std::string("svfitAlgorithm_histogram"+m_tauLabel+"ERatio").c_str(), std::string("svfitAlgorithm_histogram"+m_tauLabel+"ERatio").c_str(), 200, 0.0, 1.0);
 }
-double TauERatioSVfitQuantity::fitFunction(const classic_svFit::LorentzVector& tau1P4, const classic_svFit::LorentzVector& tau2P4, const classic_svFit::LorentzVector& vis1P4, const classic_svFit::LorentzVector& vis2P4, const classic_svFit::Vector& met) const
+double TauERatioSVfitQuantity::fitFunction(const classic_svFit::LorentzVector& tau1P4, const classic_svFit::LorentzVector& tau2P4, const classic_svFit::LorentzVector& tauSumP4,
+                                           const classic_svFit::LorentzVector& vis1P4, const classic_svFit::LorentzVector& vis2P4, const classic_svFit::Vector& met) const
 {
   double visEnergy = (m_tauIndex == 0 ? vis1P4 : vis2P4).E();
   double tauEnergy = (m_tauIndex == 0 ? tau1P4 : tau2P4).E();
@@ -275,7 +289,8 @@ TH1* TauPtSVfitQuantity::createHistogram(const classic_svFit::LorentzVector& vis
 {
   return classic_svFit::HistogramTools::makeHistogram(std::string("svfitAlgorithm_histogram"+m_tauLabel+"Pt").c_str(), 1., 1.e+3, 1.025);
 }
-double TauPtSVfitQuantity::fitFunction(const classic_svFit::LorentzVector& tau1P4, const classic_svFit::LorentzVector& tau2P4, const classic_svFit::LorentzVector& vis1P4, const classic_svFit::LorentzVector& vis2P4, const classic_svFit::Vector& met) const
+double TauPtSVfitQuantity::fitFunction(const classic_svFit::LorentzVector& tau1P4, const classic_svFit::LorentzVector& tau2P4, const classic_svFit::LorentzVector& tauSumP4,
+                                       const classic_svFit::LorentzVector& vis1P4, const classic_svFit::LorentzVector& vis2P4, const classic_svFit::Vector& met) const
 {
   return (m_tauIndex == 0 ? tau1P4 : tau2P4).pt();
 }
@@ -287,7 +302,8 @@ TH1* TauEtaSVfitQuantity::createHistogram(const classic_svFit::LorentzVector& vi
 {
   return new TH1D(std::string("svfitAlgorithm_histogram"+m_tauLabel+"Eta").c_str(), std::string("svfitAlgorithm_histogram"+m_tauLabel+"Eta").c_str(), 198, -9.9, +9.9);
 }
-double TauEtaSVfitQuantity::fitFunction(const classic_svFit::LorentzVector& tau1P4, const classic_svFit::LorentzVector& tau2P4, const classic_svFit::LorentzVector& vis1P4, const classic_svFit::LorentzVector& vis2P4, const classic_svFit::Vector& met) const
+double TauEtaSVfitQuantity::fitFunction(const classic_svFit::LorentzVector& tau1P4, const classic_svFit::LorentzVector& tau2P4, const classic_svFit::LorentzVector& tauSumP4,
+                                        const classic_svFit::LorentzVector& vis1P4, const classic_svFit::LorentzVector& vis2P4, const classic_svFit::Vector& met) const
 {
   return (m_tauIndex == 0 ? tau1P4 : tau2P4).eta();
 }
@@ -299,7 +315,8 @@ TH1* TauPhiSVfitQuantity::createHistogram(const classic_svFit::LorentzVector& vi
 {
   return new TH1D(std::string("svfitAlgorithm_histogram"+m_tauLabel+"Phi").c_str(), std::string("svfitAlgorithm_histogram"+m_tauLabel+"Phi").c_str(), 180, -TMath::Pi(), +TMath::Pi());
 }
-double TauPhiSVfitQuantity::fitFunction(const classic_svFit::LorentzVector& tau1P4, const classic_svFit::LorentzVector& tau2P4, const classic_svFit::LorentzVector& vis1P4, const classic_svFit::LorentzVector& vis2P4, const classic_svFit::Vector& met) const
+double TauPhiSVfitQuantity::fitFunction(const classic_svFit::LorentzVector& tau1P4, const classic_svFit::LorentzVector& tau2P4, const classic_svFit::LorentzVector& tauSumP4,
+                                        const classic_svFit::LorentzVector& vis1P4, const classic_svFit::LorentzVector& vis2P4, const classic_svFit::Vector& met) const
 {
   return (m_tauIndex == 0 ? tau1P4 : tau2P4).phi();
 }
@@ -326,13 +343,22 @@ void HistogramAdapter::setMeasurement(const LorentzVector& vis1P4, const Lorentz
   met_ = met;
 }
 
-void HistogramAdapter::setTau1P4(const LorentzVector& tau1P4) { tau1P4_ = tau1P4; }
-void HistogramAdapter::setTau2P4(const LorentzVector& tau2P4) { tau2P4_ = tau2P4; }
+void HistogramAdapter::setTau1And2P4(const LorentzVector& tau1P4, const LorentzVector& tau2P4) {
+  tau1P4_ = tau1P4;
+  tau2P4_ = tau2P4;
+  tauSumP4_ = tau1P4_ + tau2P4_;
+}
 
 unsigned int HistogramAdapter::registerQuantity(SVfitQuantity* quantity)
 {
   quantities_.push_back(quantity);
   return getNQuantities() - 1;
+}
+
+const SVfitQuantity* HistogramAdapter::getQuantity(unsigned int iQuantity) const
+{
+  if(iQuantity>=getNQuantities()) return 0;
+  else return  quantities_[iQuantity];
 }
 
 void HistogramAdapter::bookHistograms(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met)
@@ -343,12 +369,12 @@ void HistogramAdapter::bookHistograms(const LorentzVector& vis1P4, const Lorentz
   }
 }
 
-void HistogramAdapter::fillHistograms(const LorentzVector& tau1P4, const LorentzVector& tau2P4,
+void HistogramAdapter::fillHistograms(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& tauSumP4,
                                       const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
   for (std::vector<SVfitQuantity*>::iterator quantity = quantities_.begin(); quantity != quantities_.end(); ++quantity)
   {
-    (*quantity)->fillHistogram(tau1P4, tau2P4, vis1P4, vis2P4, met);
+    (*quantity)->fillHistogram(tau1P4, tau2P4, tauSumP4, vis1P4, vis2P4, met);
   }
 }
 
@@ -369,7 +395,7 @@ void HistogramAdapter::writeHistograms(const std::string& likelihoodFileName) co
 
 double HistogramAdapter::DoEval(const double* x) const
 {
-  fillHistograms(tau1P4_, tau2P4_, vis1P4_, vis2P4_, met_);
+  fillHistograms(tau1P4_, tau2P4_, tauSumP4_, vis1P4_, vis2P4_, met_);
   return 0.;
 }
 

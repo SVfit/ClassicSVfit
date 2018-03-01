@@ -168,18 +168,21 @@ double compPSfactor_tauToLepDecay(double x, double visEn, double visP, double vi
   double visMass2 = square(visMass);
   double nunuMass2 = square(nunuMass);
   if ( x >= (visMass2/tauLeptonMass2) && x <= 1. && nunuMass2 < ((1. - x)*tauLeptonMass2) ) { // physical solution
-    const double GFfactor = square(GF)/square(TMath::Pi());
     double tauEn_rf = (tauLeptonMass2 + nunuMass2 - visMass2)/(2.*nunuMass);
     double visEn_rf = tauEn_rf - nunuMass;
     if ( !(tauEn_rf >= tauLeptonMass && visEn_rf >= visMass) ) return 0.;
-    double I = GFfactor*nunuMass2*(2.*tauEn_rf*visEn_rf - (2./3.)*TMath::Sqrt((square(tauEn_rf) - tauLeptonMass2)*(square(visEn_rf) - visMass2)));
+    double I = nunuMass2*(2.*tauEn_rf*visEn_rf - (2./3.)*TMath::Sqrt((square(tauEn_rf) - tauLeptonMass2)*(square(visEn_rf) - visMass2)));
+    #ifdef XSECTION_NORMALIZATION
+    I *= GFfactor;    
+    #endif
     double cosThetaNuNu = compCosThetaNuNu(visEn, visP, visMass2, nunuEn, nunuP, nunuMass2);
-    const double epsilon = 1.e-3;
     if ( !(cosThetaNuNu >= (-1. + epsilon) && cosThetaNuNu <= +1.) ) return 0.;
     double PSfactor = (visEn + nunuEn)*I/(8.*visP*square(x)*TMath::Sqrt(square(visP) + square(nunuP) + 2.*visP*nunuP*cosThetaNuNu + tauLeptonMass2));
     //-------------------------------------------------------------------------
     // CV: fudge factor to reproduce literature value for cross-section times branching fraction
+    #ifdef XSECTION_NORMALIZATION
     PSfactor *= 2.;
+    #endif
     //-------------------------------------------------------------------------
     return PSfactor;
   } else {
@@ -200,19 +203,29 @@ double compPSfactor_tauToHadDecay(double x, double visEn, double visP, double vi
   if ( x >= (visMass2/tauLeptonMass2) && x <= 1. ) { // physical solution
     double cosThetaNu = compCosThetaNuNu(visEn, visP, visMass2, nuEn, nuP, 0.);
     //std::cout << "cosThetaNu = " << cosThetaNu << std::endl;
-    const double epsilon = 1.e-3;
     if ( !(cosThetaNu >= (-1. + epsilon) && cosThetaNu <= +1.) ) return 0.;
     double PSfactor = (visEn + nuEn)/(8.*visP*square(x)*TMath::Sqrt(square(visP) + square(nuP) + 2.*visP*nuP*cosThetaNu + tauLeptonMass2));
+    PSfactor *= 1.0/(tauLeptonMass2 - visMass2);
     //-------------------------------------------------------------------------
     // CV: multiply by constant matrix element,
     //     chosen such that the branching fraction of the tau to decay into hadrons is reproduced
-    const double M2 = 16.*TMath::Pi()*cube(tauLeptonMass)*GammaTauToHad/(tauLeptonMass2 - visMass2);
+    //const double M2 = 16.*TMath::Pi()*cube(tauLeptonMass)*GammaTauToHad/(tauLeptonMass2 - visMass2);
+    //Remove multiplication as it add to execution time, and does not alter the result.
+    #ifdef XSECTION_NORMALIZATION
     PSfactor *= M2;
+    #endif
     //-------------------------------------------------------------------------
     return PSfactor;
   } else {
     return 0.;
   }
+}
+
+void integrationParameters::reset(){
+      idx_X_ = -1;
+      idx_phi_ = -1;
+      idx_VisPtShift_ = -1;
+      idx_mNuNu_ = -1;
 }
 
 }

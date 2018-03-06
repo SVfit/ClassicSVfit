@@ -313,11 +313,11 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
         clock_->Reset();
         clock_->Start("<ClassicSVfit::integrate>");
 
-        setDiTauMassConstraint(-1);
         prepareLeptonInput(measuredTauLeptons);
         integrand_->clearMET();
         addMETEstimate(measuredMETx, measuredMETy, covMET);
-        setIntegrationParams();
+        bool useMassConstraint = diTauMassConstraint_>0;
+        setIntegrationParams(useMassConstraint);
         prepareIntegrand();
         if(!intAlgo_) initializeMCIntegrator();
 

@@ -63,27 +63,37 @@ int main(int argc, char* argv[])
 
   if ( isValidSolution ) {
     std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 115.746 +/- 92.5252),"
-              << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 114.242 +/- 91.2066)"
-              << std::endl;
+              << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 114.242 +/- 91.2066)" << std::endl;
   } else {
     std::cout << "sorry, failed to find valid solution !!" << std::endl;
   }
-
+  if (std::abs((mass - 115.746) / 115.746) > 0.001) return 1;
+  if (std::abs((massErr - 92.5252) / 92.5252) > 0.001) return 1;
+  if (std::abs((transverseMass - 114.242) / 114.242) > 0.001) return 1;
+  if (std::abs((transverseMassErr - 91.2066) / 91.2066) > 0.001) return 1;
+  
+  // re-run with mass constraint
   double massContraint = 125.06;
+  std::cout << "\n\nTesting integration with di tau mass constraint set to " << massContraint<<std::endl;
   svFitAlgo.setLikelihoodFileName("testClassicSVfit_withMassContraint.root");
   svFitAlgo.setDiTauMassConstraint(massContraint);
   svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
   isValidSolution = svFitAlgo.isValidSolution();
   mass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMass();
   massErr = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMassErr();
+  transverseMass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getTransverseMass();
+  transverseMassErr = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getTransverseMassErr();
 
-  std::cout<<"Testing integration with di tau mass constraint set to: "<<massContraint<<std::endl;
   if ( isValidSolution ) {
     std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 124.646 +/- 1.23027),"
-              << std::endl;
+              << " transverse mass = " << transverseMass << " +/- " << transverseMassErr << " (expected value = 123.026 +/- 1.1574)" << std::endl;
   } else {
     std::cout << "sorry, failed to find valid solution !!" << std::endl;
   }
+  if (std::abs((mass - 124.646) / 124.646) > 0.001) return 1;
+  if (std::abs((massErr - 1.23027) / 1.23027) > 0.001) return 1;
+  if (std::abs((transverseMass - 123.026) / 123.026) > 0.001) return 1;
+  if (std::abs((transverseMassErr - 1.1574) / 1.1574) > 0.001) return 1;
 
   return 0;
 }

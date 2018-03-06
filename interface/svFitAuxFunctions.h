@@ -82,9 +82,11 @@ namespace classic_svFit
   const double GammaTauToMu = GammaTau*0.174; // BR(tau -> mu) = 17.4%
   const double GammaTauToHad = GammaTau*0.648; // BR(tau -> hadrons) = 64.8%
 
-  //const double GF = 1.166e-5; // in units of GeV^-2
-  //const double GFfactor = square(GF)/square(M_PI);
-  //const double M2 = 16.*M_PI*cube(tauLeptonMass)*GammaTauToHad;
+  #ifdef XSECTION_NORMALIZATION
+  const double GF = 1.166e-5; // in units of GeV^-2
+  const double GFfactor = square(GF)/square(M_PI);
+  const double M2 = 16.*M_PI*cube(tauLeptonMass)*GammaTauToHad;
+  #endif
 
   const double conversionFactor = 1.e+10*square(hbar_c); // conversion factor from GeV^-2 to picobarn = 10^-40m//FIX ME store this
   const double constFactor = 2.*conversionFactor/eigth(2.*M_PI);

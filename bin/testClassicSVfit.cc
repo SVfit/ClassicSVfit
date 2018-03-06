@@ -70,5 +70,21 @@ int main(int argc, char* argv[])
     std::cout << "sorry, failed to find valid solution !!" << std::endl;
   }
 
+  double massContraint = 125.06;
+  svFitAlgo.setLikelihoodFileName("testClassicSVfit_withMassContraint.root");
+  svFitAlgo.setDiTauMassConstraint(massContraint);
+  svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+  isValidSolution = svFitAlgo.isValidSolution();
+  mass = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMass();
+  massErr = static_cast<DiTauSystemHistogramAdapter*>(svFitAlgo.getHistogramAdapter())->getMassErr();
+
+  std::cout<<"Testing integration with di tau mass constraint set to: "<<massContraint<<std::endl;
+  if ( isValidSolution ) {
+    std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 124.646 +/- 1.23027),"
+              << std::endl;
+  } else {
+    std::cout << "sorry, failed to find valid solution !!" << std::endl;
+  }
+
   return 0;
 }

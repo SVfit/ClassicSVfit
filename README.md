@@ -20,3 +20,5 @@ scram b -j 4
 
 In case of compilation problems, please sutmitt an issue on
 https://github.com/SVfit/ClassicSVfit/issues
+
+Instructions: [slides 2+3](https://indico.cern.ch/event/684622/contributions/2807248/attachments/1575090/2487044/presentation_tmuller.pdf)

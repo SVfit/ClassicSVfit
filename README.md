@@ -23,4 +23,5 @@ https://github.com/SVfit/ClassicSVfit/issues
 
 # Running instructions
 
-[Presentation, slides 2+3](https://indico.cern.ch/event/684622/contributions/2807248/attachments/1575090/2487044/presentation_tmuller.pdf)
+- [Presentation, slides 2+3](https://indico.cern.ch/event/684622/contributions/2807248/attachments/1575090/2487044/presentation_tmuller.pdf)
+- [Example(s)](https://github.com/SVfit/ClassicSVfit/blob/master/bin/testClassicSVfit.cc)

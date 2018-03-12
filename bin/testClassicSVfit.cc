@@ -47,6 +47,7 @@ int main(int argc, char* argv[])
   //svFitAlgo.setHadTauTF(hadTauTF);
   //svFitAlgo.enableHadTauTF();
 #endif
+
   //svFitAlgo.addLogM_fixed(false);
   svFitAlgo.addLogM_fixed(true, 6.);
   //svFitAlgo.addLogM_dynamic(true, "(m/1000.)*15.");
@@ -74,7 +75,7 @@ int main(int argc, char* argv[])
   
   // re-run with mass constraint
   double massContraint = 125.06;
-  std::cout << "\n\nTesting integration with di tau mass constraint set to " << massContraint<<std::endl;
+  std::cout << "\n\nTesting integration with di tau mass constraint set to " << massContraint << std::endl;
   svFitAlgo.setLikelihoodFileName("testClassicSVfit_withMassContraint.root");
   svFitAlgo.setDiTauMassConstraint(massContraint);
   svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
@@ -94,6 +95,26 @@ int main(int argc, char* argv[])
   if (std::abs((massErr - 1.23027) / 1.23027) > 0.001) return 1;
   if (std::abs((transverseMass - 123.026) / 123.026) > 0.001) return 1;
   if (std::abs((transverseMassErr - 1.1574) / 1.1574) > 0.001) return 1;
+  
+  // re-run with classic_svFit::TauTauHistogramAdapter
+  std::cout << "\n\nTesting integration with classic_svFit::TauTauHistogramAdapter" << std::endl;
+  ClassicSVfit svFitAlgo2(verbosity);
+  svFitAlgo2.setHistogramAdapter(new classic_svFit::TauTauHistogramAdapter());
+  svFitAlgo2.addLogM_fixed(true, 6.);
+  svFitAlgo2.setLikelihoodFileName("testClassicSVfit_TauTauHistogramAdapter.root");
+  svFitAlgo2.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+  isValidSolution = svFitAlgo2.isValidSolution();
+  classic_svFit::LorentzVector tau1P4 = static_cast<classic_svFit::TauTauHistogramAdapter*>(svFitAlgo2.getHistogramAdapter())->GetFittedTau1LV();
+  classic_svFit::LorentzVector tau2P4 = static_cast<classic_svFit::TauTauHistogramAdapter*>(svFitAlgo2.getHistogramAdapter())->GetFittedTau2LV();
+
+  if ( isValidSolution ) {
+    std::cout << "found valid solution: pT(tau1) = " << tau1P4.Pt() << " (expected value = 102.508),"
+              << "                      pT(tau2) = " << tau2P4.Pt() << " (expected value = 27.019)" << std::endl;
+  } else {
+    std::cout << "sorry, failed to find valid solution !!" << std::endl;
+  }
+  if (std::abs((tau1P4.Pt() - 102.508) / 102.508) > 0.001) return 1;
+  if (std::abs((tau2P4.Pt() - 27.019) / 27.019) > 0.001) return 1;
 
   return 0;
 }

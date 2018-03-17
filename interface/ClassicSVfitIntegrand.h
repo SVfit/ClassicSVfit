@@ -38,7 +38,7 @@ namespace classic_svFit
 
     /// set pointer to histograms used to keep track of pT, eta, phi, mass and transverse mass of di-tau system
     /// during Markov Chain integration
-    void setHistogramAdapter(HistogramAdapter* histogramAdapter);
+    void setHistogramAdapter(HistogramAdapterDiTau* histogramAdapter);
 
     void setLegIntegrationParams(unsigned int iLeg,
                                  const classic_svFit::integrationParameters & aParams);
@@ -174,7 +174,7 @@ namespace classic_svFit
     /// error code that can be passed on
     int errorCode_;
 
-    HistogramAdapter* histogramAdapter_;
+    HistogramAdapterDiTau* histogramAdapter_;
 
     mutable double phaseSpaceComponentCache_;
 

@@ -91,7 +91,7 @@ void ClassicSVfitIntegrand::setDiTauMassConstraint(double diTauMass)
   diTauMassConstraint_ = diTauMass;
 }
 
-void ClassicSVfitIntegrand::setHistogramAdapter(HistogramAdapter* histogramAdapter)
+void ClassicSVfitIntegrand::setHistogramAdapter(HistogramAdapterDiTau* histogramAdapter)
 {
   histogramAdapter_ = histogramAdapter;
 }

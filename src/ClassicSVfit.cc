@@ -27,7 +27,7 @@ ClassicSVfit::ClassicSVfit(int verbosity)
         maxObjFunctionCalls_(100000),
         treeFileName_(""),
         numDimensions_(0),
-        histogramAdapter_(new DiTauSystemHistogramAdapter()),
+        histogramAdapter_(new HistogramAdapterDiTau("ditau")),
         likelihoodFileName_(""),
         isValidSolution_(false),
         useHadTauTF_(false),
@@ -345,13 +345,13 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
         }
 }
 
-void ClassicSVfit::setHistogramAdapter(classic_svFit::HistogramAdapter* histogramAdapter)
+void ClassicSVfit::setHistogramAdapter(classic_svFit::HistogramAdapterDiTau* histogramAdapter)
 {
         if ( histogramAdapter_ ) delete histogramAdapter_;
         histogramAdapter_ = histogramAdapter;
 }
 
-classic_svFit::HistogramAdapter* ClassicSVfit::getHistogramAdapter() const
+classic_svFit::HistogramAdapterDiTau* ClassicSVfit::getHistogramAdapter() const
 {
         return histogramAdapter_;
 }

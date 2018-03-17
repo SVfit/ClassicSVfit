@@ -52,8 +52,8 @@ void setLikelihoodFileName(const std::string& likelihoodFileName);
 void setTreeFileName(const std::string& treeFileName);
 
 /// set and get histogram adapter
-void setHistogramAdapter(classic_svFit::HistogramAdapter* histogramAdapter);
-classic_svFit::HistogramAdapter* getHistogramAdapter() const;
+void setHistogramAdapter(classic_svFit::HistogramAdapterDiTau* histogramAdapter);
+classic_svFit::HistogramAdapterDiTau* getHistogramAdapter() const;
 
 /// prepare the integrand
 void prepareIntegrand(bool useHistoAdapter=true);
@@ -129,7 +129,7 @@ unsigned int numDimensions_ = 0;
 double xl_[6], xu_[6];
 
 /// histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
-mutable classic_svFit::HistogramAdapter* histogramAdapter_;
+mutable classic_svFit::HistogramAdapterDiTau* histogramAdapter_;
 std::string likelihoodFileName_;
 
 /// flag indicating if algorithm succeeded to find valid solution

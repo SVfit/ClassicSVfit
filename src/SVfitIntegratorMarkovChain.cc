@@ -266,7 +266,7 @@ void SVfitIntegratorMarkovChain::integrate(gPtr_C g, const double* xl, const dou
       bool isAccepted = false;
       bool isValid = true;
       do {
-  makeStochasticMove(iMove, isAccepted, isValid);
+	makeStochasticMove(iMove, isAccepted, isValid);
       } while ( !isValid );
     }
 

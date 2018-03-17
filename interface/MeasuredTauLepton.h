@@ -1,7 +1,7 @@
 #ifndef TauAnalysis_ClassicSVfit_MeasuredTauLepton_h
 #define TauAnalysis_ClassicSVfit_MeasuredTauLepton_h
 
-#include "TauAnalysis/ClassicSVfit/interface/svFitAuxFunctions.h"
+#include "TauAnalysis/ClassicSVfit/interface/svFitAuxFunctions.h" // Vector, LorentzVector
 
 namespace classic_svFit
 {
@@ -64,6 +64,10 @@ namespace classic_svFit
 
     void roundToNdigits(unsigned int nDigis = 3);
 
+    /// flag indicating if tau decayed leptonically or hadronically 
+    bool isLeptonicTauDecay() const;
+    bool isHadronicTauDecay() const;
+
    protected:
     /// set visible momentum in all coordinates systems
     void initialize();
@@ -103,6 +107,7 @@ namespace classic_svFit
     double cosPhi_sinTheta_;
     double sinPhi_sinTheta_;
     double cosTheta_;
+    bool isLeptonicTauDecay_;
   };
 }
 

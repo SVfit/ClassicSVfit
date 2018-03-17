@@ -2,6 +2,7 @@
 #define TauAnalysis_ClassicSVfit_ClassicSVfitIntegrand_h
 
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredTauLepton.h"
+#include "TauAnalysis/ClassicSVfit/interface/FittedTauLepton.h"
 #ifdef USE_SVFITTF
 #include "TauAnalysis/SVfitTF/interface/HadTauTFBase.h"
 #endif
@@ -21,10 +22,11 @@ namespace classic_svFit
    public:
     /// error codes that can be read out by ClassicSVfit class
     enum ErrorCodes {
-      None            = 0x00000000,
-      MatrixInversion = 0x00000001,
-      LeptonNumber    = 0x00000010,
-      TestMass        = 0x00000100
+      None               = 0x00000000,
+      MatrixInversion    = 0x00000001,
+      LeptonNumber       = 0x00000010,
+      TestMass           = 0x00000100,
+      TauDecayParameters = 0x00001000,
     };
 
     ClassicSVfitIntegrand(int);
@@ -40,17 +42,13 @@ namespace classic_svFit
     /// during Markov Chain integration
     void setHistogramAdapter(HistogramAdapterDiTau* histogramAdapter);
 
-    void setLegIntegrationParams(unsigned int iLeg,
-                                 const classic_svFit::integrationParameters & aParams);
+    void setLegIntegrationParams(unsigned int iLeg, const classic_svFit::integrationParameters& aParams);
 
     void setNumDimensions(unsigned numDimensions);
 
     void setVerbosity(int aVerbosity);
 
     void setIntegrationRanges(const double* xl, const double* xu);
-
-    void computeVisMom(LorentzVector &, LorentzVector &,
-                       const double & visPtShift1, const double & visPtShift2) const;
 
 #ifdef USE_SVFITTF
     /// set transfer functions for pT of hadronic tau decays
@@ -76,7 +74,7 @@ namespace classic_svFit
     double EvalPS(const double* x) const;
 
     /// evaluate the MET TF part of the integral.
-    double EvalMET_TF(const double & aMETx, const double & aMETy, const TMatrixD&) const;
+    double EvalMET_TF(double aMETx, double aMETy, const TMatrixD&) const;
 
     /// evaluate the MET TF part of the integral using current values of the MET variables
     /// iComponent is ans index to MET estimate, i.e. systamtic effect variation
@@ -96,43 +94,20 @@ namespace classic_svFit
     static const ClassicSVfitIntegrand* gSVfitIntegrand;
 
    protected:
+    /// number of tau leptons reconstructed per event
+    unsigned numTaus_;
 
-    mutable LorentzVector vis1P4_, vis2P4_;
-    mutable LorentzVector nu1P4_, nu2P4_;
-    mutable LorentzVector tau1P4_, tau2P4_;
-
-    /// measured tau leptons
-    MeasuredTauLepton measuredTauLepton1_;
-    bool leg1isLep_;
-    double leg1Mass_;
-    double leg1Mass2_;
-    double leg1eX_x_;
-    double leg1eX_y_;
-    double leg1eX_z_;
-    double leg1eY_x_;
-    double leg1eY_y_;
-    double leg1eY_z_;
-    double leg1eZ_x_;
-    double leg1eZ_y_;
-    double leg1eZ_z_;
-    MeasuredTauLepton measuredTauLepton2_;
-    bool leg2isLep_;
-    double leg2Mass_;
-    double leg2Mass2_;
-    double leg2eX_x_;
-    double leg2eX_y_;
-    double leg2eX_z_;
-    double leg2eY_x_;
-    double leg2eY_y_;
-    double leg2eY_z_;
-    double leg2eZ_x_;
-    double leg2eZ_y_;
-    double leg2eZ_z_;
+    /// momenta of visible tau decay products and of reconstructed tau leptons
+    MeasuredTauLepton measuredTauLepton1_;    
+    mutable FittedTauLepton fittedTauLepton1_;
+    bool leg1isLeptonicTauDecay_;
+    MeasuredTauLepton measuredTauLepton2_;  
+    mutable FittedTauLepton fittedTauLepton2_;
+    bool leg2isLeptonicTauDecay_;
+    std::vector<FittedTauLepton*> fittedTauLeptons_;
 
     mutable double mVis_measured_;
     mutable double mVis2_measured_;
-
-    Vector beamAxis_;
 
     /// measured MET
     std::vector<double> measuredMETx_;
@@ -150,8 +125,7 @@ namespace classic_svFit
 
 #ifdef USE_SVFITTF
     /// account for resolution on pT of hadronic tau decays via appropriate transfer functions
-    const HadTauTFBase* hadTauTF1_;
-    const HadTauTFBase* hadTauTF2_;
+    std::vector<const HadTauTFBase*> hadTauTFs_;
     bool useHadTauTF_;
 
     double rhoHadTau_;
@@ -169,10 +143,11 @@ namespace classic_svFit
     bool addLogM_dynamic_;
     TFormula* addLogM_dynamic_formula_;
 
-    double diTauMassConstraint_ = -1.0;
+    double diTauMassConstraint_;
+    double diTauMassConstraint2_;
 
     /// error code that can be passed on
-    int errorCode_;
+    mutable int errorCode_;
 
     HistogramAdapterDiTau* histogramAdapter_;
 

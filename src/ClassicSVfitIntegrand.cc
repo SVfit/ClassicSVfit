@@ -14,26 +14,28 @@ using namespace classic_svFit;
 const ClassicSVfitIntegrand* ClassicSVfitIntegrand::gSVfitIntegrand = 0;
 
 ClassicSVfitIntegrand::ClassicSVfitIntegrand(int verbosity)
-  : numTaus_(2)
+  : ClassicSVfitIntegrandBase(verbosity)
   , fittedTauLepton1_(0, verbosity)
   , fittedTauLepton2_(1, verbosity)
-#ifdef USE_SVFITTF
-  , useHadTauTF_(false)
-  , rhoHadTau_(0.)
-#endif
-  , numDimensions_(0)
-  , addLogM_fixed_(true)
-  , addLogM_fixed_power_(6.) // CV: best compatibility with "old" SVfitStandalone algorithm
-  , addLogM_dynamic_(false)
-  , addLogM_dynamic_formula_(0)
   , diTauMassConstraint_(-1.)
-  , errorCode_(0)
-  , histogramAdapter_(0)
-  , verbosity_(verbosity)
+  , histogramAdapter_(nullptr)
 {
   if ( verbosity_ ) {
     std::cout << "<ClassicSVfitIntegrand::ClassicSVfitIntegrand>:" << std::endl;
   }
+
+  numTaus_ = 2;
+  legIntegrationParams_.resize(numTaus_);
+
+  maxNumberOfDimensions_ = 6;
+  xMin_ = new double[maxNumberOfDimensions_];
+  xMax_ = new double[maxNumberOfDimensions_];
+  x_ = new double[maxNumberOfDimensions_];
+
+  // CV: enable log(M) term with kappa = 6, unless explicitely requested by user otherwise,
+  //     as this setting provides best compatibility with "old" SVfitStandalone algorithm
+  addLogM_fixed_ = true;
+  addLogM_fixed_power_ = 6.; 
 
   fittedTauLeptons_.resize(numTaus_);
   fittedTauLeptons_[0] = &fittedTauLepton1_;
@@ -48,53 +50,6 @@ ClassicSVfitIntegrand::~ClassicSVfitIntegrand()
   if ( verbosity_ ) {
     std::cout << "<ClassicSVfitIntegrand::~ClassicSVfitIntegrand>:" << std::endl;
   }
-
-#ifdef USE_SVFITTF
-  for ( std::vector<const HadTauTFBase*>::iterator hadTauTF = hadTauTFs_.begin();
-	hadTauTF != hadTauTFs_.end(); ++hadTauTF ) {
-    delete (*hadTauTF);
-  }
-#endif
-
-  delete addLogM_dynamic_formula_;
-}
-
-
-void ClassicSVfitIntegrand::setVerbosity(int aVerbosity)
-{
-  verbosity_ = aVerbosity;
-}
-
-void ClassicSVfitIntegrand::addLogM_fixed(bool value, double power)
-{
-  addLogM_fixed_ = value;
-  addLogM_fixed_power_ = power;
-  if ( addLogM_fixed_ && addLogM_dynamic_ ) {
-    std::cerr << "Warning: simultaneous use of fixed and dynamic logM terms not supported --> disabling dynamic logM term !!" << std::endl;
-    addLogM_dynamic_ = false;
-  }
-}
-
-void ClassicSVfitIntegrand::addLogM_dynamic(bool value, const std::string& power)
-{
-  addLogM_dynamic_ = value;
-  if ( addLogM_dynamic_ ) {
-    if ( power != "" ) {
-      TString power_tstring = power.data();
-      power_tstring = power_tstring.ReplaceAll("m", "x");
-      power_tstring = power_tstring.ReplaceAll("mass", "x");
-      std::string formulaName = "ClassicSVfitIntegrand_addLogM_dynamic_formula";
-      delete addLogM_dynamic_formula_;
-      addLogM_dynamic_formula_ = new TFormula(formulaName.data(), power_tstring.Data());
-    } else {
-      std::cerr << "Warning: expression = '" << power << "' is invalid --> disabling dynamic logM term !!" << std::endl;
-      addLogM_dynamic_ = false;
-    }
-  }
-  if ( addLogM_dynamic_ && addLogM_fixed_ ) {
-    std::cerr << "Warning: simultaneous use of fixed and dynamic logM terms not supported --> disabling fixed logM term !!" << std::endl;
-    addLogM_fixed_ = false;
-  }
 }
 
 void ClassicSVfitIntegrand::setDiTauMassConstraint(double diTauMass)
@@ -108,73 +63,14 @@ void ClassicSVfitIntegrand::setHistogramAdapter(HistogramAdapterDiTau* histogram
   histogramAdapter_ = histogramAdapter;
 }
 
-void ClassicSVfitIntegrand::setLegIntegrationParams(unsigned int iLeg, const classic_svFit::integrationParameters& aParams)
-{ 
-  legIntegrationParams_[iLeg] = aParams;
-}
-
-void ClassicSVfitIntegrand::setNumDimensions(unsigned numDimensions) 
-{ 
-  numDimensions_ = numDimensions; 
-}
-
-void ClassicSVfitIntegrand::setIntegrationRanges(const double* xl, const double* xu)
-{
-  for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
-    xMin_[iDimension] = xl[iDimension];
-    xMax_[iDimension] = xu[iDimension];
-  }
-}
-
-#ifdef USE_SVFITTF
-void ClassicSVfitIntegrand::setHadTauTF(const HadTauTFBase* hadTauTF)
-{
-  for ( std::vector<const HadTauTFBase*>::iterator hadTauTF = hadTauTFs_.begin();
-	hadTauTF != hadTauTFs_.end(); ++hadTauTF ) {
-    delete (*hadTauTF);
-  }
-  hadTauTFs_.clear();
-  for ( unsigned iTau = 0; iTau < numTaus_; ++iTau ) {
-    hadTauTFs_.push_back(hadTauTF->Clone(Form("leg%i" + iTau)));
-  }
-}
-
-void ClassicSVfitIntegrand::enableHadTauTF()
-{
-  if ( !(hadTauTFs_.size() == numTaus_) ) {
-    std::cerr << "No tau pT transfer functions defined, call 'setHadTauTF' function first !!" << std::endl;
-    assert(0);
-  }
-  useHadTauTF_ = true;
-}
-
-void ClassicSVfitIntegrand::disableHadTauTF()
-{
-  useHadTauTF_ = false;
-}
-
-void ClassicSVfitIntegrand::setRhoHadTau(double rhoHadTau)
-{
-  rhoHadTau_ = rhoHadTau;
-}
-#endif
-
-
 void ClassicSVfitIntegrand::setLeptonInputs(const std::vector<MeasuredTauLepton>& measuredTauLeptons)
 {
   if ( verbosity_ >= 2 ) {
     std::cout << "<ClassicSVfitIntegrand::setLeptonInputs>:" << std::endl;
   }
 
-  // reset 'LeptonNumber' and 'MatrixInversion' error codes
-  errorCode_ &= (errorCode_ ^ LeptonNumber);
-  errorCode_ &= (errorCode_ ^ MatrixInversion);
+  ClassicSVfitIntegrandBase::setLeptonInputs(measuredTauLeptons);
 
-  if ( measuredTauLeptons.size() != numTaus_ ) {
-    std::cerr << "Error: Number of MeasuredTauLeptons is not equal to " << numTaus_ << " !!" << std::endl;
-    errorCode_ |= LeptonNumber;
-  }
-  
   // set momenta of visible tau decay products, reset momenta of reconstructed tau leptons
   measuredTauLepton1_ = measuredTauLeptons[0];
   fittedTauLepton1_.setMeasuredTauLepton(measuredTauLepton1_);
@@ -192,114 +88,9 @@ void ClassicSVfitIntegrand::setLeptonInputs(const std::vector<MeasuredTauLepton>
     std::cout << "mVis = " << mVis_measured_ << std::endl;
   }
   mVis2_measured_ = square(mVis_measured_);
-
-  phaseSpaceComponentCache_ = 0;
-
-#ifdef USE_SVFITTF
-  if ( useHadTauTF_ ) {
-    for ( unsigned iTau = 0; iTau < numTaus_; ++iTau ) {
-      const FittedTauLepton* fittedTauLepton = fittedTauLeptons_[iTau];
-      const MeasuredTauLepton& measuredTauLepton = fittedTauLepton->getMeasuredTauLepton();
-      if ( measuredTauLepton.type() == MeasuredTauLepton::kTauToHadDecay ) {
-	hadTauTFs_[iTau]->setDecayMode(measuredTauLepton.decayMode());
-      }
-    }
-  }
-#endif
 }
 
-void ClassicSVfitIntegrand::addMETEstimate(double measuredMETx, double measuredMETy, const TMatrixD& covMET)
-{
-  measuredMETx_.push_back(measuredMETx);
-  measuredMETy_.push_back(measuredMETy);
-  covMET_.push_back(covMET);
-}
-
-int ClassicSVfitIntegrand::getMETComponentsSize() const 
-{
-  return measuredMETx_.size();
-}
-
-void ClassicSVfitIntegrand::clearMET()
-{
-  measuredMETx_.clear();
-  measuredMETy_.clear();
-  covMET_.clear();
-}
-
-void ClassicSVfitIntegrand::rescaleX(const double* q) const
-{
-  for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
-    const double& q_i = q[iDimension];
-    x_[iDimension] = (1. - q_i)*xMin_[iDimension] + q_i*xMax_[iDimension];
-  }
-}
-
-double ClassicSVfitIntegrand::EvalMET_TF(unsigned int iComponent) const
-{
-  return EvalMET_TF(measuredMETx_[iComponent], measuredMETy_[iComponent], covMET_[iComponent]);
-}
-
-double ClassicSVfitIntegrand::EvalMET_TF(double aMETx, double aMETy, const TMatrixD& covMET) const
-{
-  // determine transfer matrix for MET
-  double invCovMETxx = covMET(1,1);
-  double invCovMETxy = -covMET(0,1);
-  double invCovMETyx = -covMET(1,0);
-  double invCovMETyy = covMET(0,0);
-  double covDet = invCovMETxx*invCovMETyy - invCovMETxy*invCovMETyx;
-
-  if( std::abs(covDet) < 1.e-10 ){
-    std::cerr << "Error: Cannot invert MET covariance Matrix (det=0) !!" << std::endl;
-    errorCode_ |= MatrixInversion;
-    return 0;
-  }
-  double const_MET = 1./(2.*TMath::Pi()*TMath::Sqrt(covDet));
-
-  // compute sum of momenta of all neutrinos produced in tau decays
-  double sumNuPx = 0.;
-  double sumNuPy = 0.;
-  for ( unsigned iTau = 0; iTau < numTaus_; ++iTau ) {
-    const FittedTauLepton* fittedTauLepton = fittedTauLeptons_[iTau];
-    sumNuPx += fittedTauLepton->nuP4().px();
-    sumNuPy += fittedTauLepton->nuP4().py();
-  }
-
-  // evaluate transfer function for MET/hadronic recoil
-  double residualX = aMETx - sumNuPx;
-  double residualY = aMETy - sumNuPy;
-#ifdef USE_SVFITTF
-  if ( rhoHadTau_ != 0. ) {
-    for ( unsigned iTau = 0; iTau < numTaus_; ++iTau ) {
-      const FittedTauLepton* fittedTauLepton = fittedTauLeptons_[iTau];
-      const MeasuredTauLepton& measuredTauLepton = fittedTauLepton->getMeasuredTauLepton();
-      if ( measuredTauLepton.isHadronicTauDecay() ) {
-	int idx_visPtShift = legIntegrationParams_[iTau].idx_VisPtShift_;
-	if ( idx_visPtShift != -1 ) {
-	  double visPtShift = 1./x_[idx_visPtShift];
-	  if ( visPtShift < 1.e-2 ) continue;
-	  residualX += (rhoHadTau_*(visPtShift - 1.)*measuredTauLepton.px());
-	  residualY += (rhoHadTau_*(visPtShift - 1.)*measuredTauLepton.py());
-	}
-      }
-    }
-  }
-#endif
-  double pull2 = residualX*(invCovMETxx*residualX + invCovMETxy*residualY) +
-                 residualY*(invCovMETyx*residualX + invCovMETyy*residualY);
-  pull2 /= covDet;
-  double prob = const_MET*TMath::Exp(-0.5*pull2);
-
-  if ( verbosity_ >= 2 ) {    
-    std::cout << "TF(met): recPx = " << aMETx << ", recPy = " << aMETy << ","
-	      << " genPx = " << sumNuPx << ", genPy = " << sumNuPy << ","
-	      << " pull2 = " << pull2 << ", prob = " << prob << std::endl;
-  }
-  return prob;
-}
-
-double
-ClassicSVfitIntegrand::EvalPS(const double* q) const
+double ClassicSVfitIntegrand::EvalPS(const double* q) const
 {
   rescaleX(q);
 
@@ -436,7 +227,7 @@ ClassicSVfitIntegrand::EvalPS(const double* q) const
   if ( addLogM_fixed_ ) {
     prob_logM = 1./TMath::Power(TMath::Max(1., mTauTau), addLogM_fixed_power_);
   }
-  if ( addLogM_dynamic_ ) {
+  if ( addLogM_dynamic_ ) {    
     double addLogM_power = addLogM_dynamic_formula_->Eval(mTauTau);
     prob_logM = 1./TMath::Power(TMath::Max(1., mTauTau), TMath::Max(0., addLogM_power));
   }

@@ -81,7 +81,7 @@ void extractResult(TGraphErrors* graph, double& mass, double& massErr, double& L
     }
   }
 
-  TGraphErrors* likelihoodGraph_forFit = makeGraph("svFitLikelihoodGraph_forFit", graphPoints_forFit);
+  TGraphErrors* likelihoodGraph_forFit = classic_svFit::makeGraph("svFitLikelihoodGraph_forFit", graphPoints_forFit);
   int numPoints = likelihoodGraph_forFit->GetN();
   bool useFit = false;
   if ( numPoints >= 3 ) {
@@ -175,7 +175,7 @@ double compPSfactor_tauToLepDecay(double x, double visEn, double visP, double vi
     #ifdef XSECTION_NORMALIZATION
     I *= GFfactor;    
     #endif
-    double cosThetaNuNu = compCosThetaNuNu(visEn, visP, visMass2, nunuEn, nunuP, nunuMass2);
+    double cosThetaNuNu = classic_svFit::compCosThetaNuNu(visEn, visP, visMass2, nunuEn, nunuP, nunuMass2);
     if ( !(cosThetaNuNu >= (-1. + epsilon) && cosThetaNuNu <= +1.) ) return 0.;
     double PSfactor = (visEn + nunuEn)*I/(8.*visP*square(x)*TMath::Sqrt(square(visP) + square(nunuP) + 2.*visP*nunuP*cosThetaNuNu + tauLeptonMass2));
     //-------------------------------------------------------------------------
@@ -201,7 +201,7 @@ double compPSfactor_tauToHadDecay(double x, double visEn, double visP, double vi
   //std::cout << " nuP = " << nuP << std::endl;
   double visMass2 = square(visMass);
   if ( x >= (visMass2/tauLeptonMass2) && x <= 1. ) { // physical solution
-    double cosThetaNu = compCosThetaNuNu(visEn, visP, visMass2, nuEn, nuP, 0.);
+    double cosThetaNu = classic_svFit::compCosThetaNuNu(visEn, visP, visMass2, nuEn, nuP, 0.);
     //std::cout << "cosThetaNu = " << cosThetaNu << std::endl;
     if ( !(cosThetaNu >= (-1. + epsilon) && cosThetaNu <= +1.) ) return 0.;
     double PSfactor = (visEn + nuEn)/(8.*visP*square(x)*TMath::Sqrt(square(visP) + square(nuP) + 2.*visP*nuP*cosThetaNu + tauLeptonMass2));
@@ -221,11 +221,17 @@ double compPSfactor_tauToHadDecay(double x, double visEn, double visP, double vi
   }
 }
 
-void integrationParameters::reset(){
-      idx_X_ = -1;
-      idx_phi_ = -1;
-      idx_VisPtShift_ = -1;
-      idx_mNuNu_ = -1;
+integrationParameters::integrationParameters()
+{
+  reset();
+}
+
+void integrationParameters::reset()
+{
+  idx_X_ = -1;
+  idx_phi_ = -1;
+  idx_VisPtShift_ = -1;
+  idx_mNuNu_ = -1;
 }
 
 }

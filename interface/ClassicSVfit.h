@@ -17,134 +17,130 @@
 
 class ClassicSVfit
 {
-public:
-ClassicSVfit(int = 0);
-~ClassicSVfit();
+ public:
+  ClassicSVfit(int = 0);
+  ~ClassicSVfit();
 
-/// add an additional log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution (default is false)
-void addLogM_fixed(bool value, double power = 1.);
-void addLogM_dynamic(bool value, const std::string& power = "");
+  /// add an additional log(mTauTau) term to the nll to suppress high mass tail in mTauTau distribution (default is false)
+  void addLogM_fixed(bool value, double power = 1.);
+  void addLogM_dynamic(bool value, const std::string& power = "");
 
-void setDiTauMassConstraint(double diTauMass);
+  void setDiTauMassConstraint(double diTauMass);
 
 #ifdef USE_SVFITTF
-/// set transfer functions for pT of hadronic tau decays
-void setHadTauTF(const HadTauTFBase* hadTauTF);
-/// enable/disable use of transfer functions for hadronic tau decays
-void enableHadTauTF();
-void disableHadTauTF();
+  /// set transfer functions for pT of hadronic tau decays
+  void setHadTauTF(const HadTauTFBase* hadTauTF);
+  /// enable/disable use of transfer functions for hadronic tau decays
+  void enableHadTauTF();
+  void disableHadTauTF();
 
-/// set correlation between hadronic tau pT and MET
-void setRhoHadTau(double rhoHadTau);
+  /// set correlation between hadronic tau pT and MET
+  void setRhoHadTau(double rhoHadTau);
 #endif
 
-///set verbosity level.
-///Level 0 - mute, level 1 - print inputs, level 2 - print integration details
-void setVerbosity(int aVerbosity);
+  ///set verbosity level.
+  ///Level 0 - mute, level 1 - print inputs, level 2 - print integration details
+  void setVerbosity(int aVerbosity);
 
-/// number of function calls for Markov Chain integration (default is 100000)
-void setMaxObjFunctionCalls(unsigned maxObjFunctionCalls);
+  /// number of function calls for Markov Chain integration (default is 100000)
+  void setMaxObjFunctionCalls(unsigned maxObjFunctionCalls);
 
-/// set name of ROOT file to store histograms of di-tau pT, eta, phi, mass and transverse mass
-void setLikelihoodFileName(const std::string& likelihoodFileName);
+  /// set name of ROOT file to store histograms of di-tau pT, eta, phi, mass and transverse mass
+  void setLikelihoodFileName(const std::string& likelihoodFileName);
 
-/// set name of ROOT file to store Markov Chain steps
-void setTreeFileName(const std::string& treeFileName);
+  /// set name of ROOT file to store Markov Chain steps
+  void setTreeFileName(const std::string& treeFileName);
 
-/// set and get histogram adapter
-void setHistogramAdapter(classic_svFit::HistogramAdapterDiTau* histogramAdapter);
-classic_svFit::HistogramAdapterDiTau* getHistogramAdapter() const;
+  /// set and get histogram adapter
+  void setHistogramAdapter(classic_svFit::HistogramAdapterDiTau* histogramAdapter);
+  classic_svFit::HistogramAdapterDiTau* getHistogramAdapter() const;
 
-/// prepare the integrand
-void prepareIntegrand(bool useHistoAdapter=true);
+  /// prepare the integrand
+  void prepareIntegrand(bool useHistoAdapter=true);
 
-/// prepare input measurements
-void prepareLeptonInput(const std::vector<classic_svFit::MeasuredTauLepton>& measuredTauLeptons);
+  /// prepare input measurements
+  void prepareLeptonInput(const std::vector<classic_svFit::MeasuredTauLepton>& measuredTauLeptons);
 
-/// add MET estimate, i.e systematic effect variation
-void addMETEstimate(const double & measuredMETx,
-                    const double & measuredMETy,
-                    const TMatrixD& covMET);
+  /// add MET estimate, i.e systematic effect variation
+  void addMETEstimate(double measuredMETx, double measuredMETy, const TMatrixD& covMET);
 
-/// remove MET estimated from integrand
-void clearMET();
+  /// remove MET estimated from integrand
+  void clearMET();
 
-/// run integration with Markov Chain
-void integrate(const std::vector<classic_svFit::MeasuredTauLepton>&,
-               const double &, const double &, const TMatrixD&);
+  /// run integration with Markov Chain
+  void integrate(const std::vector<classic_svFit::MeasuredTauLepton>&, double, double, const TMatrixD&);
 
-/// return flag indicating if algorithm succeeded to find valid solution
-bool isValidSolution() const;
+  /// return flag indicating if algorithm succeeded to find valid solution
+  bool isValidSolution() const;
 
-/// return computing time (in seconds) spent on last call to integrate method
-double getComputingTime_cpu() const;
-double getComputingTime_real() const;
+  /// return computing time (in seconds) spent on last call to integrate method
+  double getComputingTime_cpu() const;
+  double getComputingTime_real() const;
 
-protected:
+ protected:
+  ///flag for choosing the integrator class
+  bool useCuba_;
 
-///flag for choosing the integrator class
-bool useCuba_;
+  /// initialize Markov Chain integrator class
+  void initializeMCIntegrator();
 
-/// initialize Markov Chain integrator class
-void initializeMCIntegrator();
+  /// print MET and its covariance matrix
+  void printMET(double measuredMETx, double measuredMETy, const TMatrixD& covMET) const;
 
-/// print MET and its covariance matrix
-void printMET(double measuredMETx, double measuredMETy, const TMatrixD& covMET) const;
+  /// print measured leptons
+  void printLeptons() const;
 
-/// print measured leptons
-void printLeptons() const;
+  /// print integration range
+  void printIntegrationRange() const;
 
-/// print integration range
-void printIntegrationRange() const;
+  /// set integration indices and ranges for both legs
+  /// when useMassConstraint is true reduce number of
+  ///dimension by using the mass contraint
+  void setIntegrationParams(bool useMassConstraint=false);
 
-/// set integration indices and ranges for both legs
-/// when useMassConstraint is true reduce number of
-///dimension by using the mass contraint
-void setIntegrationParams(bool useMassConstraint=false);
+  /// set integration indices and ranges for given leg
+  void setLegIntegrationParams(unsigned iLeg, bool useMassConstraint=false);
+  
+  /// set integration ranges for given leg
+  void setIntegrationRanges(unsigned iLeg);
 
-/// set integration indices and ranges for given leg
-void setLegIntegrationParams(unsigned int iLeg, bool useMassConstraint=false);
+  classic_svFit::ClassicSVfitIntegrand* integrand_;
 
-/// set integration ranges for given leg
-void setIntegrationRanges(unsigned int iLeg);
+  std::vector<classic_svFit::MeasuredTauLepton> measuredTauLeptons_;
+  classic_svFit::Vector met_;
 
-classic_svFit::ClassicSVfitIntegrand* integrand_;
+  double diTauMassConstraint_;
 
-std::vector<classic_svFit::MeasuredTauLepton> measuredTauLeptons_;
-classic_svFit::Vector met_;
+  /// interface to Markov Chain integration algorithm
+  classic_svFit::SVfitIntegratorMarkovChain* intAlgo_;
 
-double diTauMassConstraint_ = -1.0;
+  double theIntegral_, theIntegralErr_;
 
-/// interface to Markov Chain integration algorithm
-classic_svFit::SVfitIntegratorMarkovChain* intAlgo_;
+  unsigned maxObjFunctionCalls_;
+  std::string treeFileName_;
 
-double theIntegral, theIntegralErr;
+  /// variables indices and ranges for each leg
+  classic_svFit::integrationParameters legIntegrationParams_[2];
+  unsigned numDimensions_;
+  double xl_[6], xu_[6];
 
-unsigned maxObjFunctionCalls_;
-std::string treeFileName_;
+  /// histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
+  mutable classic_svFit::HistogramAdapterDiTau* histogramAdapter_;
+  std::string likelihoodFileName_;
 
-/// variables indices and ranges for each leg
-classic_svFit::integrationParameters legIntegrationParams_[2];
-unsigned int numDimensions_ = 0;
-double xl_[6], xu_[6];
+  /// flag indicating if algorithm succeeded to find valid solution
+  bool isValidSolution_;
 
-/// histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
-mutable classic_svFit::HistogramAdapterDiTau* histogramAdapter_;
-std::string likelihoodFileName_;
+  /// account for resolution on pT of hadronic tau decays via appropriate transfer functions
+  bool useHadTauTF_;
 
-/// flag indicating if algorithm succeeded to find valid solution
-bool isValidSolution_;
+  /// clock for measuring run-time of algorithm
+  TBenchmark* clock_;
+  double numSeconds_cpu_;
+  double numSeconds_real_;
 
-/// account for resolution on pT of hadronic tau decays via appropriate transfer functions
-bool useHadTauTF_;
-
-/// clock for measuring run-time of algorithm
-TBenchmark* clock_;
-double numSeconds_cpu_;
-double numSeconds_real_;
-
-/// verbosity level
-int verbosity_;
+  /// verbosity level
+  int verbosity_;
 };
 
 #endif

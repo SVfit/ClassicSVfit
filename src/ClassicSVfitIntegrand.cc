@@ -179,9 +179,13 @@ void ClassicSVfitIntegrand::setLeptonInputs(const std::vector<MeasuredTauLepton>
   measuredTauLepton1_ = measuredTauLeptons[0];
   fittedTauLepton1_.setMeasuredTauLepton(measuredTauLepton1_);
   leg1isLeptonicTauDecay_ = measuredTauLepton1_.isLeptonicTauDecay();
+  leg1isHadronicTauDecay_ = measuredTauLepton1_.isHadronicTauDecay();
+  leg1isPrompt_ = measuredTauLepton1_.isPrompt();
   measuredTauLepton2_ = measuredTauLeptons[1];
   fittedTauLepton2_.setMeasuredTauLepton(measuredTauLepton2_);
   leg2isLeptonicTauDecay_ = measuredTauLepton2_.isLeptonicTauDecay();
+  leg2isHadronicTauDecay_ = measuredTauLepton2_.isHadronicTauDecay();
+  leg2isPrompt_ = measuredTauLepton2_.isPrompt();
 
   mVis_measured_ = (measuredTauLepton1_.p4() + measuredTauLepton2_.p4()).mass();
   if ( verbosity_ >= 2 ) {
@@ -327,45 +331,54 @@ ClassicSVfitIntegrand::EvalPS(const double* q) const
   fittedTauLepton2_.updateVisMomentum(visPtShift2);
 
   // compute visible energy fractions for both taus
-  int idx_x1 = legIntegrationParams_[0].idx_X_;
-  assert(idx_x1 != -1);
-  double x1_dash = x_[idx_x1];
+  double x1_dash = 1.;
+  if ( !leg1isPrompt_ ) {
+    int idx_x1 = legIntegrationParams_[0].idx_X_;
+    assert(idx_x1 != -1);
+    x1_dash = x_[idx_x1];
+  }
   double x1 = x1_dash/visPtShift1;
   if ( !(x1 >= 1.e-5 && x1 <= 1.) ) return 0.;
 
-  double x2_dash = 0.;
-  int idx_x2 = legIntegrationParams_[1].idx_X_;
-  if ( idx_x2 != -1 ) {
-    x2_dash = x_[idx_x2];
-  } else {
-    x2_dash = (mVis2_measured_/diTauMassConstraint2_)/x1_dash;
+  double x2_dash = 1.;
+  if ( !leg2isPrompt_ ) {
+    int idx_x2 = legIntegrationParams_[1].idx_X_;
+    if ( idx_x2 != -1 ) {
+      x2_dash = x_[idx_x2];
+    } else {
+      x2_dash = (mVis2_measured_/diTauMassConstraint2_)/x1_dash;
+    }
   }
   double x2 = x2_dash/visPtShift2;
   if ( !(x2 >= 1.e-5 && x2 <= 1.) ) return 0.;
 
   // compute neutrino and tau lepton momenta 
-  int idx_phiNu1 = legIntegrationParams_[0].idx_phi_;
-  assert(idx_phiNu1 != -1);
-  double phiNu1 = x_[idx_phiNu1];
-  int idx_nu1Mass = legIntegrationParams_[0].idx_mNuNu_;
-  double nu1Mass = ( idx_nu1Mass != -1 ) ? TMath::Sqrt(x_[idx_nu1Mass]) : 0.;
-  fittedTauLepton1_.updateTauMomentum(x1, phiNu1, nu1Mass);
-  //std::cout << "fittedTauLepton1: errorCode = " << fittedTauLepton1_.errorCode() << std::endl;
-  if ( fittedTauLepton1_.errorCode() != FittedTauLepton::None ) {
-    errorCode_ |= TauDecayParameters;
-    return 0.;
+  if ( !leg1isPrompt_ ) {
+    int idx_phiNu1 = legIntegrationParams_[0].idx_phi_;
+    assert(idx_phiNu1 != -1);
+    double phiNu1 = x_[idx_phiNu1];
+    int idx_nu1Mass = legIntegrationParams_[0].idx_mNuNu_;
+    double nu1Mass = ( idx_nu1Mass != -1 ) ? TMath::Sqrt(x_[idx_nu1Mass]) : 0.;
+    fittedTauLepton1_.updateTauMomentum(x1, phiNu1, nu1Mass);
+    //std::cout << "fittedTauLepton1: errorCode = " << fittedTauLepton1_.errorCode() << std::endl;
+    if ( fittedTauLepton1_.errorCode() != FittedTauLepton::None ) {
+      errorCode_ |= TauDecayParameters;
+      return 0.;
+    }
   }
 
-  int idx_phiNu2 = legIntegrationParams_[1].idx_phi_;
-  assert(idx_phiNu2 != -1);
-  double phiNu2 = x_[idx_phiNu2];
-  int idx_nu2Mass = legIntegrationParams_[1].idx_mNuNu_;
-  double nu2Mass = ( idx_nu2Mass != -1 ) ? TMath::Sqrt(x_[idx_nu2Mass]) : 0.;
-  fittedTauLepton2_.updateTauMomentum(x2, phiNu2, nu2Mass);
-  //std::cout << "fittedTauLepton2: errorCode = " << fittedTauLepton1_.errorCode() << std::endl;
-  if ( fittedTauLepton2_.errorCode() != FittedTauLepton::None ) {
-    errorCode_ |= TauDecayParameters;
-    return 0.;
+  if ( !leg2isPrompt_ ) {
+    int idx_phiNu2 = legIntegrationParams_[1].idx_phi_;
+    assert(idx_phiNu2 != -1);
+    double phiNu2 = x_[idx_phiNu2];
+    int idx_nu2Mass = legIntegrationParams_[1].idx_mNuNu_;
+    double nu2Mass = ( idx_nu2Mass != -1 ) ? TMath::Sqrt(x_[idx_nu2Mass]) : 0.;
+    fittedTauLepton2_.updateTauMomentum(x2, phiNu2, nu2Mass);
+    //std::cout << "fittedTauLepton2: errorCode = " << fittedTauLepton1_.errorCode() << std::endl;
+    if ( fittedTauLepton2_.errorCode() != FittedTauLepton::None ) {
+      errorCode_ |= TauDecayParameters;
+      return 0.;
+    }
   }
 
   if ( verbosity_ >= 2 ) {
@@ -399,8 +412,8 @@ ClassicSVfitIntegrand::EvalPS(const double* q) const
 
     // evaluate tau decay matrix elements
     double prob = 1.;
-    if ( measuredTauLepton.isLeptonicTauDecay() ) prob = compPSfactor_tauToLepDecay(x, visP4.E(), visP4.P(), measuredTauLepton.mass(), nuP4.E(), nuP4.P(), nuMass);
-    else prob = compPSfactor_tauToHadDecay(x, visP4.E(), visP4.P(), measuredTauLepton.mass(), nuP4.E(), nuP4.P());
+    if      ( measuredTauLepton.isLeptonicTauDecay() ) prob = compPSfactor_tauToLepDecay(x, visP4.E(), visP4.P(), measuredTauLepton.mass(), nuP4.E(), nuP4.P(), nuMass);
+    else if ( measuredTauLepton.isHadronicTauDecay() ) prob = compPSfactor_tauToHadDecay(x, visP4.E(), visP4.P(), measuredTauLepton.mass(), nuP4.E(), nuP4.P());
     prob_tauDecay *= prob;
 
     // evaluate transfer functions for tau energy reconstruction

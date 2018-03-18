@@ -16,7 +16,8 @@ namespace classic_svFit
       kUndefinedDecayType,
       kTauToHadDecay,  /* < hadronic tau lepton decay                                                        */
       kTauToElecDecay, /* < tau lepton decay to electron                                                     */
-      kTauToMuDecay    /* < tau lepton decay to muon                                                         */
+      kTauToMuDecay,   /* < tau lepton decay to muon                                                         */
+      kPrompt          /* < electron or muon directly originating from LFV Higgs boson decay                 */
     };
 
     MeasuredTauLepton();
@@ -68,6 +69,9 @@ namespace classic_svFit
     bool isLeptonicTauDecay() const;
     bool isHadronicTauDecay() const;
 
+    /// flag indicating electrons or muons directly originating from LFV Higgs boson decay
+    bool isPrompt() const;
+
    protected:
     /// set visible momentum in all coordinates systems
     void initialize();
@@ -108,6 +112,8 @@ namespace classic_svFit
     double sinPhi_sinTheta_;
     double cosTheta_;
     bool isLeptonicTauDecay_;
+    bool isHadronicTauDecay_;
+    bool isPrompt_;
   };
 }
 

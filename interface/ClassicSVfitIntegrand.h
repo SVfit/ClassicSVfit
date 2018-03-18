@@ -101,9 +101,13 @@ namespace classic_svFit
     MeasuredTauLepton measuredTauLepton1_;    
     mutable FittedTauLepton fittedTauLepton1_;
     bool leg1isLeptonicTauDecay_;
+    bool leg1isHadronicTauDecay_;
+    bool leg1isPrompt_;
     MeasuredTauLepton measuredTauLepton2_;  
     mutable FittedTauLepton fittedTauLepton2_;
     bool leg2isLeptonicTauDecay_;
+    bool leg2isHadronicTauDecay_;
+    bool leg2isPrompt_;
     std::vector<FittedTauLepton*> fittedTauLeptons_;
 
     mutable double mVis_measured_;

@@ -11,6 +11,7 @@ FittedTauLepton::FittedTauLepton(int iTau, int verbosity)
   , x_(-1.)
   , phiNu_(-1.)
   , nuMass_(-1.)
+  , errorCode_(None)
   , verbosity_(verbosity)
 {}
 
@@ -68,6 +69,13 @@ void FittedTauLepton::updateVisMomentum(double visPtShift)
   double visEn = TMath::Sqrt(square(visPx) + square(visPy) + square(visPz) + measuredTauLepton_mass2_);
   //std::cout << "vis: En = " << visEn << ", Pt = " << TMath::Sqrt(square(visPx) + square(visPy)) << std::endl;
   visP4_.SetPxPyPzE(visPx, visPy, visPz, visEn);
+
+  // set tau lepton four-vector to four-vector of visible decay products and neutrino four-vector to zero,
+  // in case of electrons or muons directly originating from LFV Higgs boson decay
+  if ( measuredTauLepton_.type() == MeasuredTauLepton::kPrompt ) {
+    nuP4_.SetPxPyPzE(0., 0., 0., 0.);
+    tauP4_ = visP4_;
+  }
 }
 
 void FittedTauLepton::updateTauMomentum(double x, double phiNu, double nuMass)

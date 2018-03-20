@@ -336,17 +336,14 @@ HistogramAdapter::~HistogramAdapter()
   */
 }
 
-void HistogramAdapter::setMeasurement(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met)
+void HistogramAdapter::setMeasurement(const std::vector<LorentzVector> & visibleMomenta, const Vector & met)
 {
-  vis1P4_ = vis1P4;
-  vis2P4_ = vis2P4;
+  visibleMomenta_ = visibleMomenta;
   met_ = met;
 }
 
-void HistogramAdapter::setTau1And2P4(const LorentzVector& tau1P4, const LorentzVector& tau2P4) {
-  tau1P4_ = tau1P4;
-  tau2P4_ = tau2P4;
-  tauSumP4_ = tau1P4_ + tau2P4_;
+void HistogramAdapter::setTau1And2P4(const std::vector<LorentzVector> & fittedMomenta) {
+  fittedMomenta_ = fittedMomenta;
 }
 
 unsigned int HistogramAdapter::registerQuantity(SVfitQuantity* quantity)
@@ -361,20 +358,20 @@ const SVfitQuantity* HistogramAdapter::getQuantity(unsigned int iQuantity) const
   else return  quantities_[iQuantity];
 }
 
-void HistogramAdapter::bookHistograms(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met)
+void HistogramAdapter::bookHistograms(const std::vector<LorentzVector> & visibleMomenta, const Vector & met)
 {
   for (std::vector<SVfitQuantity*>::iterator quantity = quantities_.begin(); quantity != quantities_.end(); ++quantity)
   {
-    (*quantity)->bookHistogram({vis1P4, vis2P4}, met);
+    (*quantity)->bookHistogram(visibleMomenta, met);
   }
 }
 
-void HistogramAdapter::fillHistograms(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& tauSumP4,
-                                      const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
+void HistogramAdapter::fillHistograms(const std::vector<LorentzVector> & fittedMomenta,
+                                      const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
 {
   for (std::vector<SVfitQuantity*>::iterator quantity = quantities_.begin(); quantity != quantities_.end(); ++quantity)
   {
-    (*quantity)->fillHistogram({tau1P4, tau2P4}, {vis1P4, vis2P4}, met);
+    (*quantity)->fillHistogram(fittedMomenta, visibleMomenta, met);
   }
 }
 
@@ -395,7 +392,7 @@ void HistogramAdapter::writeHistograms(const std::string& likelihoodFileName) co
 
 double HistogramAdapter::DoEval(const double* x) const
 {
-  fillHistograms(tau1P4_, tau2P4_, tauSumP4_, vis1P4_, vis2P4_, met_);
+  fillHistograms(fittedMomenta_, visibleMomenta_, met_);
   return 0.;
 }
 

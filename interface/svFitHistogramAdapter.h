@@ -133,7 +133,7 @@ namespace classic_svFit
     TauPtSVfitQuantity(size_t tauIndex);
     virtual TH1* createHistogram(const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const;
     virtual double fitFunction(const std::vector<LorentzVector> & fittedMomenta,
-                                const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const;
+                               const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const;
   };
 
   class TauEtaSVfitQuantity : public TauSVfitQuantity
@@ -159,14 +159,14 @@ namespace classic_svFit
     HistogramAdapter(std::vector<SVfitQuantity*> const& quantities = std::vector<SVfitQuantity*>());
     virtual ~HistogramAdapter();
 
-    void setMeasurement(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met);
-    void setTau1And2P4(const LorentzVector& tau1P4,  const LorentzVector& tau2P4);
+    void setMeasurement(const std::vector<LorentzVector> & visibleMomenta, const Vector & met);
+    void setTau1And2P4(const std::vector<LorentzVector> & fittedMomenta);
 
     unsigned int registerQuantity(SVfitQuantity* quantity);
     const SVfitQuantity* getQuantity(unsigned int iQuantity) const;
     inline unsigned int getNQuantities() const { return quantities_.size(); }
 
-    void bookHistograms(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met);
+    void bookHistograms(const std::vector<LorentzVector> & visibleMomenta, const Vector & met);
     void writeHistograms(const std::string& likelihoodFileName) const;
 
     double extractValue(size_t index) const;
@@ -181,19 +181,16 @@ namespace classic_svFit
 
    private:
     virtual double DoEval(const double* x) const;
-    void fillHistograms(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& tauSumP4,
-                        const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
+    void fillHistograms(const std::vector<LorentzVector> & fittedMomenta,
+                        const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const;
 
    protected:
     mutable std::vector<SVfitQuantity*> quantities_;
 
-    LorentzVector vis1P4_;
-    LorentzVector vis2P4_;
+    std::vector<LorentzVector> visibleMomenta_;
     Vector met_;
 
-    LorentzVector tau1P4_;
-    LorentzVector tau2P4_;
-    LorentzVector tauSumP4_;
+    std::vector<LorentzVector> fittedMomenta_;
   };
 
   class DiTauSystemHistogramAdapter : public HistogramAdapter

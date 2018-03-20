@@ -325,8 +325,8 @@ ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons
         if ( measuredTauLeptons_.size() == 2 ) {
                 met_.SetX(measuredMETx);
                 met_.SetY(measuredMETy);
-                histogramAdapter_->setMeasurement(measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4(), met_);
-                histogramAdapter_->bookHistograms(measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4(), met_);
+                histogramAdapter_->setMeasurement({measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4()}, met_);
+                histogramAdapter_->bookHistograms({measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4()}, met_);
         }
 
         intAlgo_->integrate(&g_C, xl_, xu_, numDimensions_, theIntegral, theIntegralErr);

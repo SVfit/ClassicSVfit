@@ -41,8 +41,6 @@ namespace classic_svFit
     const TH1* getHistogram() const;
     void writeHistogram() const;
 
-    void fillHistogram(const double & value, const double & weight);
-
     void fillHistogram(const std::vector<LorentzVector> & fittedMomenta,
                        const std::vector<LorentzVector> & visibleMomenta, const Vector & met);
 

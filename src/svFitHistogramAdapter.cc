@@ -148,11 +148,6 @@ void SVfitQuantity::writeHistogram() const
   }
 }
 
-void SVfitQuantity::fillHistogram(const double & value, const double & weight)
-{
-  histogram_->Fill(value, weight);
-}
-
 void SVfitQuantity::fillHistogram(
     const std::vector<LorentzVector> & fittedMomenta,
     const std::vector<LorentzVector> & visibleMomenta, const Vector & met

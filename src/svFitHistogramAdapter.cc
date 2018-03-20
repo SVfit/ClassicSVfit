@@ -243,8 +243,8 @@ double TransverseMassSVfitQuantity::fitFunction(const std::vector<LorentzVector>
 
 TauSVfitQuantity::TauSVfitQuantity(size_t tauIndex) :
   classic_svFit::SVfitQuantity(),
-  m_tauIndex(tauIndex),
-  m_tauLabel("Tau"+std::to_string(tauIndex+1))
+  tauIndex_(tauIndex),
+  tauLabel_("Tau"+std::to_string(tauIndex+1))
 {
 }
 
@@ -253,13 +253,13 @@ TauESVfitQuantity::TauESVfitQuantity(size_t tauIndex) : TauSVfitQuantity(tauInde
 }
 TH1* TauESVfitQuantity::createHistogram(const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
 {
-  double visEnergy = visibleMomenta.at(m_tauIndex).E();
-  return classic_svFit::HistogramTools::makeHistogram(std::string("svfitAlgorithm_histogram"+m_tauLabel+"E").c_str(), visEnergy/1.025, TMath::Max(1.e+3, 1.e+1*visEnergy/1.025), 1.025);
+  double visEnergy = visibleMomenta.at(tauIndex_).E();
+  return classic_svFit::HistogramTools::makeHistogram(std::string("svfitAlgorithm_histogram"+tauLabel_+"E").c_str(), visEnergy/1.025, TMath::Max(1.e+3, 1.e+1*visEnergy/1.025), 1.025);
 }
 double TauESVfitQuantity::fitFunction(const std::vector<LorentzVector> & fittedMomenta,
                                       const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
 {
-  return fittedMomenta.at(m_tauIndex).E();
+  return fittedMomenta.at(tauIndex_).E();
 }
 
 TauERatioSVfitQuantity::TauERatioSVfitQuantity(size_t tauIndex) : TauSVfitQuantity(tauIndex)
@@ -267,13 +267,13 @@ TauERatioSVfitQuantity::TauERatioSVfitQuantity(size_t tauIndex) : TauSVfitQuanti
 }
 TH1* TauERatioSVfitQuantity::createHistogram(const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
 {
-  return new TH1D(std::string("svfitAlgorithm_histogram"+m_tauLabel+"ERatio").c_str(), std::string("svfitAlgorithm_histogram"+m_tauLabel+"ERatio").c_str(), 200, 0.0, 1.0);
+  return new TH1D(std::string("svfitAlgorithm_histogram"+tauLabel_+"ERatio").c_str(), std::string("svfitAlgorithm_histogram"+tauLabel_+"ERatio").c_str(), 200, 0.0, 1.0);
 }
 double TauERatioSVfitQuantity::fitFunction(const std::vector<LorentzVector> & fittedMomenta,
                                            const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
 {
-  double visEnergy = visibleMomenta.at(m_tauIndex).E();
-  double tauEnergy = fittedMomenta.at(m_tauIndex).E();
+  double visEnergy = visibleMomenta.at(tauIndex_).E();
+  double tauEnergy = fittedMomenta.at(tauIndex_).E();
   return (tauEnergy != 0.0 ? visEnergy / tauEnergy : 0.0);
 }
 
@@ -282,12 +282,12 @@ TauPtSVfitQuantity::TauPtSVfitQuantity(size_t tauIndex) : TauSVfitQuantity(tauIn
 }
 TH1* TauPtSVfitQuantity::createHistogram(const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
 {
-  return classic_svFit::HistogramTools::makeHistogram(std::string("svfitAlgorithm_histogram"+m_tauLabel+"Pt").c_str(), 1., 1.e+3, 1.025);
+  return classic_svFit::HistogramTools::makeHistogram(std::string("svfitAlgorithm_histogram"+tauLabel_+"Pt").c_str(), 1., 1.e+3, 1.025);
 }
 double TauPtSVfitQuantity::fitFunction(const std::vector<LorentzVector> & fittedMomenta,
                                        const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
 {
-  return fittedMomenta.at(m_tauIndex).pt();
+  return fittedMomenta.at(tauIndex_).pt();
 }
 
 TauEtaSVfitQuantity::TauEtaSVfitQuantity(size_t tauIndex) : TauSVfitQuantity(tauIndex)
@@ -295,12 +295,12 @@ TauEtaSVfitQuantity::TauEtaSVfitQuantity(size_t tauIndex) : TauSVfitQuantity(tau
 }
 TH1* TauEtaSVfitQuantity::createHistogram(const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
 {
-  return new TH1D(std::string("svfitAlgorithm_histogram"+m_tauLabel+"Eta").c_str(), std::string("svfitAlgorithm_histogram"+m_tauLabel+"Eta").c_str(), 198, -9.9, +9.9);
+  return new TH1D(std::string("svfitAlgorithm_histogram"+tauLabel_+"Eta").c_str(), std::string("svfitAlgorithm_histogram"+tauLabel_+"Eta").c_str(), 198, -9.9, +9.9);
 }
 double TauEtaSVfitQuantity::fitFunction(const std::vector<LorentzVector> & fittedMomenta,
                                         const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
 {
-  return fittedMomenta.at(m_tauIndex).eta();
+  return fittedMomenta.at(tauIndex_).eta();
 }
 
 TauPhiSVfitQuantity::TauPhiSVfitQuantity(size_t tauIndex) : TauSVfitQuantity(tauIndex)
@@ -308,12 +308,12 @@ TauPhiSVfitQuantity::TauPhiSVfitQuantity(size_t tauIndex) : TauSVfitQuantity(tau
 }
 TH1* TauPhiSVfitQuantity::createHistogram(const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
 {
-  return new TH1D(std::string("svfitAlgorithm_histogram"+m_tauLabel+"Phi").c_str(), std::string("svfitAlgorithm_histogram"+m_tauLabel+"Phi").c_str(), 180, -TMath::Pi(), +TMath::Pi());
+  return new TH1D(std::string("svfitAlgorithm_histogram"+tauLabel_+"Phi").c_str(), std::string("svfitAlgorithm_histogram"+tauLabel_+"Phi").c_str(), 180, -TMath::Pi(), +TMath::Pi());
 }
 double TauPhiSVfitQuantity::fitFunction(const std::vector<LorentzVector> & fittedMomenta,
                                         const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
 {
-  return fittedMomenta.at(m_tauIndex).phi();
+  return fittedMomenta.at(tauIndex_).phi();
 }
 
 

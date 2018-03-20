@@ -103,8 +103,8 @@ namespace classic_svFit
     TauSVfitQuantity(size_t tauIndex);
 
    protected:
-    size_t m_tauIndex;
-    std::string m_tauLabel;
+    size_t tauIndex_;
+    std::string tauLabel_;
   };
 
   class TauESVfitQuantity : public TauSVfitQuantity

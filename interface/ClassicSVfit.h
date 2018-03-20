@@ -20,6 +20,9 @@ class ClassicSVfit : public ClassicSVfitBase
   /// prepare the integrand
   void prepareIntegrand();
 
+  /// prepare input measurements
+  void prepareLeptonInput(const std::vector<classic_svFit::MeasuredTauLepton>& measuredTauLeptons);
+
   /// run integration with Markov Chain
   void integrate(const std::vector<classic_svFit::MeasuredTauLepton>&, double, double, const TMatrixD&);
 
@@ -30,7 +33,7 @@ class ClassicSVfit : public ClassicSVfitBase
   /// set integration indices and ranges for both legs
   /// when useMassConstraint is true reduce number of
   /// dimension by using the mass contraint
-  void setIntegrationParams(bool useMassConstraint=false);
+  void setIntegrationParams(bool useDiTauMassConstraint=false);
 
   double diTauMassConstraint_;
 

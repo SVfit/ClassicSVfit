@@ -53,7 +53,7 @@ class ClassicSVfitBase
   virtual void prepareIntegrand() = 0;
 
   /// prepare input measurements
-  void prepareLeptonInput(const std::vector<classic_svFit::MeasuredTauLepton>& measuredTauLeptons);
+  virtual void prepareLeptonInput(const std::vector<classic_svFit::MeasuredTauLepton>& measuredTauLeptons) = 0;
 
   /// add MET estimate, i.e systematic effect variation
   void addMETEstimate(double measuredMETx, double measuredMETy, const TMatrixD& covMET);

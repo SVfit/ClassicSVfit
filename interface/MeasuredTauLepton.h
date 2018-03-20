@@ -115,6 +115,12 @@ namespace classic_svFit
     bool isHadronicTauDecay_;
     bool isPrompt_;
   };
-}
+
+  // auxiliary class for sorting MeasuredTauLeptons
+  struct sortMeasuredTauLeptons
+  {
+    bool operator() (const MeasuredTauLepton& measuredTauLepton1, const MeasuredTauLepton& measuredTauLepton2);
+  };
+};
 
 #endif

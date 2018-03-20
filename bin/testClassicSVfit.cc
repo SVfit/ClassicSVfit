@@ -53,10 +53,8 @@ int main(int argc, char* argv[])
   //svFitAlgo.addLogM_dynamic(true, "(m/1000.)*15.");
   //svFitAlgo.setMaxObjFunctionCalls(100000); // CV: default is 100000 evaluations of integrand per event
   svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
-
   svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
   bool isValidSolution_1stRun = svFitAlgo.isValidSolution();
-
   double mass_1stRun = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getMass();
   double massErr_1stRun = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getMassErr();
   double transverseMass_1stRun = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getTransverseMass();
@@ -75,7 +73,7 @@ int main(int argc, char* argv[])
  
   // re-run with mass constraint
   double massContraint = 125.06;
-  std::cout << "\n\nTesting integration with di tau mass constraint set to " << massContraint << std::endl;
+  std::cout << "\n\nTesting integration with ditau mass constraint set to " << massContraint << std::endl;
   svFitAlgo.setLikelihoodFileName("testClassicSVfit_withMassContraint.root");
   svFitAlgo.setDiTauMassConstraint(massContraint);
   svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);

@@ -1,5 +1,6 @@
 #include "TauAnalysis/ClassicSVfit/interface/ClassicSVfit.h"
 
+#include "TauAnalysis/ClassicSVfit/interface/ClassicSVfitIntegrand.h"
 #include "TauAnalysis/ClassicSVfit/interface/SVfitIntegratorMarkovChain.h"
 
 #include <TGraphErrors.h>
@@ -47,13 +48,13 @@ void ClassicSVfit::initializeMCIntegrator()
   intAlgo_->registerCallBackFunction(*histogramAdapter_);
 }
 
-void ClassicSVfit::setIntegrationParams(bool useMassConstraint)
+void ClassicSVfit::setIntegrationParams(bool useDiTauMassConstraint)
 {
   numDimensions_ = 0;
   legIntegrationParams_[0].reset();
   legIntegrationParams_[1].reset();
   setLegIntegrationParams(0, false);
-  setLegIntegrationParams(1, useMassConstraint);
+  setLegIntegrationParams(1, useDiTauMassConstraint);
   if ( verbosity_ >= 1 ) printIntegrationRange();
 }
 
@@ -73,6 +74,15 @@ void ClassicSVfit::prepareIntegrand()
   ClassicSVfitIntegrand::gSVfitIntegrand = static_cast<ClassicSVfitIntegrand*>(integrand_);
 }
 
+void ClassicSVfit::prepareLeptonInput(const std::vector<MeasuredTauLepton>& measuredTauLeptons)
+{
+  measuredTauLeptons_ = measuredTauLeptons;
+  for (std::vector<MeasuredTauLepton>::iterator measuredTauLepton = measuredTauLeptons_.begin();
+       measuredTauLepton != measuredTauLeptons_.end(); ++measuredTauLepton ) measuredTauLepton->roundToNdigits();
+  std::sort(measuredTauLeptons_.begin(), measuredTauLeptons_.end(), sortMeasuredTauLeptons());
+  if ( verbosity_ >= 1 ) printLeptons();
+}
+
 void ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons,
 			     double measuredMETx, double measuredMETy,
 			     const TMatrixD& covMET)
@@ -85,8 +95,8 @@ void ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLe
   prepareLeptonInput(measuredTauLeptons);
   integrand_->clearMET();
   addMETEstimate(measuredMETx, measuredMETy, covMET);
-  bool useMassConstraint = (diTauMassConstraint_ > 0);
-  setIntegrationParams(useMassConstraint);
+  bool useDiTauMassConstraint = (diTauMassConstraint_ > 0);
+  setIntegrationParams(useDiTauMassConstraint);
   prepareIntegrand();
   if ( !intAlgo_ ) initializeMCIntegrator();
 
@@ -96,7 +106,7 @@ void ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLe
     met_.SetY(measuredMETy);
     histogramAdapter_->setMeasurement(measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4(), met_);
     histogramAdapter_->bookHistograms(measuredTauLeptons_[0].p4(), measuredTauLeptons_[1].p4(), met_);
-  }
+  } else assert(0);
   
   double theIntegral, theIntegralErr;
   intAlgo_->integrate(&g_C, xl_, xh_, numDimensions_, theIntegral, theIntegralErr);

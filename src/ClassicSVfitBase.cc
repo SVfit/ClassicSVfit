@@ -158,12 +158,15 @@ void ClassicSVfitBase::printMET(double measuredMETx, double measuredMETy, const 
 
 void ClassicSVfitBase::printLeptons() const 
 {
+  LorentzVector sumP4;
   for ( size_t idx = 0; idx < measuredTauLeptons_.size(); ++idx ) {
     const MeasuredTauLepton& measuredTauLepton = measuredTauLeptons_[idx];
     std::cout << "measuredTauLepton #" << idx << " (type = " << measuredTauLepton.type() << "): Pt = " << measuredTauLepton.pt() << ","
 	      << " eta = " << measuredTauLepton.eta() << " (theta = " << measuredTauLepton.p3().theta() << ")" << ", phi = " << measuredTauLepton.phi() << ","
 	      << " mass = " << measuredTauLepton.mass() << std::endl;
+    sumP4 += measuredTauLepton.p4();
   }
+  std::cout << "visible momentum sum: Pt = " << sumP4.pt() << ", phi = " << sumP4.phi() << ", mass = " << sumP4.mass() << std::endl;
 }
 
 void ClassicSVfitBase::printIntegrationRange() const 
@@ -214,7 +217,11 @@ void ClassicSVfitBase::setIntegrationRanges(unsigned iLeg)
   if ( aIntParams.idx_X_ != -1 ) {
     xl_[aIntParams.idx_X_] = 0.;
 #ifdef USE_SVFITTF
-    xh_[aIntParams.idx_X_] = 2.; // upper integration bound for x1' = visPtShift1*x1
+    if ( aIntParams.idx_VisPtShift_ != -1 ) {
+      xh_[aIntParams.idx_X_] = 2.; // upper integration bound for x1' = visPtShift1*x1
+    } else {
+      xh_[aIntParams.idx_X_] = 1.;
+    }
 #else
     xh_[aIntParams.idx_X_] = 1.;
 #endif
@@ -231,41 +238,6 @@ void ClassicSVfitBase::setIntegrationRanges(unsigned iLeg)
     xl_[aIntParams.idx_mNuNu_] = 0.;
     xh_[aIntParams.idx_mNuNu_] = tauLeptonMass2;
   }
-}
-
-namespace
-{
-  struct sortMeasuredTauLeptons
-  {
-    bool operator() (const MeasuredTauLepton& measuredTauLepton1, const MeasuredTauLepton& measuredTauLepton2)
-    {
-      // sort tau decay products into "leg1" (first daughter) and "leg2" (second daughter)
-      // for the choice of "leg1", give preference (in order of decreasing priority) to:
-      //  - electrons and muons directly originating from lepton-flavor-violating Higgs boson decay
-      //  - leptonic over hadronic tau decays 
-      //  - tau decay products of higher pT (in case taus decay either both leptonically or both hadronically)
-      if ( measuredTauLepton1.type() == MeasuredTauLepton::kPrompt && measuredTauLepton2.type() != MeasuredTauLepton::kPrompt )
-	return true;
-      if ( measuredTauLepton2.type() == MeasuredTauLepton::kPrompt && measuredTauLepton1.type() != MeasuredTauLepton::kPrompt )
-	return false;
-      // give preference to leptonic tau decays for "leg1";
-      // in case taus decay either both leptonically or both hadronically, give preference to tau decay products of higher pT for "leg1"
-      if ( (measuredTauLepton1.type() == MeasuredTauLepton::kTauToElecDecay || measuredTauLepton1.type() == MeasuredTauLepton::kTauToMuDecay) &&
-	    measuredTauLepton2.type() == MeasuredTauLepton::kTauToHadDecay  ) return true;
-      if ( (measuredTauLepton2.type() == MeasuredTauLepton::kTauToElecDecay || measuredTauLepton2.type() == MeasuredTauLepton::kTauToMuDecay) &&
-	    measuredTauLepton1.type() == MeasuredTauLepton::kTauToHadDecay ) return false;      
-      return ( measuredTauLepton1.pt() > measuredTauLepton2.pt() );
-    }
-  };
-}
-
-void ClassicSVfitBase::prepareLeptonInput(const std::vector<MeasuredTauLepton>& measuredTauLeptons)
-{
-  measuredTauLeptons_ = measuredTauLeptons;
-  for (std::vector<MeasuredTauLepton>::iterator measuredTauLepton = measuredTauLeptons_.begin();
-       measuredTauLepton != measuredTauLeptons_.end(); ++measuredTauLepton ) measuredTauLepton->roundToNdigits();
-  std::sort(measuredTauLeptons_.begin(), measuredTauLeptons_.end(), sortMeasuredTauLeptons());
-  if ( verbosity_ >= 1 ) printLeptons();
 }
 
 void ClassicSVfitBase::clearMET()

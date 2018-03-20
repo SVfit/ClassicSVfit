@@ -93,11 +93,11 @@ void ClassicSVfitIntegrandBase::setNumDimensions(unsigned numDimensions)
   numDimensions_ = numDimensions; 
 }
 
-void ClassicSVfitIntegrandBase::setIntegrationRanges(const double* xl, const double* xu)
+void ClassicSVfitIntegrandBase::setIntegrationRanges(const double* xl, const double* xh)
 {
   for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
     xMin_[iDimension] = xl[iDimension];
-    xMax_[iDimension] = xu[iDimension];
+    xMax_[iDimension] = xh[iDimension];
   }
 }
 

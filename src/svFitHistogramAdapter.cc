@@ -463,7 +463,8 @@ void HistogramAdapterDiTau::setMeasurement(const LorentzVector& vis1P4, const Lo
   adapter_tau2_->setMeasurement(vis2P4);
 }
 
-void HistogramAdapterDiTau::setTau1And2P4(const LorentzVector& tau1P4, const LorentzVector& tau2P4) {
+void HistogramAdapterDiTau::setTau1And2P4(const LorentzVector& tau1P4, const LorentzVector& tau2P4) 
+{
   tau1P4_ = tau1P4;
   tau2P4_ = tau2P4;
   ditauP4_ = tau1P4_ + tau2P4_;

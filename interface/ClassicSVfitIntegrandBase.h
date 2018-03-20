@@ -40,7 +40,7 @@ namespace classic_svFit
 
     void setVerbosity(int aVerbosity);
 
-    void setIntegrationRanges(const double* xl, const double* xu);
+    void setIntegrationRanges(const double* xl, const double* xh);
 
 #ifdef USE_SVFITTF
     /// set transfer functions for pT of hadronic tau decays

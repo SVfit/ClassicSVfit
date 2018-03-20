@@ -203,3 +203,26 @@ bool MeasuredTauLepton::isPrompt() const
 {
   return isPrompt_;
 }
+
+//---------------------------------------------------------------------------------------------------
+// auxiliary class for sorting MeasuredTauLeptons
+bool sortMeasuredTauLeptons::operator() (const MeasuredTauLepton& measuredTauLepton1, const MeasuredTauLepton& measuredTauLepton2)
+{
+  // sort tau decay products into "leg1" (first daughter) and "leg2" (second daughter)
+  // for the choice of "leg1", give preference (in order of decreasing priority) to:
+  //  - electrons and muons directly originating from lepton-flavor-violating Higgs boson decay
+  //  - leptonic over hadronic tau decays 
+  //  - tau decay products of higher pT (in case taus decay either both leptonically or both hadronically)
+  if ( measuredTauLepton1.type() == MeasuredTauLepton::kPrompt && measuredTauLepton2.type() != MeasuredTauLepton::kPrompt )
+    return true;
+  if ( measuredTauLepton2.type() == MeasuredTauLepton::kPrompt && measuredTauLepton1.type() != MeasuredTauLepton::kPrompt )
+    return false;
+  // give preference to leptonic tau decays for "leg1";
+  // in case taus decay either both leptonically or both hadronically, give preference to tau decay products of higher pT for "leg1"
+  if ( (measuredTauLepton1.type() == MeasuredTauLepton::kTauToElecDecay || measuredTauLepton1.type() == MeasuredTauLepton::kTauToMuDecay) &&
+       measuredTauLepton2.type() == MeasuredTauLepton::kTauToHadDecay  ) return true;
+  if ( (measuredTauLepton2.type() == MeasuredTauLepton::kTauToElecDecay || measuredTauLepton2.type() == MeasuredTauLepton::kTauToMuDecay) &&
+       measuredTauLepton1.type() == MeasuredTauLepton::kTauToHadDecay ) return false;      
+  return ( measuredTauLepton1.pt() > measuredTauLepton2.pt() );
+}
+//---------------------------------------------------------------------------------------------------

@@ -27,7 +27,7 @@ ClassicSVfitIntegrand::ClassicSVfitIntegrand(int verbosity)
   numTaus_ = 2;
   legIntegrationParams_.resize(numTaus_);
 
-  maxNumberOfDimensions_ = 6;
+  maxNumberOfDimensions_ = 3*numTaus_;
   xMin_ = new double[maxNumberOfDimensions_];
   xMax_ = new double[maxNumberOfDimensions_];
   x_ = new double[maxNumberOfDimensions_];
@@ -85,7 +85,7 @@ void ClassicSVfitIntegrand::setLeptonInputs(const std::vector<MeasuredTauLepton>
 
   mVis_measured_ = (measuredTauLepton1_.p4() + measuredTauLepton2_.p4()).mass();
   if ( verbosity_ >= 2 ) {
-    std::cout << "mVis = " << mVis_measured_ << std::endl;
+    std::cout << "mVis(ditau) = " << mVis_measured_ << std::endl;
   }
   mVis2_measured_ = square(mVis_measured_);
 }
@@ -165,7 +165,7 @@ double ClassicSVfitIntegrand::EvalPS(const double* q) const
     int idx_nu2Mass = legIntegrationParams_[1].idx_mNuNu_;
     double nu2Mass = ( idx_nu2Mass != -1 ) ? TMath::Sqrt(x_[idx_nu2Mass]) : 0.;
     fittedTauLepton2_.updateTauMomentum(x2, phiNu2, nu2Mass);
-    //std::cout << "fittedTauLepton2: errorCode = " << fittedTauLepton1_.errorCode() << std::endl;
+    //std::cout << "fittedTauLepton2: errorCode = " << fittedTauLepton2_.errorCode() << std::endl;
     if ( fittedTauLepton2_.errorCode() != FittedTauLepton::None ) {
       errorCode_ |= TauDecayParameters;
       return 0.;
@@ -262,11 +262,12 @@ double ClassicSVfitIntegrand::Eval(const double* x, unsigned int iComponent) con
     phaseSpaceComponentCache_ = EvalPS(x);
   }
   if ( phaseSpaceComponentCache_ < 1.e-300 ) return 0.;
-  double prob = phaseSpaceComponentCache_*EvalMET_TF(iComponent);
+  double prob_metTF = EvalMET_TF(iComponent);
+  double prob = phaseSpaceComponentCache_*prob_metTF;
   if ( verbosity_ >= 2 ) {
-    std::cout<<" metTF: " << EvalMET_TF(iComponent)
-	     << " phaseSpaceComponentCache_: " << phaseSpaceComponentCache_
-	     << " --> returning " << prob << std::endl;
+    std::cout << " metTF: " << prob_metTF << ","
+	      << " phaseSpaceComponentCache: " << phaseSpaceComponentCache_
+	      << " --> returning " << prob << std::endl;
   }
   if ( histogramAdapter_ && prob > 1.e-300 ){
     histogramAdapter_->setTau1And2P4(fittedTauLepton1_.tauP4(), fittedTauLepton2_.tauP4());

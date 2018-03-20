@@ -4,6 +4,7 @@
 #include "TauAnalysis/ClassicSVfit/interface/ClassicSVfitIntegrandBase.h"
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredTauLepton.h"
 #include "TauAnalysis/ClassicSVfit/interface/FittedTauLepton.h"
+#include "TauAnalysis/ClassicSVfit/interface/svFitHistogramAdapter.h" // HistogramAdapterDiTau
 
 #include <Math/Functor.h>
 #include <TMatrixD.h>

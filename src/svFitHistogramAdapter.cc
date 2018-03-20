@@ -176,68 +176,85 @@ bool SVfitQuantity::isValidSolution() const
   return (extractLmax() > 0.0);
 }
 
-TH1* DiTauSystemPtSVfitQuantity::createHistogram(const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
+DiTauSystemSVfitQuantity::DiTauSystemSVfitQuantity(size_t diTauIndex) :
+  classic_svFit::SVfitQuantity(),
+  diTauIndex_(diTauIndex),
+  diTauLabel_("DiTau"+std::to_string(diTauIndex+1))
 {
-  return HistogramTools::makeHistogram("ClassicSVfitIntegrand_histogramPt", 1., 1.e+3, 1.025);
 }
 
+DiTauSystemPtSVfitQuantity::DiTauSystemPtSVfitQuantity(size_t diTauIndex) : DiTauSystemSVfitQuantity(diTauIndex)
+{
+}
+TH1* DiTauSystemPtSVfitQuantity::createHistogram(const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
+{
+  return HistogramTools::makeHistogram(std::string("ClassicSVfitIntegrand_histogram"+diTauLabel_+"Pt").c_str(), 1., 1.e+3, 1.025);
+}
 double DiTauSystemPtSVfitQuantity::fitFunction(const std::vector<LorentzVector> & fittedMomenta,
                                                const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
 {
-  return (fittedMomenta.at(0) + fittedMomenta.at(1)).pt();
+  return (fittedMomenta.at(2*diTauIndex_) + fittedMomenta.at(2*diTauIndex_+1)).pt();
 }
 
+DiTauSystemEtaSVfitQuantity::DiTauSystemEtaSVfitQuantity(size_t diTauIndex) : DiTauSystemSVfitQuantity(diTauIndex)
+{
+}
 TH1* DiTauSystemEtaSVfitQuantity::createHistogram(const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
 {
-  return new TH1D("ClassicSVfitIntegrand_histogramEta", "ClassicSVfitIntegrand_histogramEta", 198, -9.9, +9.9);
+  return new TH1D(std::string("ClassicSVfitIntegrand_histogram"+diTauLabel_+"Eta").c_str(), std::string("ClassicSVfitIntegrand_histogram"+diTauLabel_+"Eta").c_str(), 198, -9.9, +9.9);
 }
-
 double DiTauSystemEtaSVfitQuantity::fitFunction(const std::vector<LorentzVector> & fittedMomenta,
                                                 const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
 {
-  return (fittedMomenta.at(0) + fittedMomenta.at(1)).eta();
+  return (fittedMomenta.at(2*diTauIndex_) + fittedMomenta.at(2*diTauIndex_+1)).eta();
 }
 
+DiTauSystemPhiSVfitQuantity::DiTauSystemPhiSVfitQuantity(size_t diTauIndex) : DiTauSystemSVfitQuantity(diTauIndex)
+{
+}
 TH1* DiTauSystemPhiSVfitQuantity::createHistogram(const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
 {
-  return new TH1D("ClassicSVfitIntegrand_histogramPhi", "ClassicSVfitIntegrand_histogramPhi", 180, -TMath::Pi(), +TMath::Pi());
+  return new TH1D(std::string("ClassicSVfitIntegrand_histogram"+diTauLabel_+"Phi").c_str(), std::string("ClassicSVfitIntegrand_histogram"+diTauLabel_+"Phi").c_str(), 180, -TMath::Pi(), +TMath::Pi());
 }
-
 double DiTauSystemPhiSVfitQuantity::fitFunction(const std::vector<LorentzVector> & fittedMomenta,
                                                 const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
 {
-  return (fittedMomenta.at(0) + fittedMomenta.at(1)).phi();
+  return (fittedMomenta.at(2*diTauIndex_) + fittedMomenta.at(2*diTauIndex_+1)).phi();
 }
 
+DiTauSystemMassSVfitQuantity::DiTauSystemMassSVfitQuantity(size_t diTauIndex) : DiTauSystemSVfitQuantity(diTauIndex)
+{
+}
 TH1* DiTauSystemMassSVfitQuantity::createHistogram(const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
 {
-  double visMass = (visibleMomenta.at(0) + visibleMomenta.at(1)).mass();
+  double visMass = (visibleMomenta.at(2*diTauIndex_) + visibleMomenta.at(2*diTauIndex_+1)).mass();
   double minMass = visMass/1.0125;
   double maxMass = TMath::Max(1.e+4, 1.e+1*minMass);
-  return HistogramTools::makeHistogram("ClassicSVfitIntegrand_histogramMass", minMass, maxMass, 1.025);
+  return HistogramTools::makeHistogram(std::string("ClassicSVfitIntegrand_histogram"+diTauLabel_+"Mass").c_str(), minMass, maxMass, 1.025);
 }
-
 double DiTauSystemMassSVfitQuantity::fitFunction(const std::vector<LorentzVector> & fittedMomenta,
                                                  const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
 {
-  return (fittedMomenta.at(0) + fittedMomenta.at(1)).mass();
+  return (fittedMomenta.at(2*diTauIndex_) + fittedMomenta.at(2*diTauIndex_+1)).mass();
 }
 
-TH1* TransverseMassSVfitQuantity::createHistogram(const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
+DiTauSystemMtSVfitQuantity::DiTauSystemMtSVfitQuantity(size_t diTauIndex) : DiTauSystemSVfitQuantity(diTauIndex)
 {
-  classic_svFit::LorentzVector measuredDiTauSystem = visibleMomenta.at(0) + visibleMomenta.at(1);
-  double visTransverseMass2 = square(visibleMomenta.at(0).Et() + visibleMomenta.at(1).Et()) - (square(measuredDiTauSystem.px()) + square(measuredDiTauSystem.py()));
+}
+TH1* DiTauSystemMtSVfitQuantity::createHistogram(const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
+{
+  classic_svFit::LorentzVector measuredDiTauSystem = visibleMomenta.at(2*diTauIndex_) + visibleMomenta.at(2*diTauIndex_+1);
+  double visTransverseMass2 = square(visibleMomenta.at(2*diTauIndex_).Et() + visibleMomenta.at(2*diTauIndex_+1).Et()) - (square(measuredDiTauSystem.px()) + square(measuredDiTauSystem.py()));
   double visTransverseMass = TMath::Sqrt(TMath::Max(1., visTransverseMass2));
   double minTransverseMass = visTransverseMass/1.0125;
   double maxTransverseMass = TMath::Max(1.e+4, 1.e+1*minTransverseMass);
-  return HistogramTools::makeHistogram("ClassicSVfitIntegrand_histogramTransverseMass", minTransverseMass, maxTransverseMass, 1.025);
+  return HistogramTools::makeHistogram(std::string("ClassicSVfitIntegrand_histogram"+diTauLabel_+"Mt").c_str(), minTransverseMass, maxTransverseMass, 1.025);
 }
-
-double TransverseMassSVfitQuantity::fitFunction(const std::vector<LorentzVector> & fittedMomenta,
-                                                const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
+double DiTauSystemMtSVfitQuantity::fitFunction(const std::vector<LorentzVector> & fittedMomenta,
+                                               const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const
 {
 
-  double transverseMass2 = square(fittedMomenta.at(0).Et() + fittedMomenta.at(1).Et()) - (square((fittedMomenta.at(0) + fittedMomenta.at(1)).px()) + square((fittedMomenta.at(0) + fittedMomenta.at(1)).py()));
+  double transverseMass2 = square(fittedMomenta.at(2*diTauIndex_).Et() + fittedMomenta.at(2*diTauIndex_+1).Et()) - (square((fittedMomenta.at(2*diTauIndex_) + fittedMomenta.at(2*diTauIndex_+1)).px()) + square((fittedMomenta.at(2*diTauIndex_) + fittedMomenta.at(2*diTauIndex_+1)).py()));
   return TMath::Sqrt(TMath::Max(1., transverseMass2));
 }
 
@@ -439,11 +456,11 @@ bool HistogramAdapter::isValidSolution() const
 DiTauSystemHistogramAdapter::DiTauSystemHistogramAdapter(std::vector<SVfitQuantity*> const& quantities) :
   HistogramAdapter(quantities)
 {
-  indexPt_ = registerQuantity(new DiTauSystemPtSVfitQuantity());
-  indexEta_ = registerQuantity(new DiTauSystemEtaSVfitQuantity());
-  indexPhi_ = registerQuantity(new DiTauSystemPhiSVfitQuantity());
-  indexMass_ = registerQuantity(new DiTauSystemMassSVfitQuantity());
-  indexTransverseMass_ = registerQuantity(new TransverseMassSVfitQuantity());
+  indexPt_ = registerQuantity(new DiTauSystemPtSVfitQuantity(0));
+  indexEta_ = registerQuantity(new DiTauSystemEtaSVfitQuantity(0));
+  indexPhi_ = registerQuantity(new DiTauSystemPhiSVfitQuantity(0));
+  indexMass_ = registerQuantity(new DiTauSystemMassSVfitQuantity(0));
+  indexTransverseMass_ = registerQuantity(new DiTauSystemMtSVfitQuantity(0));
 }
 
 double DiTauSystemHistogramAdapter::getPt() const

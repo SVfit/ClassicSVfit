@@ -57,41 +57,56 @@ namespace classic_svFit
     mutable TH1* histogram_ = nullptr;
   };
 
-  class DiTauSystemPtSVfitQuantity : public SVfitQuantity
+  class DiTauSystemSVfitQuantity : public SVfitQuantity
   {
    public:
+    DiTauSystemSVfitQuantity(size_t diTauIndex);
+
+   protected:
+    size_t diTauIndex_;
+    std::string diTauLabel_;
+  };
+
+  class DiTauSystemPtSVfitQuantity : public DiTauSystemSVfitQuantity
+  {
+   public:
+    DiTauSystemPtSVfitQuantity(size_t diTauIndex);
     virtual TH1* createHistogram(const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const;
     virtual double fitFunction(const std::vector<LorentzVector> & fittedMomenta,
                                const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const;
   };
 
-  class DiTauSystemEtaSVfitQuantity : public SVfitQuantity
+  class DiTauSystemEtaSVfitQuantity : public DiTauSystemSVfitQuantity
   {
    public:
+    DiTauSystemEtaSVfitQuantity(size_t diTauIndex);
     virtual TH1* createHistogram(const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const;
     virtual double fitFunction(const std::vector<LorentzVector> & fittedMomenta,
                                const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const;
   };
 
-  class DiTauSystemPhiSVfitQuantity : public SVfitQuantity
+  class DiTauSystemPhiSVfitQuantity : public DiTauSystemSVfitQuantity
   {
    public:
+    DiTauSystemPhiSVfitQuantity(size_t diTauIndex);
     virtual TH1* createHistogram(const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const;
     virtual double fitFunction(const std::vector<LorentzVector> & fittedMomenta,
                                const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const;
   };
 
-  class DiTauSystemMassSVfitQuantity : public SVfitQuantity
+  class DiTauSystemMassSVfitQuantity : public DiTauSystemSVfitQuantity
   {
    public:
+    DiTauSystemMassSVfitQuantity(size_t diTauIndex);
     virtual TH1* createHistogram(const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const;
     virtual double fitFunction(const std::vector<LorentzVector> & fittedMomenta,
                                const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const;
   };
 
-  class TransverseMassSVfitQuantity : public SVfitQuantity
+  class DiTauSystemMtSVfitQuantity : public DiTauSystemSVfitQuantity
   {
    public:
+    DiTauSystemMtSVfitQuantity(size_t diTauIndex);
     virtual TH1* createHistogram(const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const;
     virtual double fitFunction(const std::vector<LorentzVector> & fittedMomenta,
                                const std::vector<LorentzVector> & visibleMomenta, const Vector & met) const;

@@ -61,15 +61,15 @@ int main(int argc, char* argv[])
   double transverseMassErr_1stRun = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getTransverseMassErr();
 
   if ( isValidSolution_1stRun ) {
-    std::cout << "found valid solution: mass = " << mass_1stRun << " +/- " << massErr_1stRun << " (expected value = 115.746 +/- 92.5252),"
-              << " transverse mass = " << transverseMass_1stRun << " +/- " << transverseMassErr_1stRun << " (expected value = 114.242 +/- 91.2066)" << std::endl;
+    std::cout << "found valid solution: mass = " << mass_1stRun << " +/- " << massErr_1stRun << " (expected value = 115.746 +/- 87.0011),"
+              << " transverse mass = " << transverseMass_1stRun << " +/- " << transverseMassErr_1stRun << " (expected value = 114.242 +/- 85.8296)" << std::endl;
   } else {
     std::cout << "sorry, failed to find valid solution !!" << std::endl;
   }
   if (std::abs((mass_1stRun - 115.746) / 115.746) > 0.001) return 1;
-  if (std::abs((massErr_1stRun - 92.5252) / 92.5252) > 0.001) return 1;
+  if (std::abs((massErr_1stRun - 87.001) / 87.0011) > 0.001) return 1;
   if (std::abs((transverseMass_1stRun - 114.242) / 114.242) > 0.001) return 1;
-  if (std::abs((transverseMassErr_1stRun - 91.2066) / 91.2066) > 0.001) return 1;
+  if (std::abs((transverseMassErr_1stRun - 85.8296) / 85.8296) > 0.001) return 1;
  
   // re-run with mass constraint
   double massContraint = 125.06;
@@ -84,15 +84,25 @@ int main(int argc, char* argv[])
   double transverseMassErr_2ndRun = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getTransverseMassErr();
 
   if ( isValidSolution_2ndRun ) {
-    std::cout << "found valid solution: mass = " << mass_2ndRun << " +/- " << massErr_2ndRun << " (expected value = 124.646 +/- 1.23027),"
-              << " transverse mass = " << transverseMass_2ndRun << " +/- " << transverseMassErr_2ndRun << " (expected value = 123.026 +/- 1.1574)" << std::endl;
+    std::cout << "found valid solution: mass = " << mass_2ndRun << " +/- " << massErr_2ndRun << " (expected value = 124.646 +/- 1.27575),"
+              << " transverse mass = " << transverseMass_2ndRun << " +/- " << transverseMassErr_2ndRun << " (expected value = 123.026 +/- 1.19297)" << std::endl;
   } else {
     std::cout << "sorry, failed to find valid solution !!" << std::endl;
   }
   if (std::abs((mass_2ndRun - 124.646) / 124.646) > 0.001) return 1;
-  if (std::abs((massErr_2ndRun - 1.23027) / 1.23027) > 0.001) return 1;
+  if (std::abs((massErr_2ndRun - 1.27575) / 1.27575) > 0.001) return 1;
   if (std::abs((transverseMass_2ndRun - 123.026) / 123.026) > 0.001) return 1;
-  if (std::abs((transverseMassErr_2ndRun - 1.1574) / 1.1574) > 0.001) return 1;
+  if (std::abs((transverseMassErr_2ndRun - 1.19297) / 1.19297) > 0.001) return 1;
   
+  std::cout << std::endl;
+  std::cout << "*****************************************************************************************************************************************" << std::endl;
+  std::cout << "* If you use this code, please cite:                                                                                                    *" << std::endl;
+  std::cout << "*   L. Bianchini, B. Calpas, J. Conway, A. Fowlie, L. Marzola, L. Perrini, C. Veelken,                                                  *" << std::endl;
+  std::cout << "*   \"Reconstruction of the Higgs mass in events with Higgs bosons decaying into a pair of tau leptons using matrix element techniques\", *" << std::endl;
+  std::cout << "*   Nucl. Instrum. Meth. A 862 (2017) 54                                                                                                *" << std::endl;
+  std::cout << "*****************************************************************************************************************************************" << std::endl;
+  std::cout << std::endl;
+
+
   return 0;
 }

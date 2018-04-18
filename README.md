@@ -25,3 +25,12 @@ https://github.com/SVfit/ClassicSVfit/issues
 
 - [Presentation, slides 2+3](https://indico.cern.ch/event/684622/contributions/2807248/attachments/1575090/2487044/presentation_tmuller.pdf)
 - [Example(s)](https://github.com/SVfit/ClassicSVfit/blob/master/bin/testClassicSVfit.cc)
+
+# Reference
+
+*****************************************************************************************************************************************
+* If you use this code, please cite:                                                                                                    *
+*   L. Bianchini, B. Calpas, J. Conway, A. Fowlie, L. Marzola, L. Perrini, C. Veelken,                                                  *
+*   "Reconstruction of the Higgs mass in events with Higgs bosons decaying into a pair of tau leptons using matrix element techniques", *
+*   Nucl. Instrum. Meth. A 862 (2017) 54                                                                                                *
+*****************************************************************************************************************************************

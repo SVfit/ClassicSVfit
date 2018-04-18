@@ -29,7 +29,8 @@ https://github.com/SVfit/ClassicSVfit/issues
 # Reference
 
 If you use this code, please cite:                                                                                                    
+```
    L. Bianchini, B. Calpas, J. Conway, A. Fowlie, L. Marzola, L. Perrini, C. Veelken,                                                  
    "Reconstruction of the Higgs mass in events with Higgs bosons decaying into a pair of tau leptons using matrix element techniques", 
    Nucl. Instrum. Meth. A 862 (2017) 54                                                                                                
-
+```

@@ -73,11 +73,15 @@ double Likelihood::massLikelihood(const double & m) const{
 
   double jacobiFactor = 2.0*std::pow(mVis,2)*std::pow(mShift,-coeff1);
   double x2IntegralTerm = log(x2Max)-log(x2Min);
-  double mNuNuIntegralTerm = std::pow(mVis/mShift,2)*(std::pow(x2Max,-1) - std::pow(x2Min,-1));
-  
+    
   double value = x2IntegralTerm;
   if(leg1DecayType!=classic_svFit::MeasuredTauLepton::kTauToHadDecay){
-    value += mNuNuIntegralTerm;
+    double mNuNuIntegralTermLeg1 = std::pow(mVis/mShift,2)*(std::pow(x2Max,-1) - std::pow(x2Min,-1));
+    value += mNuNuIntegralTermLeg1;
+  }
+  if(leg2DecayType!=classic_svFit::MeasuredTauLepton::kTauToHadDecay){
+    double mNuNuIntegralTermLeg2 = std::pow(mVis/mShift,2)*x2IntegralTerm - (x2Max - x2Min);
+    value += mNuNuIntegralTermLeg2;
   }
   ///The E12 factor to get values around 1.0
   value *=  1E12*jacobiFactor; 

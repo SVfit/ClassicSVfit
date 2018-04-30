@@ -202,15 +202,7 @@ void FastMTT::run(const std::vector<classic_svFit::MeasuredTauLepton>& measuredT
 		  const double & measuredMETx, const double & measuredMETy,
 		  const TMatrixD& covMET){
 
-  bestP4 = LorentzVector();
-  /*
-  ///FastMTT tested only for MuTau decay mode so far.
-  if((aLeg1DecayType != classic_svFit::MeasuredTauLepton::kTauToMuDecay &&
-      aLeg1DecayType != classic_svFit::MeasuredTauLepton::kTauToElecDecay) ||
-     aLeg2DecayType != classic_svFit::MeasuredTauLepton::kTauToHadDecay){
-    return;
-  }
-  */
+  bestP4 = LorentzVector();  
   ////////////////////////////////////////////
   
   if(measuredTauLeptons.size()!=2){
@@ -235,7 +227,11 @@ void FastMTT::run(const std::vector<classic_svFit::MeasuredTauLepton>& measuredT
   LorentzVector aMET =  LorentzVector(measuredMETx, measuredMETy, 0, metLength);
 
   scan(aLeg1P4, aLeg2P4, aMET, covMET, aLeg1DecayType, aLeg2DecayType);
-  
+
+  if(aLeg1DecayType != classic_svFit::MeasuredTauLepton::kTauToHadDecay &&
+     aLeg2DecayType != classic_svFit::MeasuredTauLepton::kTauToHadDecay){
+    bestP4 *= 1.11;
+  }  
 }
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////

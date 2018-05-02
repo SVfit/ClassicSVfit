@@ -9,6 +9,8 @@
 #include "TauAnalysis/ClassicSVfit/interface/svFitHistogramAdapter.h"
 //#include "TauAnalysis/SVfitTF/interface/HadTauTFCrystalBall2.h"
 
+#include "TauAnalysis/ClassicSVfit/interface/FastMTT.h"
+
 #include "TH1F.h"
 
 using namespace classic_svFit;
@@ -115,6 +117,18 @@ int main(int argc, char* argv[])
   }
   if (std::abs((tau1P4.Pt() - 102.508) / 102.508) > 0.001) return 1;
   if (std::abs((tau2P4.Pt() - 27.019) / 27.019) > 0.001) return 1;
+
+  //Run FastMTT
+  FastMTT aFastMTTAlgo;
+  aFastMTTAlgo.run(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+  LorentzVector ttP4 = aFastMTTAlgo.getBestP4();  
+  std::cout << "FastMTT found best p4 with mass = " << ttP4.M()
+	    << " (expected value = 105.582),"
+	    <<std::endl;
+  std::cout<<"Real Time =   "<<aFastMTTAlgo.getRealTime("scan")<<" seconds "
+	   <<" Cpu Time =   "<<aFastMTTAlgo.getCpuTime("scan")<<" seconds"<<std::endl;
+  if(std::abs(ttP4.M() -  105.582)>1E-6*105.582) return 1;
+  
 
   return 0;
 }

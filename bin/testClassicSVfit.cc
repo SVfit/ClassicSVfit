@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
   if (std::abs((massErr - 92.5252) / 92.5252) > 0.001) return 1;
   if (std::abs((transverseMass - 114.242) / 114.242) > 0.001) return 1;
   if (std::abs((transverseMassErr - 91.2066) / 91.2066) > 0.001) return 1;
-  
+
   // re-run with mass constraint
   double massContraint = 125.06;
   std::cout << "\n\nTesting integration with di tau mass constraint set to " << massContraint << std::endl;
@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
   if (std::abs((massErr - 1.23027) / 1.23027) > 0.001) return 1;
   if (std::abs((transverseMass - 123.026) / 123.026) > 0.001) return 1;
   if (std::abs((transverseMassErr - 1.1574) / 1.1574) > 0.001) return 1;
-  
+
   // re-run with classic_svFit::TauTauHistogramAdapter
   std::cout << "\n\nTesting integration with classic_svFit::TauTauHistogramAdapter" << std::endl;
   ClassicSVfit svFitAlgo2(verbosity);

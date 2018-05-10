@@ -230,8 +230,12 @@ void FastMTT::run(const std::vector<classic_svFit::MeasuredTauLepton>& measuredT
 
   if(aLeg1DecayType != classic_svFit::MeasuredTauLepton::kTauToHadDecay &&
      aLeg2DecayType != classic_svFit::MeasuredTauLepton::kTauToHadDecay){
-    bestP4 *= 1.11;
-  }  
+    bestP4 *= 1.036;
+  }
+  if(aLeg1DecayType == classic_svFit::MeasuredTauLepton::kTauToHadDecay &&
+     aLeg2DecayType == classic_svFit::MeasuredTauLepton::kTauToHadDecay){
+    bestP4 *= 0.98;
+  }    
 }
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////

@@ -36,6 +36,7 @@ ClassicSVfitIntegrand::ClassicSVfitIntegrand(int verbosity)
 
   // set global function pointer to this
   gSVfitIntegrand = this;
+
 }
 
 ClassicSVfitIntegrand::~ClassicSVfitIntegrand()
@@ -229,6 +230,12 @@ ClassicSVfitIntegrand::setLeptonInputs(const std::vector<MeasuredTauLepton>& mea
 
 }
 
+  void ClassicSVfitIntegrand::setSVInputs(const std::vector<TVector3>& aSVData){
+
+    svData_ = aSVData;
+
+  }
+
 void ClassicSVfitIntegrand::addMETEstimate(double measuredMETx, double measuredMETy, const TMatrixD& covMET){
 
   measuredMETx_.push_back(measuredMETx);
@@ -393,12 +400,17 @@ ClassicSVfitIntegrand::EvalPS(const double* q) const
   assert(tmpIndex != -1);
   double phiNu = x_[tmpIndex];
   double cosThetaNu = compCosThetaNuNu(vis1P4.E(), vis1P4.P(), leg1Mass2_, nuEn, nu1P, square(nu1Mass));
-  if ( !(cosThetaNu >= -1. && cosThetaNu <= +1.) ) return 0.;
+  if ( !(cosThetaNu >= -1. && cosThetaNu <= +1.) ) {
+    //cosThetaNu = std::copysign(1.0 - 1E-5, cosThetaNu);
+    return 0.;
+  }
 
   double cosPhiNu, sinPhiNu, sinThetaNu;
   sincos(phiNu, &sinPhiNu, &cosPhiNu);
   double thetaNu = TMath::ACos(cosThetaNu);
   sinThetaNu = TMath::Sin(thetaNu);
+
+  double cosPhiNu1 = cosPhiNu;
 
   double nuPx_local = nu1P*cosPhiNu*sinThetaNu;
   double nuPy_local = nu1P*sinPhiNu*sinThetaNu;
@@ -431,7 +443,10 @@ ClassicSVfitIntegrand::EvalPS(const double* q) const
   assert(tmpIndex != -1);
   phiNu = x_[tmpIndex];
   cosThetaNu = compCosThetaNuNu(vis2P4.E(), vis2P4.P(), leg2Mass2_, nuEn, nu2P, square(nu2Mass));
-  if ( !(cosThetaNu >= -1. && cosThetaNu <= +1.) ) return 0.;
+  if ( !(cosThetaNu >= -1. && cosThetaNu <= +1.) ){
+     //cosThetaNu = std::copysign(1.0 - 1E-5, cosThetaNu);
+     return 0.;
+   }
 
   sincos(phiNu, &sinPhiNu, &cosPhiNu);
   thetaNu = TMath::ACos(cosThetaNu);
@@ -540,6 +555,7 @@ ClassicSVfitIntegrand::EvalPS(const double* q) const
   }
 
   double prob = prob_PS_and_tauDecay*prob_TF*prob_logM*jacobiFactor;
+
   if ( verbosity_ >= 2 ) {
     std::cout << "mTauTau = "<<mTauTau
               << " prob: PS+decay = " << prob_PS_and_tauDecay << ","
@@ -551,6 +567,65 @@ ClassicSVfitIntegrand::EvalPS(const double* q) const
     prob = 0.;
   }
 
+
+  ////TEST
+  /*
+  std::cout<<"Mass: "<<(tau1P4_ + tau2P4_).M()<<std::endl;
+
+    std::cout<<" integration point tau1 direction. "
+           <<tau1P4_.Vect().Unit().X()<<", "
+           <<tau1P4_.Vect().Unit().Y()<<", "
+           <<tau1P4_.Vect().Unit().Z()<<std::endl;
+
+  std::cout<<"Reco tau1 direction.               "
+           <<svData_[0].Unit().X()<<", "
+           <<svData_[0].Unit().Y()<<", "
+           <<svData_[0].Unit().Z()<<std::endl;
+
+  std::cout<<" integration point tau2 direction. "
+           <<tau2P4_.Vect().Unit().X()<<", "
+           <<tau2P4_.Vect().Unit().Y()<<", "
+           <<tau2P4_.Vect().Unit().Z()<<std::endl;
+
+  std::cout<<"Reco tau2 direction.               "
+           <<svData_[1].Unit().X()<<", "
+           <<svData_[1].Unit().Y()<<", "
+           <<svData_[1].Unit().Z()<<std::endl;
+*/
+
+/*
+  double cosThetaLeg1 = tau1P4_.Vect().Unit().Dot(svData_[0].Unit());
+  double cosThetaLeg2 = tau2P4_.Vect().Unit().Dot(svData_[1].Unit());
+
+  Vector svPerp = vis1P4.Vect().Unit().Cross(svData_[0].Unit());
+  Vector nuPerp = vis1P4.Vect().Unit().Cross(nu1P4_.Vect().Unit());
+
+  double cosPhi = svPerp.Unit().Dot(nuPerp.Unit());
+*/
+  //std::cout<<"cosPhi: "<<cosPhi<<std::endl;
+
+  //prob = exp( std::pow(cosThetaLeg1 - 1,2));
+  //prob *= exp( std::pow(cosThetaLeg2 - 1,2));
+  /*
+  std::cout<<"cosThetaLeg1: "<<cosThetaLeg1
+           <<" cosThetaLeg2: "<<cosThetaLeg2
+           <<" factor: "<< exp( std::pow(cosThetaLeg1 - 1,2))
+           <<" cosPhi: "<<cosPhi
+           <<" cosPhiNu1: "<<cosPhiNu1
+           <<std::endl;
+*/
+  //if(cosPhi<0.99) prob = 0.0;
+  //prob = cosThetaLeg2;
+  //prob = 0.1;
+  /*
+  ////////TEST collinear approximation  
+  tau1P4_ = vis1P4*(1.0/x1_dash);
+  tau2P4_ = vis2P4*(1.0/x2_dash);
+
+  nu1P4_ = vis1P4*(1.0/x1_dash - 1.0);
+  nu2P4_ = vis2P4*(1.0/x2_dash - 1.0);  
+  //////
+  */
   return prob;
 }
 
@@ -560,6 +635,9 @@ double ClassicSVfitIntegrand::Eval(const double* x, unsigned int iComponent) con
     if(iComponent==0) phaseSpaceComponentCache_ = EvalPS(x);
     if(phaseSpaceComponentCache_<1E-300) return 0.0;
     double value = phaseSpaceComponentCache_ * EvalMET_TF(iComponent);
+    //value = phaseSpaceComponentCache_;
+    //value = EvalMET_TF(iComponent);
+    value = 0.5;
 
     if(verbosity_>=2){
       std::cout<<" metTF: "<<EvalMET_TF(iComponent)
@@ -570,5 +648,6 @@ double ClassicSVfitIntegrand::Eval(const double* x, unsigned int iComponent) con
   if(histogramAdapter_ && value>1E-300){
       histogramAdapter_->setTau1And2P4(tau1P4_, tau2P4_);
     }
+
     return value;
 }

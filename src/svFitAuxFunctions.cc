@@ -173,9 +173,9 @@ double compPSfactor_tauToLepDecay(double x, double visEn, double visP, double vi
     if ( !(tauEn_rf >= tauLeptonMass && visEn_rf >= visMass) ) return 0.;
     double I = nunuMass2*(2.*tauEn_rf*visEn_rf - (2./3.)*TMath::Sqrt((square(tauEn_rf) - tauLeptonMass2)*(square(visEn_rf) - visMass2)));
     #ifdef XSECTION_NORMALIZATION
-    I *= GFfactor;    
+    I *= GFfactor;
     #endif
-    double cosThetaNuNu = compCosThetaNuNu(visEn, visP, visMass2, nunuEn, nunuP, nunuMass2);
+    double cosThetaNuNu = compCosThetaNuNu(visEn, visP, visMass2, nunuEn, nunuP, nunuMass2);    
     if ( !(cosThetaNuNu >= (-1. + epsilon) && cosThetaNuNu <= +1.) ) return 0.;
     double PSfactor = (visEn + nunuEn)*I/(8.*visP*square(x)*TMath::Sqrt(square(visP) + square(nunuP) + 2.*visP*nunuP*cosThetaNuNu + tauLeptonMass2));
     //-------------------------------------------------------------------------

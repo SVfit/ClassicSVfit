@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <tuple>
 
 namespace classic_svFit{
   class MeasuredTauLepton;
@@ -39,8 +40,11 @@ public:
 
   void setLeptonInputs(const LorentzVector & aLeg1P4,
                        const LorentzVector & aLeg2P4,
-                       int aLeg1DecayType,
-                       int aLeg2DecayType);
+                       int aLeg1DecayType, int aLeg2DecayType,
+		       int aLeg1DecayMode, int aLeg2DecayMode);
+
+  void setCosGJ(const double & cosGJLeg1,
+		const double & cosGJLeg2);
 
   void setMETInputs(const LorentzVector & aMET,
                     const TMatrixD& aCovMET);
@@ -55,13 +59,26 @@ public:
 
 private:
 
+  std::tuple<double, double> energyFromCosGJ(const LorentzVector & visP4,
+					     const double & cosGJ) const;
+
+  double energyLikelihood(const double & energy,
+			  const LorentzVector & visP4,
+			  const double & cosGJ,
+			  int decayMode) const;
+
+  double ptLikelihood(const double & pTTauTau, int type) const;
+
   LorentzVector leg1P4, leg2P4;
   LorentzVector recoMET;
   TMatrixD covMET;
 
   double mVis, mVisLeg1, mVisLeg2;
 
+  double cosGJLeg1, cosGJLeg2;
+  
   int leg1DecayType, leg2DecayType;
+  int leg1DecayMode, leg2DecayMode;
 
   std::vector<double> parameters;
 
@@ -88,6 +105,9 @@ class FastMTT {
   ///Retrieve the four momentum corresponding to the likelihood maximum
   const LorentzVector & getBestP4() const { return bestP4; }
 
+  ///Retrieve x values corresponding to the likelihood maximim
+  std::tuple<double, double> getBestX() const;
+
   ///Retrieve the CPU timing for given methods
   ///Possible values:
   /// scan
@@ -109,22 +129,12 @@ class FastMTT {
   ///Run the minimalization procedure for given inputs.
   ///Results are stored in internal variables accesed by
   ///relevant get methods.
-  void minimize(const LorentzVector & aLeg1P4,
-                const LorentzVector & aLeg2P4,
-                const LorentzVector & aMET,
-                const TMatrixD & aCovMET,
-                int leg1DecayType,
-                int leg2DecayType);
+  void minimize();
 
   ///Run a scan over x1 and x2 [0,1] rectangle for given inputs.
   ///Results are stored in internal variables accesed by
   ///relevant get methods.
-  void scan(const LorentzVector & aLeg1P4,
-                const LorentzVector & aLeg2P4,
-                const LorentzVector & aMET,
-                const TMatrixD & aCovMET,
-                int leg1DecayType,
-                int leg2DecayType);
+  void scan();
 
    // Minimizer types and algorithms.
    // minimizerName               minimizerAlgorithm

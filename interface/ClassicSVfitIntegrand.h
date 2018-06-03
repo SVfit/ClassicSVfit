@@ -13,6 +13,7 @@
 #include <TH1.h>
 #include <TString.h>
 #include <TFormula.h>
+#include <TVector3.h>
 
 namespace classic_svFit
 {
@@ -68,6 +69,9 @@ namespace classic_svFit
 
     /// add MET  estimates, i.e. systematic effect variations
     void addMETEstimate(double, double, const TMatrixD&);
+
+    /// set secondary vertex related data
+    void setSVInputs(const std::vector<TVector3>&);
 
     /// remove MET estimates
     void clearMET();
@@ -140,6 +144,8 @@ namespace classic_svFit
 
     ///MET covariance matrix
     std::vector<TMatrixD> covMET_;
+
+    std::vector<TVector3> svData_;
 
     ///Inverse covariance matix elements
     double invCovMETxx_;

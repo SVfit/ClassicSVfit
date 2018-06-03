@@ -57,8 +57,8 @@ MeasuredTauLepton::MeasuredTauLepton(int type, double pt, double eta, double phi
       std::cerr << "Error: Invalid type " << type_ << " declared for leg: Pt = " << pt_ << ", eta = " << eta_ << ", phi = " << phi_ << ", mass = " << mass_ << " !!" << std::endl;
       assert(0);
     }
-    std::cerr << "Warning: " << type_string << " declared for leg: Pt = " << pt_ << ", eta = " << eta_ << ", phi = " << phi_ << ", mass = " << mass_ << " !!" << std::endl;
-    std::cerr << " (mass expected in the range = " << minVisMass << ".." << maxVisMass << ")" << std::endl;
+    //TEST std::cerr << "Warning: " << type_string << " declared for leg: Pt = " << pt_ << ", eta = " << eta_ << ", phi = " << phi_ << ", mass = " << mass_ << " !!" << std::endl;
+    //TEST std::cerr << " (mass expected in the range = " << minVisMass << ".." << maxVisMass << ")" << std::endl;
   }
   if ( preciseVisMass_ < minVisMass ) preciseVisMass_ = minVisMass;
   if ( preciseVisMass_ > maxVisMass ) preciseVisMass_ = maxVisMass;
@@ -72,15 +72,19 @@ MeasuredTauLepton::MeasuredTauLepton(const MeasuredTauLepton& measuredTauLepton)
     eta_(measuredTauLepton.eta()),
     phi_(measuredTauLepton.phi()),
     mass_(measuredTauLepton.mass()),
-    decayMode_(measuredTauLepton.decayMode())
+    decayMode_(measuredTauLepton.decayMode()),
+    cosGJ_(measuredTauLepton.cosGJ())
 {
   preciseVisMass_ = measuredTauLepton.mass();
+
   initialize();
 }
 
 MeasuredTauLepton::~MeasuredTauLepton()
 {
 }
+
+void MeasuredTauLepton::setCosGJ(const double & aCosGJ) { cosGJ_ = aCosGJ; }
 
 int MeasuredTauLepton::type() const { return type_; }
 
@@ -95,6 +99,8 @@ double MeasuredTauLepton::py() const { return py_; }
 double MeasuredTauLepton::pz() const { return pz_; }
 
 double MeasuredTauLepton::p() const { return p_; }
+
+double MeasuredTauLepton::cosGJ() const { return cosGJ_; }
 
 int MeasuredTauLepton::decayMode() const { return decayMode_; }
 

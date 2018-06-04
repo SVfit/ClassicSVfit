@@ -88,9 +88,9 @@ namespace classic_svFit
   const double M2 = 16.*M_PI*cube(tauLeptonMass)*GammaTauToHad;
   #endif
 
-  const double conversionFactor = 1.e+10*square(hbar_c); // conversion factor from GeV^-2 to picobarn = 10^-40m//FIX ME store this
-  const double constFactor = 2.*conversionFactor/eigth(2.*M_PI);
-  const double matrixElementNorm = square(M_PI/(tauLeptonMass*GammaTau));// CV: multiply matrix element by factor (Pi/(mTau GammaTau))^2 from Luca's write-up
+  const double __attribute__((unused)) conversionFactor = 1.e+10*square(hbar_c); // conversion factor from GeV^-2 to picobarn = 10^-40m//FIX ME store this
+  const double __attribute__((unused)) constFactor = 2.*conversionFactor/eigth(2.*M_PI);
+  const double __attribute__((unused)) matrixElementNorm = square(M_PI/(tauLeptonMass*GammaTau));// CV: multiply matrix element by factor (Pi/(mTau GammaTau))^2 from Luca's write-up
 
   //const double v2 = square(246.22); // GeV^2
   //-----------------------------------------------------------------------------

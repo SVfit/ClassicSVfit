@@ -186,14 +186,14 @@ bool SVfitQuantity::isValidSolution() const
 
 TH1* DiTauSystemPtSVfitQuantity::createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
-  return HistogramTools::makeHistogram("ClassicSVfitIntegrand_histogramPt", -200, 200, 1.025);//TEST
+  return HistogramTools::makeHistogram("ClassicSVfitIntegrand_histogramPt", -500, 300, 1.025);//TEST
   //return HistogramTools::makeHistogram("ClassicSVfitIntegrand_histogramPt", 1., 1.e+3, 1.025);
 }
 
 double DiTauSystemPtSVfitQuantity::fitFunction(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& tauSumP4,
                                                const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
 {
-  return tauSumP4.Px();
+  return tauSumP4.Py();
 }
 
 TH1* DiTauSystemEtaSVfitQuantity::createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const

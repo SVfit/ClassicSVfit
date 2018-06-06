@@ -188,71 +188,99 @@ double Likelihood::massLikelihood(const double & m) const{
 ///////////////////////////////////////////////////////////////////
 double Likelihood::ptLikelihood(const double & pTTauTau, int type) const{
 
-  double mTau = 1.77685;
+  ///Protection against numerical singularity in phase space volume.
+  if(std::abs(pTTauTau)<0.5) return 0.0;
 
+  double mTau = 1.77685;
   double pT1 = 0.0;
   double pT2 = 0.0;
 
   if(type==0){
     pT1 = leg1P4.Px();
-    pT2 = leg2P4.Px();
+    pT2 = leg2P4.Px();    
   }
   else{
     pT1 = leg1P4.Py();
     pT2 = leg2P4.Py();
   }
 
-   Double_t x1Min = std::min(1.0, std::pow(mVisLeg1/mTau,2));
-   Double_t x2Min = std::min(1.0, std::pow(mVisLeg2/mTau,2));
+  Double_t x1Min = std::min(1.0, std::pow(mVisLeg1/mTau,2));
+  Double_t x2Min = std::min(1.0, std::pow(mVisLeg2/mTau,2));
 
-   Double_t x1Max = 1.0;
    Double_t x2Max = 1.0;
+   Double_t x1Max = 1.0;
 
-   Double_t a_x1 = x2Min*pT1/(x2Min*pTTauTau - pT2);
-   Double_t b_x1 = x2Max*pT1/(x2Max*pTTauTau - pT2);
+   Double_t a_x2 = x1Min*pT2/(x1Min*pTTauTau - pT1);
+   Double_t b_x2 = x1Max*pT2/(x1Max*pTTauTau - pT1);
 
-   Double_t a_x2 = x1Min*pT1/(x1Min*pTTauTau - pT2);
-   Double_t b_x2 = x1Max*pT1/(x1Max*pTTauTau - pT2);
+   bool is_x1_vs_x2_falling = (-pT2*pT1)<0;
+   bool hasSingularity = pT1/pTTauTau>0.0 &&  pT1/pTTauTau<1.0;
 
-   Double_t a = a_x1;
-   Double_t b = b_x1;
-
-   bool is_x2_vs_x1_falling = (-pT1*pT2)<0;
-   bool hasSingularity = pT2/pTTauTau>0.0 &&  pT2/pTTauTau<1.0;
-
-   if(is_x2_vs_x1_falling){
-     x1Min = std::max(x1Min, b_x1);
-     x1Max = std::min(x1Max, a_x1);     
-     if(hasSingularity && x1Max<0) x1Max = 1.0;
+   if(is_x1_vs_x2_falling){
+     x2Min = std::max(x2Min, b_x2);
+     x2Max = std::min(x2Max, a_x2);     
+     if(hasSingularity && x2Max<0) x2Max = 1.0;
    }
    else{
-     x1Min = std::max(x1Min, a_x1);
-     x1Max = std::min(x1Max, b_x1);
-     if(hasSingularity && x1Max<0) x1Max = 1.0;
+     x2Min = std::max(x2Min, a_x2);
+     x2Max = std::min(x2Max, b_x2);
+     if(hasSingularity && x2Max<0) x2Max = 1.0;
    }
 
-   if(x1Min<0) x1Min = 0.0;
-   if(x1Min>x1Max) return 0.0;
+   if(x2Min<0) x2Min = 0.0;
+   if(x2Min>x2Max) return 0.0;
 
-  Double_t mNuNuIntegralTermLeg1 = 0.0;
-  Double_t x1 = std::min(1.0, x1Max);
-  Double_t integralMax = (pT2*(pTTauTau*x1+pow(pT1,2)/(pT1-pTTauTau*x1)+2*pT1*log(std::abs(pT1-pTTauTau*x1))))/pow(pTTauTau,3);
-  if(leg1DecayType!=classic_svFit::MeasuredTauLepton::kTauToHadDecay){
-    mNuNuIntegralTermLeg1 =  pow(pT2,2)*(2*pTTauTau*x1 + (pow(pT1,2)*(5*pT1 - 6*pTTauTau*x1))/pow(pT1 - pTTauTau*x1,2) + 6*pT1*log(std::abs(pT1 - pTTauTau*x1)))/(2*pow(pTTauTau,4));
-  }
-  integralMax -= mNuNuIntegralTermLeg1;
+  Double_t mNuNuIntegral = 0.0;
+  Double_t x2 = std::min(1.0, x2Max);
+
+  Double_t term1 = pT2-pTTauTau*x2;
+  Double_t log_term1 = log(std::abs(term1));
   
-  x1 = x1Min;
-  Double_t integralMin = (pT2*(pTTauTau*x1+pow(pT1,2)/(pT1-pTTauTau*x1)+2*pT1*log(std::abs(pT1-pTTauTau*x1))))/pow(pTTauTau,3);
+  Double_t integralMax = (pT1*(pTTauTau*x2+pow(pT2,2)/term1+2*pT2*log_term1))/pow(pTTauTau,3);
   if(leg1DecayType!=classic_svFit::MeasuredTauLepton::kTauToHadDecay){
-    mNuNuIntegralTermLeg1 =  pow(pT2,2)*(2*pTTauTau*x1 + (pow(pT1,2)*(5*pT1 - 6*pTTauTau*x1))/pow(pT1 - pTTauTau*x1,2) + 6*pT1*log(std::abs(pT1 - pTTauTau*x1)))/(2*pow(pTTauTau,4));
+    mNuNuIntegral =  -pow(pT1,2)*(2*pTTauTau*x2 + (pow(pT2,2)*(5*pT2 - 6*pTTauTau*x2))/pow(term1,2) +
+				  6*pT2*log_term1)/(2*pow(pTTauTau,4));
   }
-  integralMin -= mNuNuIntegralTermLeg1;
+  if(leg2DecayType!=classic_svFit::MeasuredTauLepton::kTauToHadDecay){
+    mNuNuIntegral += -pT1/(2*pow(pTTauTau,5))*
+                     (2*pT2*pTTauTau*(-3*pT1 + 2*pTTauTau)*x2 + 
+		      pow(pTTauTau,2)*(-pT1 + pTTauTau)*pow(x2,2) +
+		      (pow(pT2,4)*pT1)/pow(term1,2) + (2*pow(pT2,3)*(-4*pT1 + pTTauTau))/term1 + 
+		      6*pow(pT2,2)*(-2*pT1 + pTTauTau)*log_term1); 
+    }
+  integralMax += mNuNuIntegral;
+  
+  x2 = x2Min;
+  term1 = pT2-pTTauTau*x2;
+  log_term1 = log(std::abs(term1));
+  
+  Double_t integralMin = (pT1*(pTTauTau*x2+pow(pT2,2)/term1+2*pT2*log_term1))/pow(pTTauTau,3);
+  if(leg1DecayType!=classic_svFit::MeasuredTauLepton::kTauToHadDecay){
+    mNuNuIntegral =  -pow(pT1,2)*(2*pTTauTau*x2 + (pow(pT2,2)*(5*pT2 - 6*pTTauTau*x2))/pow(term1,2) +
+				  6*pT2*log_term1)/(2*pow(pTTauTau,4));
+  }
+  if(leg2DecayType!=classic_svFit::MeasuredTauLepton::kTauToHadDecay){
+  mNuNuIntegral += -pT1/(2*pow(pTTauTau,5))*
+                   (2*pT2*pTTauTau*(-3*pT1 + 2*pTTauTau)*x2 + 
+		    pow(pTTauTau,2)*(-pT1 + pTTauTau)*pow(x2,2) +
+		    (pow(pT2,4)*pT1)/pow(term1,2) + (2*pow(pT2,3)*(-4*pT1 + pTTauTau))/term1 + 
+		    6*pow(pT2,2)*(-2*pT1 + pTTauTau)*log_term1);  
+  }
+
+  integralMin += mNuNuIntegral;
 
   Double_t value  = integralMax - integralMin;
 
+  if(std::abs(value)>100){
+    std::cout<<"value: "<<value
+	     <<" pTTauTau: "<<pTTauTau
+	     <<std::endl;
+  }
+  
   ///The 1E4 factor to get values around 1.0
-  return std::abs(value*1E4);
+  value *= 1E4;
+
+  return std::abs(value);
 }
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////x
@@ -293,19 +321,21 @@ double Likelihood::value(const double *x) const{
   LorentzVector testP4 = leg1P4*(1.0/x[0]) + leg2P4*(1.0/x[1]);
   LorentzVector testMET = testP4 - leg1P4 - leg2P4;
  
-  double value = metTF(recoMET, testMET, covMET);
-  value *= massLikelihood(testP4.M());
-  value *= ptLikelihood(testP4.Px(), 0);
-  value *= ptLikelihood(testP4.Py(), 1);
+  double metLH = metTF(recoMET, testMET, covMET);
+  double massLH = massLikelihood(testP4.M());
+  double pxLH = ptLikelihood(testP4.Px(), 0);
+  double pyLH = ptLikelihood(testP4.Py(), 1);
   
-  double llh1 = energyLikelihood((leg1P4*(1.0/x[0])).E(),
+  double lh1 = energyLikelihood((leg1P4*(1.0/x[0])).E(),
 				 leg1P4, cosGJLeg1, leg1DecayMode);
 
-  double llh2 = energyLikelihood((leg2P4*(1.0/x[1])).E(),
+  double lh2 = energyLikelihood((leg2P4*(1.0/x[1])).E(),
 				 leg2P4, cosGJLeg2, leg2DecayMode);
+
+
+  double value = -metLH*massLH*pxLH*pyLH;
   
-  return -value;
-  //return -value*llh1*llh2;
+  return value;
 }
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
@@ -406,11 +436,12 @@ void FastMTT::run(const std::vector<classic_svFit::MeasuredTauLepton>& measuredT
   myLikelihood.setMETInputs(aMET, covMET);
 
   scan();
+  //minimize();
 
   bestP4 = aLepton1.p4()*(1.0/minimalizationResult[0]) +
            aLepton2.p4()*(1.0/minimalizationResult[1]);
   
-  if(aLepton1.type() != classic_svFit::MeasuredTauLepton::kTauToHadDecay &&
+  if(aLepton1.type() != classic_svFit::MeasuredTauLepton::kTauToHadDecay ||
      aLepton2.type() != classic_svFit::MeasuredTauLepton::kTauToHadDecay){
     bestP4 *= 1.036;
   }
@@ -426,8 +457,8 @@ void FastMTT::minimize(){
   clock.Reset();
   clock.Start("minimize");
 
-  minimizer->SetVariableLimits(0, 0.0 ,1.0);
-  minimizer->SetVariableLimits(1, 0.0 ,1.0);
+  minimizer->SetVariableLimits(0, 0.01 ,1.0);
+  minimizer->SetVariableLimits(1, 0.01 ,1.0);
   minimizer->Minimize();
 
   const double *theMinimum = minimizer->X();
@@ -441,7 +472,6 @@ void FastMTT::minimize(){
 	      <<" nIterations: "<<minimizer->NIterations()
 	      <<" x1Max: "<<theMinimum[0]
 	      <<" x2Max: "<<theMinimum[1]
-	      <<" x3Max: "<<theMinimum[2]
 	      <<" max LLH: "<<minimizer->MinValue()
 	      <<" m: "<<bestP4.M()
 	      <<std::endl;
@@ -468,6 +498,7 @@ void FastMTT::scan(){
       x[0] = (double)iX1/nGridPoints;
 
       lh = - myLikelihood.value(x);
+
       ++nCalls;
       if(lh>maxLH){
 	maxLH = lh;
@@ -478,7 +509,7 @@ void FastMTT::scan(){
   }
   /*
   std::cout<<"best x1: "<<theMinimum[0]
-	   <<" x2: "<<theMinimum[0]
+	   <<" x2: "<<theMinimum[1]
 	   <<std::endl;
   */
   minimalizationResult[0] = theMinimum[0];

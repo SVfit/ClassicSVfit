@@ -410,8 +410,6 @@ ClassicSVfitIntegrand::EvalPS(const double* q) const
   double thetaNu = TMath::ACos(cosThetaNu);
   sinThetaNu = TMath::Sin(thetaNu);
 
-  double cosPhiNu1 = cosPhiNu;
-
   double nuPx_local = nu1P*cosPhiNu*sinThetaNu;
   double nuPy_local = nu1P*sinPhiNu*sinThetaNu;
   double nuPz_local = nu1P*cosThetaNu;
@@ -637,7 +635,7 @@ double ClassicSVfitIntegrand::Eval(const double* x, unsigned int iComponent) con
     double value = phaseSpaceComponentCache_ * EvalMET_TF(iComponent);
     //value = phaseSpaceComponentCache_;
     //value = EvalMET_TF(iComponent);
-    value = 0.5;
+    //value = 0.5;
 
     if(verbosity_>=2){
       std::cout<<" metTF: "<<EvalMET_TF(iComponent)

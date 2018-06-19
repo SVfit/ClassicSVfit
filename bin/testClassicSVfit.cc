@@ -129,6 +129,5 @@ int main(int argc, char* argv[])
 	   <<" Cpu Time =   "<<aFastMTTAlgo.getCpuTime("scan")<<" seconds"<<std::endl;
   if(std::abs(ttP4.M() -  105.582)>1E-6*105.582) return 1;
   
-
   return 0;
 }

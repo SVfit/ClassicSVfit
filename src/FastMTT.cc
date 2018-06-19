@@ -36,11 +36,13 @@ void Likelihood::setLeptonInputs(const LorentzVector & aLeg1P4,
   mVis = (leg1P4 + leg2P4).M();
   mVisLeg1 = leg1P4.M();
   mVisLeg2 = leg2P4.M();
-  ///Setting fixed hadronic tau mass avoids
-  ///cases when solution is not found.
-  //if(aLeg2DecayType==classic_svFit::MeasuredTauLepton::kTauToHadDecay){
-  //  mVisLeg2 = 0.3;
-  //}
+ 
+  if(aLeg1DecayType==classic_svFit::MeasuredTauLepton::kTauToHadDecay && mVisLeg1>1.5){
+    mVisLeg1 = 0.3;
+  }  
+  if(aLeg2DecayType==classic_svFit::MeasuredTauLepton::kTauToHadDecay && mVisLeg2>1.5){
+    mVisLeg2 = 0.3;
+  }
 
   leg1DecayType = aLeg1DecayType;
   leg2DecayType = aLeg2DecayType;
@@ -115,8 +117,8 @@ double Likelihood::energyLikelihood(const double & tauE,
   
   std::tuple<double, double> energySolutions = energyFromCosGJ(visP4, cosGJ);
 
-  std::vector<double> mean = {-0.163, 0.114};
-  std::vector<double> sigma = {0.146,  0.16};
+  std::vector<double> mean = {-0.117, 0.245};
+  std::vector<double> sigma = {0.12,  0.27};
 
   double pull1 = std::get<0>(energySolutions) - tauE;
   pull1 /= tauE;
@@ -131,8 +133,12 @@ double Likelihood::energyLikelihood(const double & tauE,
   
   gaussNorm = 1.0/sigma[1]/sqrt(2.0*M_PI);
   double likelihoodSolution2 = gaussNorm*TMath::Exp(-0.5*std::pow(pull2/sigma[1], 2));
+
+  double value = std::max(likelihoodSolution1, likelihoodSolution2);
   /*
   std::cout<<"tauE: "<<tauE
+	   <<" cosGJ: "<<cosGJ
+    	   <<" sinGJ: "<< 1- cosGJ*cosGJ
            <<" solution1: "<<std::get<0>(energySolutions)
 	   <<" solution2: "<<std::get<1>(energySolutions)
 	   <<" pull1: "<<pull1
@@ -141,14 +147,8 @@ double Likelihood::energyLikelihood(const double & tauE,
     	   <<" likelihoodSolution2: "<<likelihoodSolution2
 	   <<std::endl;
   */
-
-  if(tauE>std::get<0>(energySolutions) || tauE<0.8*std::get<0>(energySolutions)) return 0.0;
-  else return likelihoodSolution1;
- 
-  return likelihoodSolution1;
-  return std::max(likelihoodSolution1, likelihoodSolution2);
   
-  
+  return value;
 }
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
@@ -160,11 +160,12 @@ double Likelihood::massLikelihood(const double & m) const{
 
   if(mShift<mVis) return 0.0;
 
-  double mTau = 1.77685;
+  const double & mTau = classic_svFit::tauLeptonMass;
 
   double x1Min = std::min(1.0, std::pow(mVisLeg1/mTau,2));
   double x2Min = std::max(std::pow(mVisLeg2/mTau,2), std::pow(mVis/mShift,2));
   double x2Max = std::min(1.0, std::pow(mVis/mShift,2)/x1Min);
+  if(x2Max<x2Min) return 0.0;
 
   double jacobiFactor = 2.0*std::pow(mVis,2)*std::pow(mShift,-coeff1);
   double x2IntegralTerm = log(x2Max)-log(x2Min);
@@ -179,9 +180,9 @@ double Likelihood::massLikelihood(const double & m) const{
     value += mNuNuIntegralTermLeg2;
   }
     
-  ///The E12 factor to get values around 1.0
-  value *=  1E12*jacobiFactor;
-
+  ///The E9 factor to get values around 1.0
+  value *=  1E9*jacobiFactor;
+  
   return value;
 }
 ///////////////////////////////////////////////////////////////////
@@ -191,7 +192,7 @@ double Likelihood::ptLikelihood(const double & pTTauTau, int type) const{
   ///Protection against numerical singularity in phase space volume.
   if(std::abs(pTTauTau)<0.5) return 0.0;
 
-  double mTau = 1.77685;
+  const double & mTau = classic_svFit::tauLeptonMass;
   double pT1 = 0.0;
   double pT2 = 0.0;
 
@@ -199,9 +200,13 @@ double Likelihood::ptLikelihood(const double & pTTauTau, int type) const{
     pT1 = leg1P4.Px();
     pT2 = leg2P4.Px();    
   }
-  else{
+  else if(type==1){
     pT1 = leg1P4.Py();
     pT2 = leg2P4.Py();
+  }
+  else{
+    pT1 = leg1P4.Pz();
+    pT2 = leg2P4.Pz();
   }
 
   Double_t x1Min = std::min(1.0, std::pow(mVisLeg1/mTau,2));
@@ -214,17 +219,20 @@ double Likelihood::ptLikelihood(const double & pTTauTau, int type) const{
    Double_t b_x2 = x1Max*pT2/(x1Max*pTTauTau - pT1);
 
    bool is_x1_vs_x2_falling = (-pT2*pT1)<0;
-   bool hasSingularity = pT1/pTTauTau>0.0 &&  pT1/pTTauTau<1.0;
+   bool x2_vs_x1_hasSingularity = pT1/pTTauTau>0.0 &&  pT1/pTTauTau<1.0;
+   double x1_singularity = pT1/pTTauTau;
+   if(x2_vs_x1_hasSingularity && x1_singularity<x1Min) return 0.0;
+
 
    if(is_x1_vs_x2_falling){
      x2Min = std::max(x2Min, b_x2);
-     x2Max = std::min(x2Max, a_x2);     
-     if(hasSingularity && x2Max<0) x2Max = 1.0;
+     x2Max = std::min(x2Max, a_x2);
+     if(x2_vs_x1_hasSingularity && x2Max<0) x2Max = 1.0;
    }
    else{
      x2Min = std::max(x2Min, a_x2);
      x2Max = std::min(x2Max, b_x2);
-     if(hasSingularity && x2Max<0) x2Max = 1.0;
+     if(x2_vs_x1_hasSingularity && x2Max<0) x2Max = 1.0;
    }
 
    if(x2Min<0) x2Min = 0.0;
@@ -305,8 +313,12 @@ double Likelihood::metTF(const LorentzVector & metP4,
   }
   double const_MET = 1./(2.*M_PI*TMath::Sqrt(covDet));
 
-  double residualX = aMETx - (nuP4.X());
-  double residualY = aMETy - (nuP4.Y());
+  double meanX = -4.48;
+  double meanY = 2.94;
+  meanX = 0.0;
+  meanY = 0.0;
+  double residualX = aMETx - (nuP4.X()) - meanX;
+  double residualY = aMETy - (nuP4.Y()) - meanY;
 
   double pull2 = residualX*(invCovMETxx*residualX + invCovMETxy*residualY) +
     residualY*(invCovMETyx*residualX + invCovMETyy*residualY);
@@ -318,23 +330,48 @@ double Likelihood::metTF(const LorentzVector & metP4,
 //////////////////////////////////////////////////////////////////////////////
 double Likelihood::value(const double *x) const{
 
-  LorentzVector testP4 = leg1P4*(1.0/x[0]) + leg2P4*(1.0/x[1]);
-  LorentzVector testMET = testP4 - leg1P4 - leg2P4;
- 
-  double metLH = metTF(recoMET, testMET, covMET);
+  const double & mTau = classic_svFit::tauLeptonMass;
+  double x1Min = std::min(1.0, std::pow(mVisLeg1/mTau,2));
+  double x2Min = std::min(1.0, std::pow(mVisLeg2/mTau,2));
+  if(x[0]<x1Min || x[1]<x2Min) return 0.0;
+  
+  testP4 = leg1P4*(1.0/x[0]) + leg2P4*(1.0/x[1]);
+  testMET = testP4 - leg1P4 - leg2P4;
+
+  double metLH = 1.0;//metTF(recoMET, testMET, covMET);
   double massLH = massLikelihood(testP4.M());
   double pxLH = ptLikelihood(testP4.Px(), 0);
   double pyLH = ptLikelihood(testP4.Py(), 1);
-  
+   /*
   double lh1 = energyLikelihood((leg1P4*(1.0/x[0])).E(),
-				 leg1P4, cosGJLeg1, leg1DecayMode);
+				leg1P4, cosGJLeg1, leg1DecayMode);
 
   double lh2 = energyLikelihood((leg2P4*(1.0/x[1])).E(),
 				 leg2P4, cosGJLeg2, leg2DecayMode);
 
-
+  LorentzVector leg2PlusMET_test = testMET + leg2P4;
+  LorentzVector leg2PlusMET_reco = recoMET + leg2P4;
+  metLH = metTF(leg2PlusMET_reco, leg2PlusMET_test, covMET);
+  */  
   double value = -metLH*massLH*pxLH*pyLH;
+  if(std::abs(value)<-1E-20){
+    std::cout<<"metLH: "<<metLH
+	     <<" massLH: "<<massLH
+	     <<" pxLH: "<<pxLH
+	     <<" pyLH: "<<pyLH
+	     <<std::endl;
+  }
   
+  //value *= lh1;
+  //value *= lh2;
+  /*
+    std::cout<<__func__<<" x[0]: "<<x[0]<<" x[1]: "<<x[1]<<std::endl;
+  std::cout<<" metLH: "<<metLH
+	   <<" massLH: "<<massLH
+	   <<" pxLH: "<<pxLH
+    	   <<" pyLH: "<<pyLH
+	   <<" value: "<<value<<std::endl;
+  */
   return value;
 }
 //////////////////////////////////////////////////////////////////////////////
@@ -367,7 +404,8 @@ void FastMTT::initialize(){
   nVariables = varNames.size();
   std::vector<double> initialValues(nVariables,0.5);
   std::vector<double> stepSizes(nVariables, 0.01);
-  minimalizationResult = initialValues;
+  minimumPosition = initialValues;
+  minimumValue = 999.0;
 
   for(unsigned int iVar=0; iVar<nVariables; ++iVar){
     minimizer->SetVariable(iVar, varNames[iVar].c_str(), initialValues[iVar], stepSizes[iVar]);
@@ -438,17 +476,20 @@ void FastMTT::run(const std::vector<classic_svFit::MeasuredTauLepton>& measuredT
   scan();
   //minimize();
 
-  bestP4 = aLepton1.p4()*(1.0/minimalizationResult[0]) +
-           aLepton2.p4()*(1.0/minimalizationResult[1]);
-  
+  tau1P4 = aLepton1.p4()*(1.0/minimumPosition[0]);
+  tau2P4 = aLepton2.p4()*(1.0/minimumPosition[1]);
+
+  bestP4 = tau1P4 + tau2P4;
+  /*
   if(aLepton1.type() != classic_svFit::MeasuredTauLepton::kTauToHadDecay ||
      aLepton2.type() != classic_svFit::MeasuredTauLepton::kTauToHadDecay){
     bestP4 *= 1.036;
-  }
+   }
   if(aLepton1.type() == classic_svFit::MeasuredTauLepton::kTauToHadDecay &&
      aLepton2.type() == classic_svFit::MeasuredTauLepton::kTauToHadDecay){
     bestP4 *= 0.98;
-  }  
+  }
+  */
 }
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
@@ -457,13 +498,18 @@ void FastMTT::minimize(){
   clock.Reset();
   clock.Start("minimize");
 
-  minimizer->SetVariableLimits(0, 0.01 ,1.0);
-  minimizer->SetVariableLimits(1, 0.01 ,1.0);
+  minimizer->SetVariableLimits(0, 0.01, 1.0);
+  minimizer->SetVariableLimits(1, 0.01, 1.0);
+
+  minimizer->SetVariable(0, "x1", 0.5, 0.1);
+  minimizer->SetVariable(1, "x2", 0.5, 0.1);
+    
   minimizer->Minimize();
 
   const double *theMinimum = minimizer->X();
-  minimalizationResult[0] = theMinimum[0];
-  minimalizationResult[1] = theMinimum[1];
+  minimumPosition[0] = theMinimum[0];
+  minimumPosition[1] = theMinimum[1];
+  minimumValue = minimizer->MinValue();
 
    if(minimizer->Status()!=0){
      std::cout<<" minimizer "
@@ -486,34 +532,31 @@ void FastMTT::scan(){
   clock.Start("scan");
 
   double lh = 0.0;
-  double maxLH = -99.0;
+  double bestLH = 0.0;
 
   double x[2] = {0.5, 0.5};
-  double theMinimum[2] = {0.5, 0.5};  
+  double theMinimum[2] = {0.75, 0.75};  
   int nGridPoints = 100;
   int nCalls = 0;
   for(int iX2 = 1; iX2<nGridPoints;++iX2){
-    x[1] = (double)iX2/nGridPoints;
+    x[1] = 1.0*(double)iX2/nGridPoints;
     for(int iX1 = 1; iX1<nGridPoints;++iX1){
-      x[0] = (double)iX1/nGridPoints;
+      x[0] = 1.0*(double)iX1/nGridPoints;
 
-      lh = - myLikelihood.value(x);
+      lh = myLikelihood.value(x);
 
       ++nCalls;
-      if(lh>maxLH){
-	maxLH = lh;
+      if(lh<bestLH){
+	bestLH = lh;
 	theMinimum[0] = x[0];
 	theMinimum[1] = x[1];
       }
     }
   }
-  /*
-  std::cout<<"best x1: "<<theMinimum[0]
-	   <<" x2: "<<theMinimum[1]
-	   <<std::endl;
-  */
-  minimalizationResult[0] = theMinimum[0];
-  minimalizationResult[1] = theMinimum[1];
+  
+  minimumPosition[0] = theMinimum[0];
+  minimumPosition[1] = theMinimum[1];
+  minimumValue = bestLH;
 
   clock.Stop("scan");
 }
@@ -533,7 +576,14 @@ double FastMTT::getRealTime(const std::string & method){
 ///////////////////////////////////////////////////////////////////
 std::tuple<double, double> FastMTT::getBestX() const{
 
-  return std::make_tuple(minimalizationResult[0], minimalizationResult[1]);
+  return std::make_tuple(minimumPosition[0], minimumPosition[1]);
+  
+}
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+double FastMTT::getBestLikelihood() const{
+
+  return minimumValue;
   
 }
 ///////////////////////////////////////////////////////////////////

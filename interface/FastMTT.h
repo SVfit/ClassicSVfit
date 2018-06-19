@@ -71,6 +71,8 @@ private:
 
   LorentzVector leg1P4, leg2P4;
   LorentzVector recoMET;
+  mutable LorentzVector testP4, testMET;
+  
   TMatrixD covMET;
 
   double mVis, mVisLeg1, mVisLeg2;
@@ -105,9 +107,18 @@ class FastMTT {
   ///Retrieve the four momentum corresponding to the likelihood maximum
   const LorentzVector & getBestP4() const { return bestP4; }
 
+  ///Retrieve the tau1 four momentum corresponding to the likelihood maximum
+  const LorentzVector & getTau1P4() const { return tau1P4; }
+
+  ///Retrieve the tau1 four momentum corresponding to the likelihood maximum
+  const LorentzVector & getTau2P4() const { return tau2P4; }
+
   ///Retrieve x values corresponding to the likelihood maximim
   std::tuple<double, double> getBestX() const;
 
+  ///Retrieve the best likelihood value
+  double getBestLikelihood() const;
+  
   ///Retrieve the CPU timing for given methods
   ///Possible values:
   /// scan
@@ -152,7 +163,10 @@ class FastMTT {
    ROOT::Math::Minimizer* minimizer;
 
    ///Minimum location
-   std::vector<double> minimalizationResult;
+   std::vector<double> minimumPosition;
+
+   ///Mimimum value
+   double minimumValue;
 
   ///Dimenstion of minimalization space
   unsigned int nVariables;
@@ -170,7 +184,7 @@ class FastMTT {
 
   Likelihood myLikelihood;
 
-  LorentzVector bestP4;
+  LorentzVector tau1P4, tau2P4, bestP4;
 
   TBenchmark clock;
 

@@ -121,13 +121,14 @@ int main(int argc, char* argv[])
   //Run FastMTT
   FastMTT aFastMTTAlgo;
   aFastMTTAlgo.run(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
-  LorentzVector ttP4 = aFastMTTAlgo.getBestP4();  
+  LorentzVector ttP4 = aFastMTTAlgo.getBestP4();
+  std::cout<<std::endl;
   std::cout << "FastMTT found best p4 with mass = " << ttP4.M()
-	    << " (expected value = 105.582),"
+	    << " (expected value = 108.991),"
 	    <<std::endl;
   std::cout<<"Real Time =   "<<aFastMTTAlgo.getRealTime("scan")<<" seconds "
 	   <<" Cpu Time =   "<<aFastMTTAlgo.getCpuTime("scan")<<" seconds"<<std::endl;
-  if(std::abs(ttP4.M() -  105.582)>1E-6*105.582) return 1;
+  if(std::abs(ttP4.M() -  108.991)>1E-6*108.991) return 1;
   
 
   return 0;

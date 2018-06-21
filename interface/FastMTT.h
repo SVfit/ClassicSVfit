@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <tuple>
 
 namespace classic_svFit{
   class MeasuredTauLepton;
@@ -39,9 +40,9 @@ public:
 
   void setLeptonInputs(const LorentzVector & aLeg1P4,
                        const LorentzVector & aLeg2P4,
-                       int aLeg1DecayType,
-                       int aLeg2DecayType);
-
+                       int aLeg1DecayType, int aLeg2DecayType,
+		       int aLeg1DecayMode, int aLeg2DecayMode);
+  
   void setMETInputs(const LorentzVector & aMET,
                     const TMatrixD& aCovMET);
 
@@ -49,19 +50,28 @@ public:
 
   double massLikelihood(const double & m) const;
 
+  double ptLikelihood(const double & pTTauTau, int type) const;
+
   double metTF(const LorentzVector & metP4,
                const LorentzVector & nuP4,
                const TMatrixD& covMET) const;
 
 private:
 
+  std::tuple<double, double> energyFromCosGJ(const LorentzVector & visP4,
+					     const double & cosGJ) const;
+
+
   LorentzVector leg1P4, leg2P4;
   LorentzVector recoMET;
+  mutable LorentzVector testP4, testMET;
+  
   TMatrixD covMET;
 
   double mVis, mVisLeg1, mVisLeg2;
-
+  
   int leg1DecayType, leg2DecayType;
+  int leg1DecayMode, leg2DecayMode;
 
   std::vector<double> parameters;
 
@@ -88,6 +98,18 @@ class FastMTT {
   ///Retrieve the four momentum corresponding to the likelihood maximum
   const LorentzVector & getBestP4() const { return bestP4; }
 
+  ///Retrieve the tau1 four momentum corresponding to the likelihood maximum
+  const LorentzVector & getTau1P4() const { return tau1P4; }
+
+  ///Retrieve the tau1 four momentum corresponding to the likelihood maximum
+  const LorentzVector & getTau2P4() const { return tau2P4; }
+
+  ///Retrieve x values corresponding to the likelihood maximim
+  std::tuple<double, double> getBestX() const;
+
+  ///Retrieve the best likelihood value
+  double getBestLikelihood() const;
+  
   ///Retrieve the CPU timing for given methods
   ///Possible values:
   /// scan
@@ -109,22 +131,12 @@ class FastMTT {
   ///Run the minimalization procedure for given inputs.
   ///Results are stored in internal variables accesed by
   ///relevant get methods.
-  void minimize(const LorentzVector & aLeg1P4,
-                const LorentzVector & aLeg2P4,
-                const LorentzVector & aMET,
-                const TMatrixD & aCovMET,
-                int leg1DecayType,
-                int leg2DecayType);
+  void minimize();
 
   ///Run a scan over x1 and x2 [0,1] rectangle for given inputs.
   ///Results are stored in internal variables accesed by
   ///relevant get methods.
-  void scan(const LorentzVector & aLeg1P4,
-                const LorentzVector & aLeg2P4,
-                const LorentzVector & aMET,
-                const TMatrixD & aCovMET,
-                int leg1DecayType,
-                int leg2DecayType);
+  void scan();
 
    // Minimizer types and algorithms.
    // minimizerName               minimizerAlgorithm
@@ -142,7 +154,10 @@ class FastMTT {
    ROOT::Math::Minimizer* minimizer;
 
    ///Minimum location
-   std::vector<double> minimalizationResult;
+   std::vector<double> minimumPosition;
+
+   ///Mimimum value
+   double minimumValue;
 
   ///Dimenstion of minimalization space
   unsigned int nVariables;
@@ -160,7 +175,7 @@ class FastMTT {
 
   Likelihood myLikelihood;
 
-  LorentzVector bestP4;
+  LorentzVector tau1P4, tau2P4, bestP4;
 
   TBenchmark clock;
 

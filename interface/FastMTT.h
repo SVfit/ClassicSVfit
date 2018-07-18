@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <tuple>
+#include <bitset>
 
 namespace classic_svFit{
   class MeasuredTauLepton;
@@ -15,7 +16,6 @@ namespace ROOT{
     class Functor;
   }
 }
-class TF1;
 class TVector2;
 
 #include "TMatrixD.h"
@@ -26,6 +26,8 @@ typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LorentzVector;
 
 namespace fastMTT {
   double likelihoodFunc(double *x, double *par);
+
+  enum likelihoodComponent{MET, MASS, PX, PY, ENERGY, IP};
 }
 
 class Likelihood{
@@ -46,10 +48,17 @@ public:
   void setCosGJ(const double & cosGJLeg1,
 		const double & cosGJLeg2);
 
+  void setIP3D(const double & aIP3DLeg1,
+	       const double & aIP3DLeg2);
+
   void setMETInputs(const LorentzVector & aMET,
                     const TMatrixD& aCovMET);
 
   void setParameters(const std::vector<double> & parameters);
+
+  void enableComponent(fastMTT::likelihoodComponent aCompIndex);
+
+  void disableComponent(fastMTT::likelihoodComponent aCompIndex);
 
   double massLikelihood(const double & m) const;
 
@@ -62,27 +71,35 @@ private:
   std::tuple<double, double> energyFromCosGJ(const LorentzVector & visP4,
 					     const double & cosGJ) const;
 
-  double energyLikelihood(const double & energy,
+  double energyLikelihood(const LorentzVector & tauP4,
 			  const LorentzVector & visP4,
 			  const double & cosGJ,
 			  int decayMode) const;
 
   double ptLikelihood(const double & pTTauTau, int type) const;
 
+  double ip3DLikelihood(const LorentzVector & tauP4,
+			const double & sinGJ,
+			const double & ip3D) const;
+
   LorentzVector leg1P4, leg2P4;
   LorentzVector recoMET;
   mutable LorentzVector testP4, testMET;
   
   TMatrixD covMET;
-
+ 
   double mVis, mVisLeg1, mVisLeg2;
 
   double cosGJLeg1, cosGJLeg2;
+  double ip3DLeg1, ip3DLeg2;
   
   int leg1DecayType, leg2DecayType;
   int leg1DecayMode, leg2DecayMode;
 
   std::vector<double> parameters;
+
+  ///Bit word coding enabled likelihood components
+  std::bitset<128> compnentsBitWord;
 
 };
 //////////////////////////////////////////////////////////////
@@ -101,8 +118,17 @@ class FastMTT {
   void run(const std::vector<classic_svFit::MeasuredTauLepton>&,
 	   const double &, const double &, const TMatrixD&);
 
-  ///Set likelihood shape parameters.
+  ///Set likelihood shape parameters. Two parameters are expected:
+  ///power of 1/mVis, and scaling factor of mTest
+  ///in case of less than two parameters the default values are used:
+  ///{6, 1.0/1.15};
   void setLikelihoodParams(const std::vector<double> & aPars);
+
+  ///Set the bit word for switching on particular likelihood components
+  void enableComponent(fastMTT::likelihoodComponent aCompIndex);
+
+  ///Set the bit word for switching off particular likelihood components
+  void disableComponent(fastMTT::likelihoodComponent aCompIndex);
 
   ///Retrieve the four momentum corresponding to the likelihood maximum
   const LorentzVector & getBestP4() const { return bestP4; }
@@ -118,6 +144,9 @@ class FastMTT {
 
   ///Retrieve the best likelihood value
   double getBestLikelihood() const;
+
+  ///Retrieve the likelihood value for given x values
+  double getLikelihoodForX(double *x) const;
   
   ///Retrieve the CPU timing for given methods
   ///Possible values:
@@ -167,29 +196,29 @@ class FastMTT {
 
    ///Mimimum value
    double minimumValue;
+   
+   ///Dimension of minimalization space
+   unsigned int nVariables;
 
-  ///Dimenstion of minimalization space
-  unsigned int nVariables;
-
-  ///Names of variables to be minimized
-  std::vector<std::string> varNames;
-
+   ///Names of variables to be minimized
+   std::vector<std::string> varNames;
+   
   ///Values of variables to be minimized
-  std::vector<double> variables;
-
-  ///Step sizes for each minimized variable
-  std::vector<double> stepSizes;
-
-  ROOT::Math::Functor *likelihoodFunctor;
-
-  Likelihood myLikelihood;
-
-  LorentzVector tau1P4, tau2P4, bestP4;
-
-  TBenchmark clock;
-
-  int verbosity;
-
+   std::vector<double> variables;
+   
+   ///Step sizes for each minimized variable
+   std::vector<double> stepSizes;
+   
+   ROOT::Math::Functor *likelihoodFunctor;
+   
+   Likelihood myLikelihood;
+   
+   LorentzVector tau1P4, tau2P4, bestP4;
+   
+   TBenchmark clock;
+   
+   int verbosity;
+   
 };
 
 #endif

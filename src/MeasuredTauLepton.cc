@@ -73,7 +73,8 @@ MeasuredTauLepton::MeasuredTauLepton(const MeasuredTauLepton& measuredTauLepton)
     phi_(measuredTauLepton.phi()),
     mass_(measuredTauLepton.mass()),
     decayMode_(measuredTauLepton.decayMode()),
-    cosGJ_(measuredTauLepton.cosGJ())
+    cosGJ_(measuredTauLepton.cosGJ()),
+    ip3D_(measuredTauLepton.ip3D())
 {
   preciseVisMass_ = measuredTauLepton.mass();
 
@@ -85,6 +86,8 @@ MeasuredTauLepton::~MeasuredTauLepton()
 }
 
 void MeasuredTauLepton::setCosGJ(const double & aCosGJ) { cosGJ_ = aCosGJ; }
+
+void MeasuredTauLepton::setIP3D(const double & aIP3D) { ip3D_ = aIP3D; }
 
 int MeasuredTauLepton::type() const { return type_; }
 
@@ -101,6 +104,8 @@ double MeasuredTauLepton::pz() const { return pz_; }
 double MeasuredTauLepton::p() const { return p_; }
 
 double MeasuredTauLepton::cosGJ() const { return cosGJ_; }
+
+double MeasuredTauLepton::ip3D() const { return ip3D_; }
 
 int MeasuredTauLepton::decayMode() const { return decayMode_; }
 

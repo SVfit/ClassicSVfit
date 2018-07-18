@@ -10,6 +10,9 @@
 
 #include "TF1.h"
 #include "Math/BasicMinimizer.h"
+#include "Math/Boost.h"
+#include "Math/Rotation3D.h"
+#include "Math/AxisAngle.h"
 
 #include "TauAnalysis/ClassicSVfit/interface/FastMTT.h"
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredTauLepton.h"
@@ -20,10 +23,18 @@ Likelihood::Likelihood(){
 
   covMET.ResizeTo(2,2);
 
+  compnentsBitWord.reset();
+  enableComponent(fastMTT::MASS);
+  enableComponent(fastMTT::MET);
+  enableComponent(fastMTT::PX);
+  enableComponent(fastMTT::PY);
+  //enableComponent(fastMTT::ENERGY);
+  //enableComponent(fastMTT::IP);
+
 }
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
-Likelihood::~Likelihood(){}
+Likelihood::~Likelihood(){ }
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
 void Likelihood::setLeptonInputs(const LorentzVector & aLeg1P4,
@@ -34,6 +45,7 @@ void Likelihood::setLeptonInputs(const LorentzVector & aLeg1P4,
   leg2P4 = aLeg2P4;
 
   mVis = (leg1P4 + leg2P4).M();
+  
   mVisLeg1 = leg1P4.M();
   mVisLeg2 = leg2P4.M();
  
@@ -62,6 +74,15 @@ void Likelihood::setCosGJ(const double & aCosGJLeg1,
 }
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
+void Likelihood::setIP3D(const double & aIP3DLeg1,
+			 const double & aIP3DLeg2){
+
+  ip3DLeg1 = aIP3DLeg1;
+  ip3DLeg2 = aIP3DLeg2;
+  
+}
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
 void Likelihood::setMETInputs(const LorentzVector & aMET,
                               const TMatrixD& aCovMET){
   recoMET = aMET;
@@ -73,7 +94,20 @@ void Likelihood::setMETInputs(const LorentzVector & aMET,
 void Likelihood::setParameters(const std::vector<double> & aPars){
 
   parameters = aPars;
+  if(parameters.size()<2) parameters = std::vector<double>{6, 1.0/1.15};
 
+}
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+void Likelihood::enableComponent(fastMTT::likelihoodComponent aCompIndex){
+
+  compnentsBitWord.set(aCompIndex);
+}
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+void Likelihood::disableComponent(fastMTT::likelihoodComponent aCompIndex){
+
+  compnentsBitWord.reset(aCompIndex);
 }
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
@@ -91,11 +125,8 @@ std::tuple<double, double> Likelihood::energyFromCosGJ(const LorentzVector & vis
 
   double b2 = (mVis2 + mTau2)*pVis*cosGJ;
 
-  double delta = (mVis2 + pVis2)*(std::pow(mVis2 - mTau2, 2) - 4.0*mTau2*pVis2*sinGJ2);
-  if(delta<0){
-    sinGJ2 = 0;
-    delta = (mVis2 + pVis2)*(std::pow(mVis2 - mTau2, 2) - 4.0*mTau2*pVis2*sinGJ2);
-  }
+  double delta = (mVis2 + pVis2)*(std::pow(mVis2 - mTau2, 2) - 4.0*mTau2*pVis2*sinGJ2); 
+  if(delta<0){return std::make_tuple(0, 0); }
 
   double twoA = 2.0*(mVis2 + pVis2*sinGJ2);
   double solution1 = (b2 - sqrt(delta))/twoA;
@@ -108,7 +139,7 @@ std::tuple<double, double> Likelihood::energyFromCosGJ(const LorentzVector & vis
 }
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
-double Likelihood::energyLikelihood(const double & tauE,
+double Likelihood::energyLikelihood(const LorentzVector & tauP4,
 				    const LorentzVector & visP4,
 				    const double & cosGJ,
 				    int decayMode) const{
@@ -116,17 +147,28 @@ double Likelihood::energyLikelihood(const double & tauE,
   if(decayMode<10 || decayMode>14) return 1.0;
   
   std::tuple<double, double> energySolutions = energyFromCosGJ(visP4, cosGJ);
+  if( std::get<0>(energySolutions)<1E-3 &&
+      std::get<1>(energySolutions)<1E-3) return 1.0;
 
-  std::vector<double> mean = {-0.117, 0.245};
-  std::vector<double> sigma = {0.12,  0.27};
+ 
+  std::vector<double> mean = {-0.05, 0.0};
+  std::vector<double> sigma = {0.11, 0.08};
 
+  //std::vector<double> mean = {-4.96169e-02, -4.96169e-02};
+  //std::vector<double> sigma = {1.14987e-01,  1.14987e-01};
+
+  ///Generator level cosGJ
+  //std::vector<double> mean = {0.0, 0.0};
+  //std::vector<double> sigma = {3.5e-02,  3.5e-02};
+  
+  double tauE = tauP4.E();
   double pull1 = std::get<0>(energySolutions) - tauE;
   pull1 /= tauE;
   pull1 -= mean[0];
 
   double gaussNorm = 1.0/sigma[0]/sqrt(2.0*M_PI);
   double likelihoodSolution1 = gaussNorm*TMath::Exp(-0.5*std::pow(pull1/sigma[0], 2));
-
+ 
   double pull2 = std::get<1>(energySolutions) - tauE;
   pull2 /= tauE;
   pull2 -= mean[1];
@@ -134,20 +176,11 @@ double Likelihood::energyLikelihood(const double & tauE,
   gaussNorm = 1.0/sigma[1]/sqrt(2.0*M_PI);
   double likelihoodSolution2 = gaussNorm*TMath::Exp(-0.5*std::pow(pull2/sigma[1], 2));
 
-  double value = std::max(likelihoodSolution1, likelihoodSolution2);
-  /*
-  std::cout<<"tauE: "<<tauE
-	   <<" cosGJ: "<<cosGJ
-    	   <<" sinGJ: "<< 1- cosGJ*cosGJ
-           <<" solution1: "<<std::get<0>(energySolutions)
-	   <<" solution2: "<<std::get<1>(energySolutions)
-	   <<" pull1: "<<pull1
-    	   <<" pull2: "<<pull2
-	   <<" likelihoodSolution1: "<<likelihoodSolution1
-    	   <<" likelihoodSolution2: "<<likelihoodSolution2
-	   <<std::endl;
-  */
-  
+  double mpv = mean[1];  
+  likelihoodSolution2 = TMath::Landau(pull2, mpv, sigma[1], true);
+ 
+  double value = likelihoodSolution1 + likelihoodSolution2;
+     
   return value;
 }
 ///////////////////////////////////////////////////////////////////
@@ -155,33 +188,33 @@ double Likelihood::energyLikelihood(const double & tauE,
 double Likelihood::massLikelihood(const double & m) const{
 
   double coeff1 = parameters[0];
-  double coeff2 = parameters[1];
-  double mShift = m*coeff2;
+  double coeff2 = parameters[1];  
+  double mScaled = m*coeff2;
 
-  if(mShift<mVis) return 0.0;
+  if(mScaled<mVis) return 0.0;
 
   const double & mTau = classic_svFit::tauLeptonMass;
 
   double x1Min = std::min(1.0, std::pow(mVisLeg1/mTau,2));
-  double x2Min = std::max(std::pow(mVisLeg2/mTau,2), std::pow(mVis/mShift,2));
-  double x2Max = std::min(1.0, std::pow(mVis/mShift,2)/x1Min);
+  double x2Min = std::max(std::pow(mVisLeg2/mTau,2), std::pow(mVis/mScaled,2));
+  double x2Max = std::min(1.0, std::pow(mVis/mScaled,2)/x1Min);
   if(x2Max<x2Min) return 0.0;
 
-  double jacobiFactor = 2.0*std::pow(mVis,2)*std::pow(mShift,-coeff1);
+  double jacobiFactor = 2.0*std::pow(mVis,2)*std::pow(mScaled,-coeff1);
   double x2IntegralTerm = log(x2Max)-log(x2Min);
     
   double value = x2IntegralTerm;
   if(leg1DecayType!=classic_svFit::MeasuredTauLepton::kTauToHadDecay){
-    double mNuNuIntegralTermLeg1 = std::pow(mVis/mShift,2)*(std::pow(x2Max,-1) - std::pow(x2Min,-1));
+    double mNuNuIntegralTermLeg1 = std::pow(mVis/mScaled,2)*(std::pow(x2Max,-1) - std::pow(x2Min,-1));
     value += mNuNuIntegralTermLeg1;
   }
   if(leg2DecayType!=classic_svFit::MeasuredTauLepton::kTauToHadDecay){
-    double mNuNuIntegralTermLeg2 = std::pow(mVis/mShift,2)*x2IntegralTerm - (x2Max - x2Min);
+    double mNuNuIntegralTermLeg2 = std::pow(mVis/mScaled,2)*x2IntegralTerm - (x2Max - x2Min);
     value += mNuNuIntegralTermLeg2;
   }
-    
+  
   ///The E9 factor to get values around 1.0
-  value *=  1E9*jacobiFactor;
+  value *=  1E8*jacobiFactor;
   
   return value;
 }
@@ -291,7 +324,23 @@ double Likelihood::ptLikelihood(const double & pTTauTau, int type) const{
   return std::abs(value);
 }
 ///////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////x
+///////////////////////////////////////////////////////////////////
+double Likelihood::ip3DLikelihood(const LorentzVector & tauP4,
+				  const double & sinGJ,
+				  const double & ip3D) const{
+
+  const double & cTauLifetime = classic_svFit::cTauLifetime;
+  const double & tauLeptonMass = classic_svFit::tauLeptonMass;
+  
+  double gammaBeta = tauP4.P()/tauLeptonMass;
+
+  double arg = gammaBeta*cTauLifetime*std::abs(sinGJ);
+  double value = 1.0/arg*exp(-ip3D/arg);
+
+  return value;
+}
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
 double Likelihood::metTF(const LorentzVector & metP4,
                          const LorentzVector & nuP4,
                          const TMatrixD& covMET) const{
@@ -312,13 +361,8 @@ double Likelihood::metTF(const LorentzVector & metP4,
     return 0;
   }
   double const_MET = 1./(2.*M_PI*TMath::Sqrt(covDet));
-
-  double meanX = -4.48;
-  double meanY = 2.94;
-  meanX = 0.0;
-  meanY = 0.0;
-  double residualX = aMETx - (nuP4.X()) - meanX;
-  double residualY = aMETy - (nuP4.Y()) - meanY;
+  double residualX = aMETx - (nuP4.X());
+  double residualY = aMETy - (nuP4.Y());
 
   double pull2 = residualX*(invCovMETxx*residualX + invCovMETxy*residualY) +
     residualY*(invCovMETyx*residualX + invCovMETyy*residualY);
@@ -333,45 +377,34 @@ double Likelihood::value(const double *x) const{
   const double & mTau = classic_svFit::tauLeptonMass;
   double x1Min = std::min(1.0, std::pow(mVisLeg1/mTau,2));
   double x2Min = std::min(1.0, std::pow(mVisLeg2/mTau,2));
+  
   if(x[0]<x1Min || x[1]<x2Min) return 0.0;
   
   testP4 = leg1P4*(1.0/x[0]) + leg2P4*(1.0/x[1]);
   testMET = testP4 - leg1P4 - leg2P4;
 
-  double metLH = 1.0;//metTF(recoMET, testMET, covMET);
-  double massLH = massLikelihood(testP4.M());
-  double pxLH = ptLikelihood(testP4.Px(), 0);
-  double pyLH = ptLikelihood(testP4.Py(), 1);
-   /*
-  double lh1 = energyLikelihood((leg1P4*(1.0/x[0])).E(),
-				leg1P4, cosGJLeg1, leg1DecayMode);
+  double value = -1.0;
+  if(compnentsBitWord.test(fastMTT::MET)) value *= metTF(recoMET, testMET, covMET);
+  if(compnentsBitWord.test(fastMTT::MASS)) value *= massLikelihood(testP4.M());    
+  if(compnentsBitWord.test(fastMTT::PX)) value *= ptLikelihood(testP4.Px(), 0);
+  if(compnentsBitWord.test(fastMTT::PY)) value *= ptLikelihood(testP4.Py(), 1);
+  if(compnentsBitWord.test(fastMTT::ENERGY)){
+    value *= energyLikelihood((leg1P4*(1.0/x[0])),
+			      leg1P4, cosGJLeg1, leg1DecayMode);
 
-  double lh2 = energyLikelihood((leg2P4*(1.0/x[1])).E(),
-				 leg2P4, cosGJLeg2, leg2DecayMode);
-
-  LorentzVector leg2PlusMET_test = testMET + leg2P4;
-  LorentzVector leg2PlusMET_reco = recoMET + leg2P4;
-  metLH = metTF(leg2PlusMET_reco, leg2PlusMET_test, covMET);
-  */  
-  double value = -metLH*massLH*pxLH*pyLH;
-  if(std::abs(value)<-1E-20){
-    std::cout<<"metLH: "<<metLH
-	     <<" massLH: "<<massLH
-	     <<" pxLH: "<<pxLH
-	     <<" pyLH: "<<pyLH
-	     <<std::endl;
+    value *= energyLikelihood((leg2P4*(1.0/x[1])),
+			      leg2P4, cosGJLeg2, leg2DecayMode);
+    
   }
-  
-  //value *= lh1;
-  //value *= lh2;
-  /*
-    std::cout<<__func__<<" x[0]: "<<x[0]<<" x[1]: "<<x[1]<<std::endl;
-  std::cout<<" metLH: "<<metLH
-	   <<" massLH: "<<massLH
-	   <<" pxLH: "<<pxLH
-    	   <<" pyLH: "<<pyLH
-	   <<" value: "<<value<<std::endl;
-  */
+  if(compnentsBitWord.test(fastMTT::IP)){    
+    double sinGJ = sqrt(1.0 - cosGJLeg1*cosGJLeg1);
+    value *= ip3DLikelihood(leg1P4*(1.0/x[0]),
+			    sinGJ, ip3DLeg1);
+    
+    sinGJ = sqrt(1.0 - cosGJLeg2*cosGJLeg2);
+    value *= ip3DLikelihood(leg2P4*(1.0/x[1]),
+			    sinGJ, ip3DLeg2);
+  }  
   return value;
 }
 //////////////////////////////////////////////////////////////////////////////
@@ -415,7 +448,7 @@ void FastMTT::initialize(){
   setLikelihoodParams(shapeParams);
   likelihoodFunctor = new ROOT::Math::Functor(&myLikelihood, &Likelihood::value, nVariables);
   minimizer->SetFunction(*likelihoodFunctor);
-
+    
   verbosity = 0;
 }
 ///////////////////////////////////////////////////////////////////
@@ -423,6 +456,20 @@ void FastMTT::initialize(){
 void FastMTT::setLikelihoodParams(const std::vector<double> & aPars){
 
    myLikelihood.setParameters(aPars);
+
+}
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+void FastMTT::enableComponent(fastMTT::likelihoodComponent aCompIndex){
+
+  myLikelihood.enableComponent(aCompIndex);
+
+}
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+void FastMTT::disableComponent(fastMTT::likelihoodComponent aCompIndex){
+
+  myLikelihood.disableComponent(aCompIndex);
 
 }
 ///////////////////////////////////////////////////////////////////
@@ -465,12 +512,13 @@ void FastMTT::run(const std::vector<classic_svFit::MeasuredTauLepton>& measuredT
 
   const classic_svFit::MeasuredTauLepton & aLepton1 = measuredTauLeptons[0];
   const classic_svFit::MeasuredTauLepton & aLepton2 = measuredTauLeptons[1];
-  
+
   myLikelihood.setLeptonInputs(aLepton1.p4(), aLepton2.p4(),
 			       aLepton1.type(), aLepton2.type(),
 			       aLepton1.decayMode(), aLepton2.decayMode());
   
   myLikelihood.setCosGJ(aLepton1.cosGJ(), aLepton2.cosGJ());
+  myLikelihood.setIP3D(aLepton1.ip3D(), aLepton2.ip3D());
   myLikelihood.setMETInputs(aMET, covMET);
 
   scan();
@@ -478,18 +526,16 @@ void FastMTT::run(const std::vector<classic_svFit::MeasuredTauLepton>& measuredT
 
   tau1P4 = aLepton1.p4()*(1.0/minimumPosition[0]);
   tau2P4 = aLepton2.p4()*(1.0/minimumPosition[1]);
-
   bestP4 = tau1P4 + tau2P4;
-  /*
+  
   if(aLepton1.type() != classic_svFit::MeasuredTauLepton::kTauToHadDecay ||
      aLepton2.type() != classic_svFit::MeasuredTauLepton::kTauToHadDecay){
-    bestP4 *= 1.036;
+    bestP4 *= 1.03;
    }
   if(aLepton1.type() == classic_svFit::MeasuredTauLepton::kTauToHadDecay &&
      aLepton2.type() == classic_svFit::MeasuredTauLepton::kTauToHadDecay){
     bestP4 *= 0.98;
   }
-  */
 }
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
@@ -535,7 +581,7 @@ void FastMTT::scan(){
   double bestLH = 0.0;
 
   double x[2] = {0.5, 0.5};
-  double theMinimum[2] = {0.75, 0.75};  
+  double theMinimum[2] = {0.75, 0.75};
   int nGridPoints = 100;
   int nCalls = 0;
   for(int iX2 = 1; iX2<nGridPoints;++iX2){
@@ -585,6 +631,12 @@ double FastMTT::getBestLikelihood() const{
 
   return minimumValue;
   
+}
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+double FastMTT::getLikelihoodForX(double *x) const{
+
+   return myLikelihood.value(x);
 }
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////

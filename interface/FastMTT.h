@@ -64,7 +64,6 @@ private:
 
   LorentzVector leg1P4, leg2P4;
   LorentzVector recoMET;
-  mutable LorentzVector testP4, testMET;
   
   TMatrixD covMET;
 

@@ -238,10 +238,15 @@ double Likelihood::value(const double *x) const{
   const double & mTau = classic_svFit::tauLeptonMass;
   double x1Min = std::min(1.0, std::pow(mVisLeg1/mTau,2));
   double x2Min = std::min(1.0, std::pow(mVisLeg2/mTau,2));
+	//const double opt1 = mVisLeg1/mTau;
+	//const double opt2 = mVisLeg2/mTau;
+  //double x1Min = std::min(1.0, opt1*opt1);
+  //double x2Min = std::min(1.0, opt2*opt2);
   if(x[0]<x1Min || x[1]<x2Min) return 0.0;
   
-  testP4 = leg1P4*(1.0/x[0]) + leg2P4*(1.0/x[1]);
-  testMET = testP4 - leg1P4 - leg2P4;
+  const auto testP4 = leg1P4*(1.0/x[0]) + leg2P4*(1.0/x[1]);
+  const auto testMET = testP4 - leg1P4 - leg2P4;
+	//testMET = leg1P4*((1. - x[0])/x[0]) + leg2P4*((1.-x[1])/x[1]);
 
   double metLH = metTF(recoMET, testMET, covMET);
   double massLH = massLikelihood(testP4.M());
@@ -386,7 +391,7 @@ void FastMTT::minimize(){
   minimumPosition[1] = theMinimum[1];
   minimumValue = minimizer->MinValue();
 
-   if(minimizer->Status()!=0){
+   if(true || minimizer->Status()!=0){
      std::cout<<" minimizer "
 	      <<" Status: "<<minimizer->Status()
 	      <<" nCalls: "<<minimizer->NCalls()
@@ -411,20 +416,21 @@ void FastMTT::scan(){
 
   double x[2] = {0.5, 0.5};
   double theMinimum[2] = {0.75, 0.75};  
-  int nGridPoints = 100;
+  const int nGridPoints = 100;
+	const double gridFactor = 1./nGridPoints;
   int nCalls = 0;
   for(int iX2 = 1; iX2<nGridPoints;++iX2){
-    x[1] = 1.0*(double)iX2/nGridPoints;
+    x[1] = iX2*gridFactor;
     for(int iX1 = 1; iX1<nGridPoints;++iX1){
-      x[0] = 1.0*(double)iX1/nGridPoints;
+      x[0] = iX1*gridFactor;
 
       lh = myLikelihood.value(x);
 
       ++nCalls;
       if(lh<bestLH){
-	bestLH = lh;
-	theMinimum[0] = x[0];
-	theMinimum[1] = x[1];
+				bestLH = lh;
+				theMinimum[0] = x[0];
+				theMinimum[1] = x[1];
       }
     }
   }

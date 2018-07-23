@@ -74,6 +74,12 @@ private:
 
   std::vector<double> parameters;
 
+	//precomputed values used to reduce the number of redundant calculations
+	double mVis1OverTauSquare;
+	double mVis2OverTauSquare;
+	using PowTable = std::array<double, 5u>; //first powers of a number
+	//array with dimensions 2x3x5 used to store the powers of the coefficients of two vectors
+	std::array<std::array<PowTable,3u>,2u> allpTpows;
 };
 //////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////

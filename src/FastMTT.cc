@@ -430,20 +430,18 @@ void FastMTT::scan(){
   double x[2] = {0.5, 0.5};
   double theMinimum[2] = {0.75, 0.75};  
   const int nGridPoints = 100;
-	const double gridFactor = 1./nGridPoints;
+  const double gridFactor = 1./nGridPoints;
   int nCalls = 0;
   for(int iX2 = 1; iX2<nGridPoints;++iX2){
     x[1] = iX2*gridFactor;
     for(int iX1 = 1; iX1<nGridPoints;++iX1){
       x[0] = iX1*gridFactor;
-
       lh = myLikelihood.value(x);
-
       ++nCalls;
       if(lh<bestLH){
-				bestLH = lh;
-				theMinimum[0] = x[0];
-				theMinimum[1] = x[1];
+        bestLH = lh;
+        theMinimum[0] = x[0];
+        theMinimum[1] = x[1];
       }
     }
   }

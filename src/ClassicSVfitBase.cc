@@ -158,15 +158,12 @@ void ClassicSVfitBase::printMET(double measuredMETx, double measuredMETy, const 
 
 void ClassicSVfitBase::printLeptons() const 
 {
-  LorentzVector sumP4;
   for ( size_t idx = 0; idx < measuredTauLeptons_.size(); ++idx ) {
     const MeasuredTauLepton& measuredTauLepton = measuredTauLeptons_[idx];
     std::cout << "measuredTauLepton #" << idx << " (type = " << measuredTauLepton.type() << "): Pt = " << measuredTauLepton.pt() << ","
 	      << " eta = " << measuredTauLepton.eta() << " (theta = " << measuredTauLepton.p3().theta() << ")" << ", phi = " << measuredTauLepton.phi() << ","
 	      << " mass = " << measuredTauLepton.mass() << std::endl;
-    sumP4 += measuredTauLepton.p4();
   }
-  std::cout << "visible momentum sum: Pt = " << sumP4.pt() << ", phi = " << sumP4.phi() << ", mass = " << sumP4.mass() << std::endl;
 }
 
 void ClassicSVfitBase::printIntegrationRange() const 

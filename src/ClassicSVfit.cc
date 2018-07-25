@@ -80,7 +80,15 @@ void ClassicSVfit::prepareLeptonInput(const std::vector<MeasuredTauLepton>& meas
   for (std::vector<MeasuredTauLepton>::iterator measuredTauLepton = measuredTauLeptons_.begin();
        measuredTauLepton != measuredTauLeptons_.end(); ++measuredTauLepton ) measuredTauLepton->roundToNdigits();
   std::sort(measuredTauLeptons_.begin(), measuredTauLeptons_.end(), sortMeasuredTauLeptons());
-  if ( verbosity_ >= 1 ) printLeptons();
+  if ( verbosity_ >= 1 ) {
+    printLeptons();
+    LorentzVector sumP4;
+    for (std::vector<MeasuredTauLepton>::iterator measuredTauLepton = measuredTauLeptons_.begin();
+	 measuredTauLepton != measuredTauLeptons_.end(); ++measuredTauLepton ) {
+      sumP4 += measuredTauLepton->p4();
+    }
+    std::cout << "visible momentum sum: Pt = " << sumP4.pt() << ", phi = " << sumP4.phi() << ", mass = " << sumP4.mass() << std::endl;
+  }
 }
 
 void ClassicSVfit::integrate(const std::vector<MeasuredTauLepton>& measuredTauLeptons,

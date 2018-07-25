@@ -54,6 +54,8 @@ namespace classic_svFit
     typedef double (*gPtr_C)(const double*, size_t, void*);
     void integrate(gPtr_C g, const double* xl, const double* xu, unsigned d, double& integral, double& integralErr);
 
+    double getProbMax() const { return probMax_; }
+
     void print(std::ostream&) const;
 
   protected:
@@ -149,6 +151,8 @@ namespace classic_svFit
     long numIntegrationCalls_;
     long numMovesTotal_accepted_;
     long numMovesTotal_rejected_;
+
+    double probMax_;
 
     int errorFlag_;
 

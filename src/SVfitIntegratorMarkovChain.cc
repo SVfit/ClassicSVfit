@@ -48,9 +48,10 @@ SVfitIntegratorMarkovChain::SVfitIntegratorMarkovChain(const std::string& initMo
                    const std::string& treeFileName, int verbosity)
   : integrand_(0),
     x_(0),
-    numIntegrationCalls_(0),
+    numIntegrationCalls_(0),    
     numMovesTotal_accepted_(0),
     numMovesTotal_rejected_(0),
+    probMax_(-1.),
     errorFlag_(0),
     treeFileName_(treeFileName),
     treeFile_(0),
@@ -204,6 +205,8 @@ void SVfitIntegratorMarkovChain::integrate(gPtr_C g, const double* xl, const dou
   numMoves_accepted_ = 0;
   numMoves_rejected_ = 0;
 
+  probMax_ = -1.;
+
   unsigned k = numChains_*numBatches_;
   unsigned m = numIterSampling_/numBatches_;
 
@@ -281,6 +284,7 @@ void SVfitIntegratorMarkovChain::integrate(gPtr_C g, const double* xl, const dou
         makeStochasticMove(numIterBurnin_ + iMove, isAccepted, isValid);
       } while ( !isValid );
       if ( isAccepted ) {
+	if ( prob_ > probMax_ ) probMax_ = prob_;
         ++numMoves_accepted_;
       } else {
         ++numMoves_rejected_;

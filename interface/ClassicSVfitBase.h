@@ -64,6 +64,9 @@ class ClassicSVfitBase
   /// run integration with Markov Chain
   virtual void integrate(const std::vector<classic_svFit::MeasuredTauLepton>&, double, double, const TMatrixD&) = 0;
 
+  /// return maximum of integrand within integration domain
+  double getProbMax() const { return intAlgo_->getProbMax(); }
+
   /// return flag indicating if algorithm succeeded to find valid solution
   bool isValidSolution() const;
 

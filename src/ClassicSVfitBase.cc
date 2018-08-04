@@ -40,6 +40,9 @@ ClassicSVfitBase::~ClassicSVfitBase()
     delete intAlgo_;
   }
 
+  delete [] xl_;
+  delete [] xh_;
+
   delete clock_;
 }
 

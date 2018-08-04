@@ -34,7 +34,9 @@ ClassicSVfit::ClassicSVfit(int verbosity)
 }
 
 ClassicSVfit::~ClassicSVfit()
-{}
+{
+  delete histogramAdapter_;
+}
 
 void ClassicSVfit::setDiTauMassConstraint(double diTauMass)
 {

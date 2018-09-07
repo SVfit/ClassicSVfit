@@ -246,6 +246,9 @@ double Likelihood::massLikelihood(const double & m) const{
 ///////////////////////////////////////////////////////////////////
 double Likelihood::ptLikelihood(const double & pTTauTau, int type) const{
 
+  ///Protection against numerical singularity in phase space volume.
+  if(std::abs(pTTauTau)<0.5) return 0.0;
+
   const auto pT1pow=allpTpows[0][type];
   const auto pT2pow=allpTpows[1][type];
   const auto pT1=pT1pow[1];

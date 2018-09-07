@@ -84,12 +84,10 @@ private:
 
   LorentzVector leg1P4, leg2P4;
   LorentzVector recoMET;
-  mutable LorentzVector testP4, testMET;
   
   TMatrixD covMET;
  
   double mVis, mVisLeg1, mVisLeg2;
-
   double cosGJLeg1, cosGJLeg2;
   double ip3DLeg1, ip3DLeg2;
   
@@ -101,6 +99,13 @@ private:
   ///Bit word coding enabled likelihood components
   std::bitset<128> compnentsBitWord;
 
+  //precomputed values used to reduce the number of redundant calculations
+  double mVis1OverTauSquare;
+  double mVis2OverTauSquare;
+  using PowTable = std::array<double, 5u>; //first powers of a number
+  //array with dimensions 2x3x5 used to store the powers of the coefficients of two vectors
+  std::array<std::array<PowTable,3u>,2u> allpTpows;
+  
 };
 //////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////
@@ -204,6 +209,7 @@ class FastMTT {
    std::vector<std::string> varNames;
    
   ///Values of variables to be minimized
+
    std::vector<double> variables;
    
    ///Step sizes for each minimized variable

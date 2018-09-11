@@ -30,6 +30,7 @@ It is possible to build the software without CMSSW framework if the following pr
 In order to build the software, please execute the following lines in any directory with write access:
 ```bash
 git clone https://github.com/SVfit/ClassicSVfit TauAnalysis/ClassicSVfit
+export LIBRARY_PATH=$LIBRARY_PATH:$PWD/TauAnalysis/ClassicSVfit/lib
 make -f TauAnalysis/ClassicSVfit/Makefile -j4
 ```
 

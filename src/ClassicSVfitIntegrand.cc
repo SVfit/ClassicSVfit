@@ -111,10 +111,14 @@ double ClassicSVfitIntegrand::EvalPS(const double* q) const
     return 0.; 
   }
 
+  double visPtShift1 = 1.;
+  double visPtShift2 = 1.;
+#ifdef USE_SVFITTF
   int idx_visPtShift1 = legIntegrationParams_[0].idx_VisPtShift_;
-  double visPtShift1 = ( useHadTauTF_ && idx_visPtShift1 != -1 && !leg1isLeptonicTauDecay_ ) ? (1./x_[idx_visPtShift1]) : 1.;
   int idx_visPtShift2 = legIntegrationParams_[1].idx_VisPtShift_;
-  double visPtShift2 = ( useHadTauTF_ && idx_visPtShift2 != -1 && !leg2isLeptonicTauDecay_ ) ? (1./x_[idx_visPtShift2]) : 1.;
+  if( useHadTauTF_ && idx_visPtShift1 != -1 && !leg1isLeptonicTauDecay_ ) visPtShift1 = (1./x_[idx_visPtShift1]);
+  if( useHadTauTF_ && idx_visPtShift2 != -1 && !leg2isLeptonicTauDecay_ ) visPtShift2 = (1./x_[idx_visPtShift2]);
+#endif
   if ( visPtShift1 < 1.e-2 || visPtShift2 < 1.e-2 ) return 0.;
 
   // scale momenta of visible tau decays products

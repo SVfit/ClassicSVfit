@@ -21,6 +21,32 @@ scram b -j 4
 In case of compilation problems, please sutmitt an issue on
 https://github.com/SVfit/ClassicSVfit/issues
 
+# Without CMSSW software
+
+It is possible to build the software without CMSSW framework if the following prerequisites are satisfied (oldest software version the instructions were tested with):
+- ROOT (6.10/3 or newer)
+- GCC (6.3 or newer)
+
+In order to build the software, please execute the following lines in any directory with write access:
+```bash
+git clone https://github.com/SVfit/ClassicSVfit TauAnalysis/ClassicSVfit
+export LIBRARY_PATH=$LIBRARY_PATH:$PWD/TauAnalysis/ClassicSVfit/lib
+make -f TauAnalysis/ClassicSVfit/Makefile -j4
+```
+
+The test executables will be placed to `$PWD/TauAnalysis/ClassicSVfit/exec`. In order to use them:
+```bash
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/TauAnalysis/ClassicSVfit/lib
+
+# either enter the full path to the executable, e.g.
+./TauAnalysis/ClassicSVfit/exec/testClassicSVfit
+
+# or make the executable available globally
+export PATH=$PATH:$PWD/TauAnalysis/ClassicSVfit/exec
+testClassicSVfit # run anywhere
+```
+You can add the export statements to your `$HOME/.bashrc` to make their effect permanent.
+
 # Running instructions
 
 - [Presentation, slides 2+3](https://indico.cern.ch/event/684622/contributions/2807248/attachments/1575090/2487044/presentation_tmuller.pdf)

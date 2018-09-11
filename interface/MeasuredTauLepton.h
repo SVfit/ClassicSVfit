@@ -121,6 +121,6 @@ namespace classic_svFit
   {
     bool operator() (const MeasuredTauLepton& measuredTauLepton1, const MeasuredTauLepton& measuredTauLepton2);
   };
-};
+}
 
 #endif

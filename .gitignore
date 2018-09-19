@@ -1,1 +1,5 @@
 *~
+exec/
+dep/
+obj/
+lib/

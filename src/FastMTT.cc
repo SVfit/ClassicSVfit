@@ -23,10 +23,11 @@ Likelihood::Likelihood(){
   compnentsBitWord.reset();
   enableComponent(fastMTT::MASS);
   enableComponent(fastMTT::MET);
-  enableComponent(fastMTT::PX);
-  enableComponent(fastMTT::PY);
-  //enableComponent(fastMTT::ENERGY);
-  //enableComponent(fastMTT::IP);
+  ///experimental components. Disabled by default.
+  disableComponent(fastMTT::PX);
+  disableComponent(fastMTT::PY);  
+  disableComponent(fastMTT::ENERGY);
+  disableComponent(fastMTT::IP);
 
 }
 ///////////////////////////////////////////////////////////////////
@@ -581,6 +582,8 @@ void FastMTT::scan(){
   clock.Reset();
   clock.Start("scan");
 
+  for(int iTry=0;iTry<100; ++iTry){
+    
   double lh = 0.0;
   double bestLH = 0.0;
 
@@ -607,7 +610,7 @@ void FastMTT::scan(){
   minimumPosition[0] = theMinimum[0];
   minimumPosition[1] = theMinimum[1];
   minimumValue = bestLH;
-
+  }
   clock.Stop("scan");
 }
 ///////////////////////////////////////////////////////////////////

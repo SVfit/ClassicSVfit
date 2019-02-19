@@ -45,12 +45,6 @@ public:
                        int aLeg1DecayType, int aLeg2DecayType,
 		       int aLeg1DecayMode, int aLeg2DecayMode);
 
-  void setCosGJ(const double & cosGJLeg1,
-		const double & cosGJLeg2);
-
-  void setIP3D(const double & aIP3DLeg1,
-	       const double & aIP3DLeg2);
-
   void setMETInputs(const LorentzVector & aMET,
                     const TMatrixD& aCovMET);
 
@@ -62,25 +56,13 @@ public:
 
   double massLikelihood(const double & m) const;
 
+  double ptLikelihood(const double & pTTauTau, int type) const;
+
   double metTF(const LorentzVector & metP4,
                const LorentzVector & nuP4,
                const TMatrixD& covMET) const;
 
 private:
-
-  std::tuple<double, double> energyFromCosGJ(const LorentzVector & visP4,
-					     const double & cosGJ) const;
-
-  double energyLikelihood(const LorentzVector & tauP4,
-			  const LorentzVector & visP4,
-			  const double & cosGJ,
-			  int decayMode) const;
-
-  double ptLikelihood(const double & pTTauTau, int type) const;
-
-  double ip3DLikelihood(const LorentzVector & tauP4,
-			const double & sinGJ,
-			const double & ip3D) const;
 
   LorentzVector leg1P4, leg2P4;
   LorentzVector recoMET;
@@ -88,8 +70,6 @@ private:
   TMatrixD covMET;
  
   double mVis, mVisLeg1, mVisLeg2;
-  double cosGJLeg1, cosGJLeg2;
-  double ip3DLeg1, ip3DLeg2;
   
   int leg1DecayType, leg2DecayType;
   int leg1DecayMode, leg2DecayMode;

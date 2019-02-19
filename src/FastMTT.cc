@@ -26,9 +26,7 @@ Likelihood::Likelihood(){
   ///experimental components. Disabled by default.
   disableComponent(fastMTT::PX);
   disableComponent(fastMTT::PY);  
-  disableComponent(fastMTT::ENERGY);
-  disableComponent(fastMTT::IP);
-
+  
 }
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
@@ -131,80 +129,6 @@ void Likelihood::enableComponent(fastMTT::likelihoodComponent aCompIndex){
 void Likelihood::disableComponent(fastMTT::likelihoodComponent aCompIndex){
 
   compnentsBitWord.reset(aCompIndex);
-}
-///////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
-std::tuple<double, double> Likelihood::energyFromCosGJ(const LorentzVector & visP4,
-						       const double & cosGJ) const{
-
-  const double & mTau2 = classic_svFit::tauLeptonMass2;
-
-  double mVis =  visP4.M();
-  double mVis2 = std::pow(mVis,2);
-  double pVis =  visP4.P();
-  double pVis2 = std::pow(pVis,2);
-  double cosGJ2 = std::pow(cosGJ,2);
-  double sinGJ2 = 1.0 - cosGJ2;
-
-  double b2 = (mVis2 + mTau2)*pVis*cosGJ;
-
-  double delta = (mVis2 + pVis2)*(std::pow(mVis2 - mTau2, 2) - 4.0*mTau2*pVis2*sinGJ2); 
-  if(delta<0){return std::make_tuple(0, 0); }
-
-  double twoA = 2.0*(mVis2 + pVis2*sinGJ2);
-  double solution1 = (b2 - sqrt(delta))/twoA;
-  double solution2 = (b2 + sqrt(delta))/twoA;
-
-  double tauEnergy1 = sqrt(pow(solution1,2) + mTau2);
-  double tauEnergy2 = sqrt(pow(solution2,2) + mTau2);
-
-  return std::make_tuple(tauEnergy1, tauEnergy2);
-}
-///////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
-double Likelihood::energyLikelihood(const LorentzVector & tauP4,
-				    const LorentzVector & visP4,
-				    const double & cosGJ,
-				    int decayMode) const{
-
-  if(decayMode<10 || decayMode>14) return 1.0;
-  
-  std::tuple<double, double> energySolutions = energyFromCosGJ(visP4, cosGJ);
-  if( std::get<0>(energySolutions)<1E-3 &&
-      std::get<1>(energySolutions)<1E-3) return 1.0;
-
- 
-  std::vector<double> mean = {-0.05, 0.0};
-  std::vector<double> sigma = {0.11, 0.08};
-
-  //std::vector<double> mean = {-4.96169e-02, -4.96169e-02};
-  //std::vector<double> sigma = {1.14987e-01,  1.14987e-01};
-
-  ///Generator level cosGJ
-  //std::vector<double> mean = {0.0, 0.0};
-  //std::vector<double> sigma = {3.5e-02,  3.5e-02};
-  
-  double tauE = tauP4.E();
-  double pull1 = std::get<0>(energySolutions) - tauE;
-  pull1 /= tauE;
-  pull1 -= mean[0];
-
-  double gaussNorm = 1.0/sigma[0]/sqrt(2.0*M_PI);
-  double likelihoodSolution1 = gaussNorm*TMath::Exp(-0.5*std::pow(pull1/sigma[0], 2));
- 
-  double pull2 = std::get<1>(energySolutions) - tauE;
-  pull2 /= tauE;
-  pull2 -= mean[1];
-  
-  gaussNorm = 1.0/sigma[1]/sqrt(2.0*M_PI);
-  double likelihoodSolution2 = gaussNorm*TMath::Exp(-0.5*std::pow(pull2/sigma[1], 2));
-
-  double mpv = mean[1];  
-  likelihoodSolution2 = TMath::Landau(pull2, mpv, sigma[1], true);
- 
-  double value = likelihoodSolution1 + likelihoodSolution2;
-     
-  return value;
 }
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
@@ -335,22 +259,6 @@ double Likelihood::ptLikelihood(const double & pTTauTau, int type) const{
 }
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
-double Likelihood::ip3DLikelihood(const LorentzVector & tauP4,
-				  const double & sinGJ,
-				  const double & ip3D) const{
-
-  const double & cTauLifetime = classic_svFit::cTauLifetime;
-  const double & tauLeptonMass = classic_svFit::tauLeptonMass;
-  
-  double gammaBeta = tauP4.P()/tauLeptonMass;
-
-  double arg = gammaBeta*cTauLifetime*std::abs(sinGJ);
-  double value = 1.0/arg*exp(-ip3D/arg);
-
-  return value;
-}
-///////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
 double Likelihood::metTF(const LorentzVector & metP4,
                          const LorentzVector & nuP4,
                          const TMatrixD& covMET) const{
@@ -396,24 +304,7 @@ double Likelihood::value(const double *x) const{
   if(compnentsBitWord.test(fastMTT::MET)) value *= metTF(recoMET, testMET, covMET);
   if(compnentsBitWord.test(fastMTT::MASS)) value *= massLikelihood(testP4.M());    
   if(compnentsBitWord.test(fastMTT::PX)) value *= ptLikelihood(testP4.Px(), 0);
-  if(compnentsBitWord.test(fastMTT::PY)) value *= ptLikelihood(testP4.Py(), 1);
-  if(compnentsBitWord.test(fastMTT::ENERGY)){
-    value *= energyLikelihood((leg1P4*(1.0/x[0])),
-			      leg1P4, cosGJLeg1, leg1DecayMode);
-
-    value *= energyLikelihood((leg2P4*(1.0/x[1])),
-			      leg2P4, cosGJLeg2, leg2DecayMode);
-    
-  }
-  if(compnentsBitWord.test(fastMTT::IP)){    
-    double sinGJ = sqrt(1.0 - cosGJLeg1*cosGJLeg1);
-    value *= ip3DLikelihood(leg1P4*(1.0/x[0]),
-			    sinGJ, ip3DLeg1);
-    
-    sinGJ = sqrt(1.0 - cosGJLeg2*cosGJLeg2);
-    value *= ip3DLikelihood(leg2P4*(1.0/x[1]),
-			    sinGJ, ip3DLeg2);
-  }  
+  if(compnentsBitWord.test(fastMTT::PY)) value *= ptLikelihood(testP4.Py(), 1); 
   return value;
 }
 //////////////////////////////////////////////////////////////////////////////
@@ -531,16 +422,7 @@ void FastMTT::run(const std::vector<classic_svFit::MeasuredTauLepton>& measuredT
 
   tau1P4 = aLepton1.p4()*(1.0/minimumPosition[0]);
   tau2P4 = aLepton2.p4()*(1.0/minimumPosition[1]);
-  bestP4 = tau1P4 + tau2P4;
-
-  if(aLepton1.type() != classic_svFit::MeasuredTauLepton::kTauToHadDecay ||
-     aLepton2.type() != classic_svFit::MeasuredTauLepton::kTauToHadDecay){
-    bestP4 *= 1.03;
-   }
-  if(aLepton1.type() == classic_svFit::MeasuredTauLepton::kTauToHadDecay &&
-     aLepton2.type() == classic_svFit::MeasuredTauLepton::kTauToHadDecay){
-    bestP4 *= 0.98;
-  }
+  bestP4 = tau1P4 + tau2P4; 
 }
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////

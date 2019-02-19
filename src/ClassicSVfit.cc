@@ -225,11 +225,7 @@ void ClassicSVfit::setLegIntegrationParams(unsigned int iLeg, bool useMassConstr
 void ClassicSVfit::setIntegrationRanges(unsigned int iLeg){
 
         const classic_svFit::integrationParameters & aIntParams = legIntegrationParams_[iLeg];
-
-        double lowX = measuredTauLeptons_[iLeg].mass()*measuredTauLeptons_[iLeg].mass()/tauLeptonMass2;
-        lowX = 0.0;
-
-        if(aIntParams.idx_X_!=-1) xl_[aIntParams.idx_X_] = lowX;
+        if(aIntParams.idx_X_!=-1) xl_[aIntParams.idx_X_] = 0;
 #ifdef USE_SVFITTF
         if(aIntParams.idx_X_!=-1) xu_[aIntParams.idx_X_] = 2.; // upper integration bound for x1' = visPtShift1*x1
 #else

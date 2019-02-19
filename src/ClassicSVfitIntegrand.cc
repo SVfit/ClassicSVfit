@@ -230,12 +230,6 @@ ClassicSVfitIntegrand::setLeptonInputs(const std::vector<MeasuredTauLepton>& mea
 
 }
 
-  void ClassicSVfitIntegrand::setSVInputs(const std::vector<TVector3>& aSVData){
-
-    svData_ = aSVData;
-
-  }
-
 void ClassicSVfitIntegrand::addMETEstimate(double measuredMETx, double measuredMETy, const TMatrixD& covMET){
 
   measuredMETx_.push_back(measuredMETx);

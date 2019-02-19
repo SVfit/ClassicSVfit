@@ -66,11 +66,6 @@ void addMETEstimate(const double & measuredMETx,
                     const double & measuredMETy,
                     const TMatrixD& covMET);
 
-
-/// add secondary vertex information
-void addSVData(const TVector3 & svLeg1,
-               const TVector3 & svLeg2);
-
 /// remove MET estimated from integrand
 void clearMET();
 
@@ -116,7 +111,6 @@ void setIntegrationRanges(unsigned int iLeg);
 classic_svFit::ClassicSVfitIntegrand* integrand_;
 
 std::vector<classic_svFit::MeasuredTauLepton> measuredTauLeptons_;
-std::vector<TVector3> svData_;
 classic_svFit::Vector met_;
 
 double diTauMassConstraint_ = -1.0;

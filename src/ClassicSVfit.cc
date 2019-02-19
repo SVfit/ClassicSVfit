@@ -225,7 +225,7 @@ void ClassicSVfit::setLegIntegrationParams(unsigned int iLeg, bool useMassConstr
 void ClassicSVfit::setIntegrationRanges(unsigned int iLeg){
 
         const classic_svFit::integrationParameters & aIntParams = legIntegrationParams_[iLeg];
-        if(aIntParams.idx_X_!=-1) xl_[aIntParams.idx_X_] = 0;
+        if(aIntParams.idx_X_!=-1) xl_[aIntParams.idx_X_] = 0.;
 #ifdef USE_SVFITTF
         if(aIntParams.idx_X_!=-1) xu_[aIntParams.idx_X_] = 2.; // upper integration bound for x1' = visPtShift1*x1
 #else
@@ -271,7 +271,6 @@ void ClassicSVfit::prepareLeptonInput(const std::vector<MeasuredTauLepton>& meas
 void ClassicSVfit::prepareIntegrand(bool useHistoAdapter){
 
         integrand_->setLeptonInputs(measuredTauLeptons_);
-        integrand_->setSVInputs(svData_);
 
         if(useHistoAdapter) integrand_->setHistogramAdapter(histogramAdapter_);
 #ifdef USE_SVFITTF
@@ -302,14 +301,6 @@ void ClassicSVfit::addMETEstimate(const double & measuredMETx,
 
         if ( verbosity_ >= 1 ) printMET(metX, metY, aCovMET);
         integrand_->addMETEstimate(metX, metY, aCovMET);
-}
-
-void ClassicSVfit::addSVData(const TVector3 & svLeg1,
-                             const TVector3 & svLeg2){
-
-                               svData_.clear();
-                               svData_.push_back(svLeg1);
-                               svData_.push_back(svLeg2);
 }
 
 void

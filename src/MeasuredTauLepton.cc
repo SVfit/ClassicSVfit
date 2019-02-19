@@ -57,8 +57,8 @@ MeasuredTauLepton::MeasuredTauLepton(int type, double pt, double eta, double phi
       std::cerr << "Error: Invalid type " << type_ << " declared for leg: Pt = " << pt_ << ", eta = " << eta_ << ", phi = " << phi_ << ", mass = " << mass_ << " !!" << std::endl;
       assert(0);
     }
-    //TEST std::cerr << "Warning: " << type_string << " declared for leg: Pt = " << pt_ << ", eta = " << eta_ << ", phi = " << phi_ << ", mass = " << mass_ << " !!" << std::endl;
-    //TEST std::cerr << " (mass expected in the range = " << minVisMass << ".." << maxVisMass << ")" << std::endl;
+    std::cerr << "Warning: " << type_string << " declared for leg: Pt = " << pt_ << ", eta = " << eta_ << ", phi = " << phi_ << ", mass = " << mass_ << " !!" << std::endl;
+    std::cerr << " (mass expected in the range = " << minVisMass << ".." << maxVisMass << ")" << std::endl;
   }
   if ( preciseVisMass_ < minVisMass ) preciseVisMass_ = minVisMass;
   if ( preciseVisMass_ > maxVisMass ) preciseVisMass_ = maxVisMass;
@@ -72,9 +72,7 @@ MeasuredTauLepton::MeasuredTauLepton(const MeasuredTauLepton& measuredTauLepton)
     eta_(measuredTauLepton.eta()),
     phi_(measuredTauLepton.phi()),
     mass_(measuredTauLepton.mass()),
-    decayMode_(measuredTauLepton.decayMode()),
-    cosGJ_(measuredTauLepton.cosGJ()),
-    ip3D_(measuredTauLepton.ip3D())
+    decayMode_(measuredTauLepton.decayMode())
 {
   preciseVisMass_ = measuredTauLepton.mass();
 
@@ -84,10 +82,6 @@ MeasuredTauLepton::MeasuredTauLepton(const MeasuredTauLepton& measuredTauLepton)
 MeasuredTauLepton::~MeasuredTauLepton()
 {
 }
-
-void MeasuredTauLepton::setCosGJ(const double & aCosGJ) { cosGJ_ = aCosGJ; }
-
-void MeasuredTauLepton::setIP3D(const double & aIP3D) { ip3D_ = aIP3D; }
 
 int MeasuredTauLepton::type() const { return type_; }
 
@@ -102,10 +96,6 @@ double MeasuredTauLepton::py() const { return py_; }
 double MeasuredTauLepton::pz() const { return pz_; }
 
 double MeasuredTauLepton::p() const { return p_; }
-
-double MeasuredTauLepton::cosGJ() const { return cosGJ_; }
-
-double MeasuredTauLepton::ip3D() const { return ip3D_; }
 
 int MeasuredTauLepton::decayMode() const { return decayMode_; }
 

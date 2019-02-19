@@ -24,10 +24,6 @@ namespace classic_svFit
     MeasuredTauLepton(const MeasuredTauLepton&);
     ~MeasuredTauLepton();
 
-    void setCosGJ(const double & aCosGJ);
-
-    void setIP3D(const double & aIP3D);
-
     /// return decay type of the tau lepton
     int type() const;
 
@@ -51,12 +47,6 @@ namespace classic_svFit
 
     /// return the measured tau lepton momentum in labframe
     double p() const;
-
-    /// return the measured cosine of Gottfried-Jacobs angle
-    double cosGJ() const;
-
-    /// return the measured leading charged particle 3D impact parameter
-    double ip3D() const;
 
     /// return decay mode of the reconstructed hadronic tau decay
     int decayMode() const;
@@ -99,12 +89,6 @@ namespace classic_svFit
 
     /// decay mode (hadronic tau decays only)
     int decayMode_;
-
-    /// cosine of Gottfried-Jacobs angle calculated from tau secondary vertex
-    double cosGJ_;
-
-     /// leading charged particle 3D impact parameter
-    double ip3D_;
 
     /// visible momentum in labframe (four-vector)
     LorentzVector p4_;

@@ -88,22 +88,6 @@ void Likelihood::setLeptonInputs(const LorentzVector & aLeg1P4,
 }  
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
-void Likelihood::setCosGJ(const double & aCosGJLeg1,
-			  const double & aCosGJLeg2){
-
-  cosGJLeg1 = aCosGJLeg1;
-  cosGJLeg2 = aCosGJLeg2;  
-}
-///////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
-void Likelihood::setIP3D(const double & aIP3DLeg1,
-			 const double & aIP3DLeg2){
-
-  ip3DLeg1 = aIP3DLeg1;
-  ip3DLeg2 = aIP3DLeg2;  
-}
-///////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
 void Likelihood::setMETInputs(const LorentzVector & aMET,
                               const TMatrixD& aCovMET){
   recoMET = aMET;
@@ -413,8 +397,6 @@ void FastMTT::run(const std::vector<classic_svFit::MeasuredTauLepton>& measuredT
   myLikelihood.setLeptonInputs(aLepton1.p4(), aLepton2.p4(),
 			       aLepton1.type(), aLepton2.type(),
 			       aLepton1.decayMode(), aLepton2.decayMode());  
-  myLikelihood.setCosGJ(aLepton1.cosGJ(), aLepton2.cosGJ());
-  myLikelihood.setIP3D(aLepton1.ip3D(), aLepton2.ip3D());
   myLikelihood.setMETInputs(aMET, covMET);
 
   scan();

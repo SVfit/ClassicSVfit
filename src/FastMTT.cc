@@ -446,8 +446,6 @@ void FastMTT::scan(){
   clock.Reset();
   clock.Start("scan");
 
-  for(int iTry=0;iTry<100; ++iTry){
-    
   double lh = 0.0;
   double bestLH = 0.0;
 
@@ -469,9 +467,8 @@ void FastMTT::scan(){
         theMinimum[1] = x[1];
       }
     }
-  }
-  
-  minimumPosition[0] = theMinimum[0];
+
+    minimumPosition[0] = theMinimum[0];
   minimumPosition[1] = theMinimum[1];
   minimumValue = bestLH;
   }

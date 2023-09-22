@@ -2,9 +2,8 @@
 <use   name="boost"/>
 <use   name="root"/>
 <use   name="roofit"/>
-<Flags CPPDEFINES="USE_SVFITTF"/>
-<Flags LDFLAGS="-rdynamic" />
-<Flags ADD_SUBDIR="1"/>
+<flags CPPDEFINES="USE_SVFITTF"/>
+<flags LDFLAGS="-rdynamic" />
 <export>
   <lib   name="1"/>
 </export>

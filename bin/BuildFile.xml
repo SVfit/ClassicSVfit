@@ -2,5 +2,5 @@
   <use name="TauAnalysis/ClassicSVfit"/>
   <use name="TauAnalysis/SVfitTF"/>
   <use name="root"/>
-  <Flags CPPDEFINES="USE_SVFITTF"/>
+  <flags CPPDEFINES="USE_SVFITTF"/>
 </bin>

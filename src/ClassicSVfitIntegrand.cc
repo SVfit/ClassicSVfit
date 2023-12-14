@@ -36,7 +36,6 @@ ClassicSVfitIntegrand::ClassicSVfitIntegrand(int verbosity)
   , useHadTauTF_(false)
 #endif
   , numDimensions_(0)
-  , maxNumberOfDimensions_(0)
   , xMin_(nullptr)
   , xMax_(nullptr)
   , x_(nullptr)
@@ -50,6 +49,9 @@ ClassicSVfitIntegrand::ClassicSVfitIntegrand(int verbosity)
   legIntegrationParams_.resize(numTaus_);
 
   maxNumberOfDimensions_ = 4*numTaus_;
+  xMin_ = new double[maxNumberOfDimensions_];
+  xMax_ = new double[maxNumberOfDimensions_];
+  x_    = new double[maxNumberOfDimensions_];
 
   // CV: enable log(M) term with kappa = 6, unless explicitely requested by user otherwise,
   //     as this setting provides best compatibility with "old" SVfitStandalone algorithm
@@ -73,9 +75,9 @@ ClassicSVfitIntegrand::~ClassicSVfitIntegrand()
   }
 #endif
 
-  //delete [] xMin_;
-  //delete [] xMax_;
-  //delete [] x_;
+  delete [] xMin_;
+  delete [] xMax_;
+  delete [] x_;
 }
 
 void
@@ -149,12 +151,6 @@ void
 ClassicSVfitIntegrand::setNumDimensions(unsigned int numDimensions) 
 { 
   assert(numDimensions <= maxNumberOfDimensions_);
-  delete [] xMin_;
-  xMin_ = new double[numDimensions_];
-  delete [] xMax_;
-  xMax_ = new double[numDimensions_];
-  delete [] x_;
-  x_ = new double[numDimensions_];
   numDimensions_ = numDimensions; 
 }
 

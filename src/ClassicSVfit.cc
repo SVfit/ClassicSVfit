@@ -36,7 +36,12 @@ ClassicSVfit::ClassicSVfit(int verbosity)
 
   histogramAdapter_ = new HistogramAdapterDiTau("ditau");
 
-  legIntegrationParams_.resize(2);
+  unsigned int numTaus = 2;
+  legIntegrationParams_.resize(numTaus);
+
+  unsigned int maxNumberOfDimensions = 4*numTaus;
+  xl_ = new double[maxNumberOfDimensions];
+  xh_ = new double[maxNumberOfDimensions];
 
   clock_ = new TBenchmark();
 }
@@ -57,8 +62,8 @@ ClassicSVfit::~ClassicSVfit()
     delete intAlgo_;
   }
 
-  //delete [] xl_;
-  //delete [] xh_;
+  delete [] xl_;
+  delete [] xh_;
 
   delete clock_;
 }
@@ -296,10 +301,6 @@ void ClassicSVfit::initializeIntegrationParams()
   bool useDiTauMassConstraint = (diTauMassConstraint_ > 0);
   initializeLegIntegrationParams(0, false);
   initializeLegIntegrationParams(1, useDiTauMassConstraint);
-  delete [] xl_;
-  xl_ = new double[numDimensions_];
-  delete [] xh_;
-  xh_ = new double[numDimensions_];
   initializeLegIntegrationRanges(0);
   initializeLegIntegrationRanges(1);
   if ( verbosity_ >= 1 )

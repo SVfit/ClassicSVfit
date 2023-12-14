@@ -161,14 +161,12 @@ SVfitQuantity::getHistogram() const
 void
 SVfitQuantity::writeHistogram() const
 {
-/*
   if ( histogram_ != nullptr )
   {
     std::string histogramName = histogram_->GetName();
     boost::replace_all(histogramName, uniqueName_, "");
     histogram_->Write(histogramName.c_str(), TObject::kWriteDelete);
   }
- */
 }
 
 void

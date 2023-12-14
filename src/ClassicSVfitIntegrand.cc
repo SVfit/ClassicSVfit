@@ -40,17 +40,12 @@ ClassicSVfitIntegrand::ClassicSVfitIntegrand(int verbosity)
   , xMin_(nullptr)
   , xMax_(nullptr)
   , x_(nullptr)
-  , errorCode_(0)
+  , errorCode_(None)
   , probPS_(0.)
   , probFlightLength_(0.)
   , histogramAdapter_(nullptr)
   , verbosity_(verbosity)
 {
-  if ( verbosity_ >= 1 )
-  {
-    std::cout << "<ClassicSVfitIntegrand::ClassicSVfitIntegrand>:" << std::endl;
-  }
-
   numTaus_ = 2;
   legIntegrationParams_.resize(numTaus_);
 
@@ -71,11 +66,6 @@ ClassicSVfitIntegrand::ClassicSVfitIntegrand(int verbosity)
 
 ClassicSVfitIntegrand::~ClassicSVfitIntegrand()
 {
-  if ( verbosity_ >= 1 )
-  {
-    std::cout << "<ClassicSVfitIntegrand::~ClassicSVfitIntegrand>:" << std::endl;
-  }
-
 #ifdef USE_SVFITTF
   for ( const HadTauTFBase* hadTauTF : hadTauTFs_ )
   {
@@ -83,9 +73,9 @@ ClassicSVfitIntegrand::~ClassicSVfitIntegrand()
   }
 #endif
 
-  delete xMin_;
-  delete xMax_;
-  delete x_;
+  //delete [] xMin_;
+  //delete [] xMax_;
+  //delete [] x_;
 }
 
 void
@@ -252,12 +242,8 @@ ClassicSVfitIntegrand::setMeasurement(const MeasuredEvent& measuredEvent)
 {
   measuredEvent_ = measuredEvent;
 
-  // reset 'LeptonNumber' and 'MatrixInversion' error codes
-  errorCode_ &= (errorCode_ ^ LeptonNumber);
-  errorCode_ &= (errorCode_ ^ MatrixInversion);
-  errorCode_ &= (errorCode_ ^ MissingVertex);
-  errorCode_ &= (errorCode_ ^ MissingLeadChargedHadron);
-  errorCode_ &= (errorCode_ ^ TauDecayParameters);
+  // reset all error codes
+  errorCode_ = None;
 
   const std::vector<MeasuredTauLepton>& measuredTauLeptons = measuredEvent.measuredTauLeptons();
   if ( measuredTauLeptons.size() != numTaus_ )
@@ -278,7 +264,8 @@ ClassicSVfitIntegrand::setMeasurement(const MeasuredEvent& measuredEvent)
   leg2isPrompt_ = measuredTauLepton2_.isPrompt();
   
   mVis_measured_ = (measuredTauLepton1_.p4() + measuredTauLepton2_.p4()).mass();
-  if ( verbosity_ >= 2 ) {
+  if ( verbosity_ >= 2 )
+  {
     std::cout << "mVis(ditau) = " << mVis_measured_ << std::endl;
   }
   mVis2_measured_ = square(mVis_measured_);
@@ -387,8 +374,7 @@ ClassicSVfitIntegrand::Eval(const double* q) const
   if ( errorCode_ & MatrixInversion          || 
        errorCode_ & LeptonNumber             || 
        errorCode_ & MissingVertex            ||
-       errorCode_ & MissingLeadChargedHadron ||
-       errorCode_ & TauDecayParameters       ) 
+       errorCode_ & MissingLeadChargedHadron ) 
   {
     return 0.; 
   }
@@ -403,7 +389,7 @@ ClassicSVfitIntegrand::Eval(const double* q) const
   if ( (probPS_*probFlightLength_) < 1.e-300 ) return 0.;
 
   const std::vector<MeasuredMEt>& measuredMEt = measuredEvent_.measuredMEt();
-  unsigned int idxMeasuredMEt = idxMEtSystematic_ + 1;
+  unsigned int idxMeasuredMEt = ( isCentral_ ) ? 0 : idxMEtSystematic_ + 1;
   assert(idxMeasuredMEt < measuredMEt.size());
   double probMEtTF = EvalMEtTF(measuredMEt[idxMeasuredMEt]);
 
@@ -439,6 +425,9 @@ ClassicSVfitIntegrand::EvalPS() const
     }
     std::cout << " }" << std::endl;
   }
+
+  // reset 'TauDecayParameters' error code
+  errorCode_ &= (errorCode_ ^ TauDecayParameters);
 
   double visPtShift1 = 1.;
   double visPtShift2 = 1.;

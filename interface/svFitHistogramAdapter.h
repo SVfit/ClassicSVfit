@@ -75,7 +75,7 @@ namespace classic_svFit
    protected:
     std::string label_;
 
-    mutable TH1* histogram_ = nullptr;
+    mutable TH1* histogram_;
 
    private:
     static int nInstances;
@@ -131,7 +131,7 @@ namespace classic_svFit
   {
    public:
     SVfitQuantityTauPt(const std::string& label);
-    virtual
+
     TH1*
     createHistogram(const MeasuredTauLepton& measuredTauLepton) const;
   };
@@ -140,7 +140,7 @@ namespace classic_svFit
   {
    public:
     SVfitQuantityTauEta(const std::string& label);
-    virtual
+
     TH1*
     createHistogram(const MeasuredTauLepton& measuredTauLepton) const;
   };
@@ -149,7 +149,7 @@ namespace classic_svFit
   {
    public:
     SVfitQuantityTauPhi(const std::string& label);
-    virtual
+
     TH1*
     createHistogram(const MeasuredTauLepton& measuredTauLepton) const;
   };
@@ -230,7 +230,7 @@ namespace classic_svFit
   {
    public:
     SVfitQuantityDiTauPt(const std::string& label);
-    virtual
+
     TH1*
     createHistogram(const MeasuredEvent& measuredEvent) const;
   };
@@ -239,7 +239,7 @@ namespace classic_svFit
   {
    public:
     SVfitQuantityDiTauEta(const std::string& label);
-    virtual
+
     TH1*
     createHistogram(const MeasuredEvent& measuredEvent) const;
   };
@@ -248,7 +248,7 @@ namespace classic_svFit
   {
    public:
     SVfitQuantityDiTauPhi(const std::string& label);
-    virtual
+
     TH1*
     createHistogram(const MeasuredEvent& measuredEvent) const;
   };
@@ -257,7 +257,7 @@ namespace classic_svFit
   {
    public:
     SVfitQuantityDiTauMass(const std::string& label);
-    virtual
+
     TH1*
     createHistogram(const MeasuredEvent& measuredEvent) const;
   };
@@ -266,7 +266,7 @@ namespace classic_svFit
   {
    public:
     SVfitQuantityDiTauTransverseMass(const std::string& label);
-    virtual
+
     TH1*
     createHistogram(const MeasuredEvent& measuredEvent) const;
   };

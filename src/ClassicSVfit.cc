@@ -1,5 +1,6 @@
 #include "TauAnalysis/ClassicSVfit/interface/ClassicSVfit.h"
 
+#include <TH1.h>   // TH1::AddDirectory()
 #include <TMath.h> // TMath::Nint(), TMath::Pi()
 
 using namespace classic_svFit;
@@ -56,8 +57,8 @@ ClassicSVfit::~ClassicSVfit()
     delete intAlgo_;
   }
 
-  delete [] xl_;
-  delete [] xh_;
+  //delete [] xl_;
+  //delete [] xh_;
 
   delete clock_;
 }
@@ -157,6 +158,11 @@ void
 ClassicSVfit::setMaxObjFunctionCalls(unsigned maxObjFunctionCalls)
 {
   maxObjFunctionCalls_ = maxObjFunctionCalls;
+  if ( maxObjFunctionCalls_ < 1000 )
+  {
+    std::cerr << "WARNING: Parameter 'maxObjFunctionCalls' = " << maxObjFunctionCalls << " too low, setting it to 1000 !!" << std::endl;
+    maxObjFunctionCalls_ = 1000;
+  }
 }
 
 void
@@ -171,17 +177,17 @@ ClassicSVfit::setTreeFileName(const std::string& treeFileName)
   treeFileName_ = treeFileName;
 }
 
-void ClassicSVfit::initializeIntegrand()
+void ClassicSVfit::initializeIntegrand(const MeasuredEvent& measuredEvent)
 {
-  //integrand_->setMeasuredTauLeptons(measuredTauLeptons_);
-  (static_cast<ClassicSVfitIntegrand*>(integrand_))->setHistogramAdapter(histogramAdapter_);
+  integrand_->setMeasurement(measuredEvent);
+  integrand_->setHistogramAdapter(histogramAdapter_);
   for ( size_t iLeg = 0; iLeg < legIntegrationParams_.size(); ++iLeg )
   {
     integrand_->initializeLegIntegrationParams(iLeg, legIntegrationParams_[iLeg]);
   }
   integrand_->setNumDimensions(numDimensions_);
   integrand_->setIntegrationRanges(xl_, xh_);
-  ClassicSVfitIntegrand::gSVfitIntegrand = static_cast<ClassicSVfitIntegrand*>(integrand_);
+  ClassicSVfitIntegrand::gSVfitIntegrand = integrand_;
 }
 
 void ClassicSVfit::integrate(const MeasuredEvent& measuredEvent)
@@ -209,13 +215,6 @@ void ClassicSVfit::integrate(const MeasuredEvent& measuredEvent)
               << " mass = " << sumP4.mass() << std::endl;
   }
 
-  initializeIntegrationParams();
-  initializeIntegrand();
-  if ( !intAlgo_ )
-  {  
-    initializeIntAlgo();
-  }
-
   // CV: book histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
   if ( measuredTauLeptons_.size() == 2 )
   {
@@ -223,6 +222,13 @@ void ClassicSVfit::integrate(const MeasuredEvent& measuredEvent)
     histogramAdapter_->bookHistograms(measuredEvent);
   } else assert(0);
 
+
+  initializeIntegrationParams();
+  initializeIntegrand(measuredEvent);
+  if ( !intAlgo_ )
+  {  
+    initializeIntAlgo();
+  }
   intAlgo_->clearCallBackFunctions();
 
   const std::vector<MeasuredMEt>& measuredMEt = measuredEvent.measuredMEt();

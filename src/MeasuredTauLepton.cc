@@ -266,7 +266,7 @@ MeasuredTauLepton::setMass()
   preciseVisMass_ = mass_;
   if ( preciseVisMass_ < (0.9*minVisMass) || preciseVisMass_ > (1.1*maxVisMass) ) 
   {
-    std::cerr << "Warning: " << type_string_ << " declared for leg:" 
+    std::cerr << "WARNING: " << type_string_ << " declared for leg:" 
               << " Pt = " << pt_ << ", eta = " << eta_ << ", phi = " << phi_ << ", mass = " << mass_ << " !!" << std::endl;
     std::cerr << " (mass expected in the range = " << minVisMass << ".." << maxVisMass << ")" << std::endl;
   }

@@ -2,7 +2,8 @@
 
 #include <assert.h> // assert()
 
-using namespace classic_svFit;
+namespace classic_svFit
+{
 
 MarkovChainRecorder::MarkovChainRecorder(unsigned int numDimensions)
   : numDimensions_(numDimensions)
@@ -52,4 +53,6 @@ MarkovChainRecorder::DoEval(const double* x) const
   points_.push_back(point);
   values_.push_back(x[numDimensions_]);
   return 0.;
+}
+
 }

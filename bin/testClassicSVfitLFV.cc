@@ -10,8 +10,7 @@
 #include "TauAnalysis/ClassicSVfit/interface/svFitHistogramAdapter.h"
 //#include "TauAnalysis/SVfitTF/interface/HadTauTFCrystalBall2.h"
 
-#include "TH1F.h"
-#include "TMath.h"
+#include <cmath> // std::sqrt()
 
 using namespace classic_svFit;
 
@@ -41,14 +40,14 @@ int main(int argc, char* argv[])
   double leg1Py   = -13.6761;
   double leg1Pz   = -61.7664;
   double leg1Mass =   0.105658;
-  double leg1En   = TMath::Sqrt(leg1Px*leg1Px + leg1Py*leg1Py + leg1Pz*leg1Pz + leg1Mass*leg1Mass);
+  double leg1En   = std::sqrt(leg1Px*leg1Px + leg1Py*leg1Py + leg1Pz*leg1Pz + leg1Mass*leg1Mass);
   classic_svFit::LorentzVector leg1P4(leg1Px, leg1Py, leg1Pz, leg1En); 
   
   double leg2Px   =  35.0206;
   double leg2Py   =   9.57334;
   double leg2Pz   =   9.49413;
   double leg2Mass =   1.00231;
-  double leg2En   = TMath::Sqrt(leg2Px*leg2Px + leg2Py*leg2Py + leg2Pz*leg2Pz + leg2Mass*leg2Mass);
+  double leg2En   = std::sqrt(leg2Px*leg2Px + leg2Py*leg2Py + leg2Pz*leg2Pz + leg2Mass*leg2Mass);
   classic_svFit::LorentzVector leg2P4(leg2Px, leg2Py, leg2Pz, leg2En); 
   //-------------------------------------------------------------------------------------------------
 

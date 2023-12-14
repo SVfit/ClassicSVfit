@@ -181,7 +181,7 @@ namespace classic_svFit
     mutable double* x_;
 
     /// error code that can be passed on
-    mutable int errorCode_;
+    mutable unsigned int errorCode_;
 
     /// cached return values of EvalPS() and EvalFlightLength() functions;
     /// these functions are called for the "central" value only (not for systematic uncertainties)

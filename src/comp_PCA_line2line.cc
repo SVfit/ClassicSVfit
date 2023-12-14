@@ -4,8 +4,6 @@
 
 #include <assert.h>   // assert()
 
-using namespace classic_svFit;
-
 namespace
 {
   template <typename T>
@@ -19,10 +17,10 @@ namespace
     return retVal;
   }
 
-  Vector
+  classic_svFit::Vector
   convert_to_recoVector(const TVectorD& v)
   {
-    return Vector(v(0), v(1), v(2));
+    return classic_svFit::Vector(v(0), v(1), v(2));
   }
 }
 

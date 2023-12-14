@@ -69,7 +69,7 @@ class ClassicSVfit
 
   /// prepare the integrand
   void
-  initializeIntegrand();
+  initializeIntegrand(const classic_svFit::MeasuredEvent& measuredEvent);
 
   /// run integration with Markov Chain
   void

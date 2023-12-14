@@ -137,7 +137,7 @@ extractResult(TGraphErrors* graph, double& mass, double& massErr, double& Lmax, 
     } 
     else
     {
-      std::cerr << "Warning in <extractResult>: Fit did not converge !!" << std::endl;
+      std::cerr << "WARNING: Fit did not converge !!" << std::endl;
     }
     delete fitFunction;
   }

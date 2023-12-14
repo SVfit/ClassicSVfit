@@ -38,7 +38,8 @@ namespace
   }
 }
 
-using namespace classic_svFit;
+namespace classic_svFit
+{
 
 SVfitIntegratorMarkovChain::SVfitIntegratorMarkovChain(const std::string& initMode,
                    unsigned numIterBurnin, unsigned numIterSampling, unsigned numIterSimAnnealingPhase1, unsigned numIterSimAnnealingPhase2,
@@ -62,9 +63,8 @@ SVfitIntegratorMarkovChain::SVfitIntegratorMarkovChain(const std::string& initMo
   else if ( initMode == "none"    ) initMode_ = kNone;
   else
   {
-    std::cerr << "<SVfitIntegratorMarkovChain>:"
-        << "Invalid Configuration Parameter 'initMode' = " << initMode << ","
-        << " expected to be either \"uniform\", \"Gaus\" or \"none\" --> ABORTING !!\n";
+    std::cerr << "ERROR: Invalid configuration parameter 'initMode' = " << initMode << ","
+              << " expected to be either \"uniform\", \"Gaus\" or \"none\" --> ABORTING !!\n";
     assert(0);
   }
 
@@ -81,8 +81,7 @@ SVfitIntegratorMarkovChain::SVfitIntegratorMarkovChain(const std::string& initMo
   numIterSimAnnealingPhase1plus2_ = numIterSimAnnealingPhase1_ + numIterSimAnnealingPhase2_;
   if ( numIterSimAnnealingPhase1plus2_ > numIterBurnin_ )
   {
-    std::cerr << "<SVfitIntegratorMarkovChain>:"
-              << "Invalid Configuration Parameters 'numIterSimAnnealingPhase1' = " << numIterSimAnnealingPhase1_ << ","
+    std::cerr << "ERROR: Invalid configuration parameters 'numIterSimAnnealingPhase1' = " << numIterSimAnnealingPhase1_ << ","
               << " 'numIterSimAnnealingPhase2' = " << numIterSimAnnealingPhase2_ << ","
               << " sim. Annealing and Sampling stages must not overlap --> ABORTING !!\n";
     assert(0);
@@ -92,8 +91,7 @@ SVfitIntegratorMarkovChain::SVfitIntegratorMarkovChain(const std::string& initMo
   alpha_ = alpha;
   if ( !(alpha_ > 0. && alpha_ < 1.) )
   {
-    std::cerr << "<SVfitIntegratorMarkovChain>:"
-              << "Invalid Configuration Parameter 'alpha' = " << alpha_ << ","
+    std::cerr << "ERROR: Invalid configuration parameter 'alpha' = " << alpha_ << ","
               << " value within interval ]0..1[ expected --> ABORTING !!\n";
     assert(0);
   }
@@ -103,24 +101,21 @@ SVfitIntegratorMarkovChain::SVfitIntegratorMarkovChain(const std::string& initMo
   numChains_ = numChains;
   if ( numChains_ == 0 )
   {
-    std::cerr << "<SVfitIntegratorMarkovChain>:"
-        << "Invalid Configuration Parameter 'numChains' = " << numChains_ << ","
-        << " value greater 0 expected --> ABORTING !!\n";
+    std::cerr << "ERROR: Invalid configuration parameter 'numChains' = " << numChains_ << ","
+              << " value greater 0 expected --> ABORTING !!\n";
     assert(0);
   }
 
   numBatches_ = numBatches;
   if ( numBatches_ == 0 )
   {
-    std::cerr << "<SVfitIntegratorMarkovChain>:"
-              << "Invalid Configuration Parameter 'numBatches' = " << numBatches_ << ","
+    std::cerr << "ERROR: Invalid configuration parameter 'numBatches' = " << numBatches_ << ","
               << " value greater 0 expected --> ABORTING !!\n";
     assert(0);
   }
   if ( (numIterSampling_ % numBatches_) != 0 )
   {
-    std::cerr << "<SVfitIntegratorMarkovChain>:"
-              << "Invalid Configuration Parameter 'numBatches' = " << numBatches_ << ","
+    std::cerr << "ERROR: Invalid configuration parameter 'numBatches' = " << numBatches_ << ","
               << " factor of numIterSampling = " << numIterSampling_ << " expected --> ABORTING !!\n";
     assert(0);
   }
@@ -214,7 +209,8 @@ SVfitIntegratorMarkovChain::integrate(gPtr_C g, const double* xl, const double* 
   {
     xMin_[iDimension] = xl[iDimension];
     xMax_[iDimension] = xu[iDimension];
-    if ( verbosity_ >= 1 ) {
+    if ( verbosity_ >= 1 )
+    {
       std::cout << "dimension #" << iDimension << ": min = " << xMin_[iDimension] << ", max = " << xMax_[iDimension] << std::endl;
     }
   }
@@ -616,4 +612,6 @@ SVfitIntegratorMarkovChain::evalProb(const std::vector<double>& q)
 {
   double prob = (*integrand_)(q.data(), numDimensions_, 0);
   return prob;
+}
+
 }

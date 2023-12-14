@@ -11,8 +11,6 @@
 #include "TauAnalysis/ClassicSVfit/interface/svFitHistogramAdapter.h"
 //#include "TauAnalysis/SVfitTF/interface/HadTauTFCrystalBall2.h"
 
-#include "TH1F.h"
-
 using namespace classic_svFit;
 
 int main(int argc, char* argv[])
@@ -64,10 +62,13 @@ int main(int argc, char* argv[])
   double transverseMass_1stRun = svFitAlgo.getHistogramAdapter()->getTransverseMass();
   double transverseMassErr_1stRun = svFitAlgo.getHistogramAdapter()->getTransverseMassErr();
 
-  if ( isValidSolution_1stRun ) {
+  if ( isValidSolution_1stRun )
+  {
     std::cout << "found valid solution: mass = " << mass_1stRun << " +/- " << massErr_1stRun << " (expected value = 115.746 +/- 87.0011),"
               << " transverse mass = " << transverseMass_1stRun << " +/- " << transverseMassErr_1stRun << " (expected value = 114.242 +/- 85.8296)" << std::endl;
-  } else {
+  }
+  else
+  {
     std::cout << "sorry, failed to find valid solution !!" << std::endl;
   }
   if (std::abs((mass_1stRun - 115.746) / 115.746) > 0.001) return 1;
@@ -87,10 +88,13 @@ int main(int argc, char* argv[])
   double transverseMass_2ndRun = svFitAlgo.getHistogramAdapter()->getTransverseMass();
   double transverseMassErr_2ndRun = svFitAlgo.getHistogramAdapter()->getTransverseMassErr();
 
-  if ( isValidSolution_2ndRun ) {
+  if ( isValidSolution_2ndRun )
+  {
     std::cout << "found valid solution: mass = " << mass_2ndRun << " +/- " << massErr_2ndRun << " (expected value = 124.646 +/- 1.27575),"
               << " transverse mass = " << transverseMass_2ndRun << " +/- " << transverseMassErr_2ndRun << " (expected value = 123.026 +/- 1.19297)" << std::endl;
-  } else {
+  } 
+  else
+  {
     std::cout << "sorry, failed to find valid solution !!" << std::endl;
   }
   if (std::abs((mass_2ndRun - 124.646) / 124.646) > 0.001) return 1;

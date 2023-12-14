@@ -1,6 +1,7 @@
 #include "TauAnalysis/ClassicSVfit/interface/HistogramAdapterDiTauSpin.h"
 
-using namespace classic_svFit;
+namespace classic_svFit
+{
 
 //-------------------------------------------------------------------------------------------------
 // auxiliary classes to reconstruct spin polarization vectors Bp and Bm and spin correlation matrix C
@@ -319,3 +320,5 @@ double HistogramAdapterDiTauSpin::DoEval(const double* x) const
   return 0.;
 }
 //-------------------------------------------------------------------------------------------------
+
+}

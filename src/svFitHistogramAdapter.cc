@@ -9,9 +9,11 @@
 
 #include <boost/algorithm/string/replace.hpp>
 
-using namespace classic_svFit;
+namespace classic_svFit
+{
 
-TH1* HistogramTools::compHistogramDensity(TH1 const* histogram)
+TH1*
+HistogramTools::compHistogramDensity(TH1 const* histogram)
 {
   TH1* histogram_density = static_cast<TH1*>(histogram->Clone((std::string(histogram->GetName()) + "_density").c_str()));
   histogram_density->Scale(1.0, "width");
@@ -48,11 +50,13 @@ void HistogramTools::extractHistogramProperties(
   xMean = histogram->GetMean();
 
   TH1* histogram_density = HistogramTools::compHistogramDensity(histogram);
-  if ( histogram_density->Integral() > 0. ) {
+  if ( histogram_density->Integral() > 0. )
+  {
     int binMaximum = histogram_density->GetMaximumBin();
     xMaximum = histogram_density->GetBinCenter(binMaximum);
     double yMaximum = histogram_density->GetBinContent(binMaximum);
-    if ( binMaximum > 1 && binMaximum < histogram_density->GetNbinsX() ) {
+    if ( binMaximum > 1 && binMaximum < histogram_density->GetNbinsX() )
+    {
       int binLeft       = binMaximum - 1;
       double xLeft      = histogram_density->GetBinCenter(binLeft);
       double yLeft      = histogram_density->GetBinContent(binLeft);
@@ -67,17 +71,22 @@ void HistogramTools::extractHistogramProperties(
       double yPlus      = yRight - yMaximum;
 
       xMaximum_interpol = xMaximum + 0.5*(yPlus*square(xMinus) - yMinus*square(xPlus))/(yPlus*xMinus - yMinus*xPlus);
-    } else {
+    }
+    else
+    {
       xMaximum_interpol = xMaximum;
     }
-  } else {
+  }
+  else
+  {
     xMaximum = 0.;
     xMaximum_interpol = 0.;
   }
   delete histogram_density;
 }
 
-double HistogramTools::extractValue(TH1 const* histogram)
+double
+HistogramTools::extractValue(TH1 const* histogram)
 {
   double maximum, maximum_interpol, mean, quantile016, quantile050, quantile084;
   HistogramTools::extractHistogramProperties(histogram, maximum, maximum_interpol, mean, quantile016, quantile050, quantile084);
@@ -85,7 +94,8 @@ double HistogramTools::extractValue(TH1 const* histogram)
   return value;
 }
 
-double HistogramTools::extractUncertainty(TH1 const* histogram)
+double
+HistogramTools::extractUncertainty(TH1 const* histogram)
 {
   double maximum, maximum_interpol, mean, quantile016, quantile050, quantile084;
   HistogramTools::extractHistogramProperties(histogram, maximum, maximum_interpol, mean, quantile016, quantile050, quantile084);
@@ -93,7 +103,8 @@ double HistogramTools::extractUncertainty(TH1 const* histogram)
   return uncertainty;
 }
 
-double HistogramTools::extractLmax(TH1 const* histogram)
+double
+HistogramTools::extractLmax(TH1 const* histogram)
 {
   TH1* histogram_density = HistogramTools::compHistogramDensity(histogram);
   double Lmax = histogram_density->GetMaximum();
@@ -101,20 +112,25 @@ double HistogramTools::extractLmax(TH1 const* histogram)
   return Lmax;
 }
 
-TH1* HistogramTools::makeHistogram_linBinWidth(const std::string& histogramName, int numBins, double xMin, double xMax)
+TH1*
+HistogramTools::makeHistogram_linBinWidth(const std::string& histogramName, int numBins, double xMin, double xMax)
 {
+  assert(numBins >= 1);
   TH1* histogram = new TH1D(histogramName.data(), histogramName.data(), numBins, xMin, xMax);
   return histogram;
 }
 
-TH1* HistogramTools::makeHistogram_logBinWidth(const std::string& histogramName, double xMin, double xMax, double logBinWidth)
+TH1*
+HistogramTools::makeHistogram_logBinWidth(const std::string& histogramName, double xMin, double xMax, double logBinWidth)
 {
   if ( xMin <= 0. ) xMin = 0.1;
   int numBins = 1 + TMath::Log(xMax/xMin)/TMath::Log(logBinWidth);
+  assert(numBins >= 1);
   TArrayF binning(numBins + 1);
   binning[0] = 0.;
   double x = xMin;
-  for ( int idxBin = 1; idxBin <= numBins; ++idxBin ) {
+  for ( int idxBin = 1; idxBin <= numBins; ++idxBin )
+  {
     binning[idxBin] = x;
     x *= logBinWidth;
   }
@@ -126,49 +142,61 @@ int SVfitQuantity::nInstances = 0;
 
 SVfitQuantity::SVfitQuantity(const std::string& label) 
   : label_(label)
+  , histogram_(nullptr)
   , uniqueName_("_SVfitQuantity_" + std::to_string(++SVfitQuantity::nInstances))
 {}
 
 SVfitQuantity::~SVfitQuantity()
 {
   if ( histogram_ != nullptr ) delete histogram_;
+  histogram_ = nullptr;
 }
 
-const TH1* SVfitQuantity::getHistogram() const 
+const TH1*
+SVfitQuantity::getHistogram() const 
 { 
   return histogram_;
 }
 
-void SVfitQuantity::writeHistogram() const
+void
+SVfitQuantity::writeHistogram() const
 {
-  if ( histogram_ != nullptr ) {
+/*
+  if ( histogram_ != nullptr )
+  {
     std::string histogramName = histogram_->GetName();
     boost::replace_all(histogramName, uniqueName_, "");
     histogram_->Write(histogramName.c_str(), TObject::kWriteDelete);
   }
+ */
 }
 
-void SVfitQuantity::fillHistogram(double value, double weight)
+void
+SVfitQuantity::fillHistogram(double value, double weight)
 {
   histogram_->Fill(value, weight);
 }
 
-double SVfitQuantity::extractValue() const
+double
+SVfitQuantity::extractValue() const
 {
   return HistogramTools::extractValue(histogram_);
 }
 
-double SVfitQuantity::extractUncertainty() const
+double
+SVfitQuantity::extractUncertainty() const
 {
   return HistogramTools::extractUncertainty(histogram_);
 }
 
-double SVfitQuantity::extractLmax() const
+double
+SVfitQuantity::extractLmax() const
 {
   return HistogramTools::extractLmax(histogram_);
 }
 
-bool SVfitQuantity::isValidSolution() const
+bool
+SVfitQuantity::isValidSolution() const
 {
   return (extractLmax() > 0.);
 }
@@ -179,20 +207,21 @@ HistogramAdapter::HistogramAdapter(const std::string& label)
 
 HistogramAdapter::~HistogramAdapter()
 {
-  for ( std::vector<SVfitQuantity*>::iterator quantity = quantities_.begin(); 
-	quantity != quantities_.end(); ++quantity ) {
-    delete (*quantity);
+  for ( SVfitQuantity* quantity : quantities_ )
+  {
+    delete quantity;
   }
 }
 
-void HistogramAdapter::writeHistograms(const std::string& likelihoodFileName) const
+void
+HistogramAdapter::writeHistograms(const std::string& likelihoodFileName) const
 {
   TFile* likelihoodFile = new TFile(likelihoodFileName.data(), "RECREATE");
   likelihoodFile->cd();
 
-  for (std::vector<SVfitQuantity*>::iterator quantity = quantities_.begin(); 
-       quantity != quantities_.end(); ++quantity ) {
-    (*quantity)->writeHistogram();
+  for ( SVfitQuantity* quantity : quantities_ )
+  {
+    quantity->writeHistogram();
   }
 
   likelihoodFile->Write();
@@ -200,22 +229,26 @@ void HistogramAdapter::writeHistograms(const std::string& likelihoodFileName) co
   delete likelihoodFile;
 }
 
-double HistogramAdapter::extractValue(const SVfitQuantity* quantity) const
+double
+HistogramAdapter::extractValue(const SVfitQuantity* quantity) const
 {
   return quantity->extractValue();
 }
 
-double HistogramAdapter::extractUncertainty(const SVfitQuantity* quantity) const
+double
+HistogramAdapter::extractUncertainty(const SVfitQuantity* quantity) const
 {
   return quantity->extractUncertainty();
 }
 
-double HistogramAdapter::extractLmax(const SVfitQuantity* quantity) const
+double
+HistogramAdapter::extractLmax(const SVfitQuantity* quantity) const
 {
   return quantity->extractLmax();
 }
 
-bool HistogramAdapter::isValidSolution() const
+bool
+HistogramAdapter::isValidSolution() const
 {
   return std::accumulate(quantities_.begin(), quantities_.end(), true,
                          [](bool result, SVfitQuantity* quantity) { return result && quantity->isValidSolution(); });
@@ -227,7 +260,8 @@ SVfitQuantityTau::SVfitQuantityTau(const std::string& label)
   : SVfitQuantity(label)
 {}
 
-void SVfitQuantityTau::bookHistogram(const MeasuredTauLepton& measuredTauLepton)
+void
+SVfitQuantityTau::bookHistogram(const MeasuredTauLepton& measuredTauLepton)
 {
   if ( histogram_ != nullptr ) delete histogram_;
   histogram_ = createHistogram(measuredTauLepton);
@@ -247,7 +281,8 @@ SVfitQuantityTauEta::SVfitQuantityTauEta(const std::string& label)
   : SVfitQuantityTau(label)
 {}
 
-TH1* SVfitQuantityTauEta::createHistogram(const MeasuredTauLepton& measuredTauLepton) const
+TH1*
+SVfitQuantityTauEta::createHistogram(const MeasuredTauLepton& measuredTauLepton) const
 {
   return HistogramTools::makeHistogram_linBinWidth("ClassicSVfitIntegrand_" + label_ + "_histogramEta", 198, -9.9, +9.9);
 }
@@ -256,7 +291,8 @@ SVfitQuantityTauPhi::SVfitQuantityTauPhi(const std::string& label)
   : SVfitQuantityTau(label)
 {}
 
-TH1* SVfitQuantityTauPhi::createHistogram(const MeasuredTauLepton& measuredTauLepton) const
+TH1*
+SVfitQuantityTauPhi::createHistogram(const MeasuredTauLepton& measuredTauLepton) const
 {
   return HistogramTools::makeHistogram_linBinWidth("ClassicSVfitIntegrand_" + label_ + "_histogramEta", 180, -TMath::Pi(), +TMath::Pi());
 }
@@ -284,83 +320,98 @@ HistogramAdapterTau::clone() const
   return retVal;
 }
 
-void HistogramAdapterTau::setMeasurement(const MeasuredTauLepton& measuredTauLepton)
+void
+HistogramAdapterTau::setMeasurement(const MeasuredTauLepton& measuredTauLepton)
 {
   measuredTauLepton_ = measuredTauLepton;
 }
  
-void HistogramAdapterTau::setFittedTauLepton(const FittedTauLepton& fittedTauLepton)
+void
+HistogramAdapterTau::setFittedTauLepton(const FittedTauLepton& fittedTauLepton)
 {
   fittedTauP4_ = fittedTauLepton.tauP4();
 }
 
-void HistogramAdapterTau::bookHistograms(const MeasuredTauLepton& measuredTauLepton)
+void
+HistogramAdapterTau::bookHistograms(const MeasuredTauLepton& measuredTauLepton)
 {
   quantity_pt_->bookHistogram(measuredTauLepton);
   quantity_eta_->bookHistogram(measuredTauLepton);
   quantity_phi_->bookHistogram(measuredTauLepton);
 }
 
-void HistogramAdapterTau::fillHistograms(double weight) const
+void
+HistogramAdapterTau::fillHistograms(double weight) const
 {
   quantity_pt_->fillHistogram(fittedTauP4_.pt(), weight);
   quantity_eta_->fillHistogram(fittedTauP4_.eta(), weight);
   quantity_phi_->fillHistogram(fittedTauP4_.phi(), weight);
 }
 
-double HistogramAdapterTau::getPt() const
+double
+HistogramAdapterTau::getPt() const
 {
   return extractValue(quantity_pt_);
 }
 
-double HistogramAdapterTau::getPtErr() const
+double
+HistogramAdapterTau::getPtErr() const
 {
   return extractUncertainty(quantity_pt_);
 }
 
-double HistogramAdapterTau::getPtLmax() const
+double
+HistogramAdapterTau::getPtLmax() const
 {
   return extractLmax(quantity_pt_);
 }
 
-double HistogramAdapterTau::getEta() const
+double
+HistogramAdapterTau::getEta() const
 {
   return extractValue(quantity_eta_);
 }
 
-double HistogramAdapterTau::getEtaErr() const
+double
+HistogramAdapterTau::getEtaErr() const
 {
   return extractUncertainty(quantity_eta_);
 }
 
-double HistogramAdapterTau::getEtaLmax() const
+double
+HistogramAdapterTau::getEtaLmax() const
 {
   return extractLmax(quantity_eta_);
 }
 
-double HistogramAdapterTau::getPhi() const
+double
+HistogramAdapterTau::getPhi() const
 {
   return extractValue(quantity_phi_);
 }
 
-double HistogramAdapterTau::getPhiErr() const
+double
+HistogramAdapterTau::getPhiErr() const
 {
   return extractUncertainty(quantity_phi_);
 }
 
-double HistogramAdapterTau::getPhiLmax() const
+double
+HistogramAdapterTau::getPhiLmax() const
 {
   return extractLmax(quantity_phi_);
 }
 
-classic_svFit::LorentzVector HistogramAdapterTau::getP4() const
+LorentzVector
+HistogramAdapterTau::getP4() const
 {
   TLorentzVector p4;
   p4.SetPtEtaPhiM(this->getPt(), this->getEta(), this->getPhi(), tauLeptonMass);
-  return classic_svFit::LorentzVector(p4.Px(), p4.Py(), p4.Pz(), p4.E());
+  return LorentzVector(p4.Px(), p4.Py(), p4.Pz(), p4.E());
 }
 
-double HistogramAdapterTau::DoEval(const double* x) const
+double
+HistogramAdapterTau::DoEval(const double* x) const
 {
   fillHistograms();
   return 0.;
@@ -373,7 +424,8 @@ SVfitQuantityDiTau::SVfitQuantityDiTau(const std::string& label)
   : SVfitQuantity(label)
 {}
 
-void SVfitQuantityDiTau::bookHistogram(const MeasuredEvent& measuredEvent)
+void
+SVfitQuantityDiTau::bookHistogram(const MeasuredEvent& measuredEvent)
 {
   if ( histogram_ != nullptr ) delete histogram_;
   histogram_ = createHistogram(measuredEvent);
@@ -384,7 +436,8 @@ SVfitQuantityDiTauPt::SVfitQuantityDiTauPt(const std::string& label)
   : SVfitQuantityDiTau(label)
 {}
 
-TH1* SVfitQuantityDiTauPt::createHistogram(const MeasuredEvent& measuredEvent) const
+TH1*
+SVfitQuantityDiTauPt::createHistogram(const MeasuredEvent& measuredEvent) const
 {
   return HistogramTools::makeHistogram_logBinWidth("ClassicSVfitIntegrand_" + label_ + "_histogramPt", 1., 1.e+3, 1.025);
 }
@@ -393,7 +446,8 @@ SVfitQuantityDiTauEta::SVfitQuantityDiTauEta(const std::string& label)
   : SVfitQuantityDiTau(label)
 {}
 
-TH1* SVfitQuantityDiTauEta::createHistogram(const MeasuredEvent& measuredEvent) const
+TH1*
+SVfitQuantityDiTauEta::createHistogram(const MeasuredEvent& measuredEvent) const
 {
   return HistogramTools::makeHistogram_linBinWidth("ClassicSVfitIntegrand_" + label_ + "_histogramEta", 198, -9.9, +9.9);
 }
@@ -411,7 +465,8 @@ SVfitQuantityDiTauMass::SVfitQuantityDiTauMass(const std::string& label)
   : SVfitQuantityDiTau(label)
 {}
 
-TH1* SVfitQuantityDiTauMass::createHistogram(const MeasuredEvent& measuredEvent) const
+TH1*
+SVfitQuantityDiTauMass::createHistogram(const MeasuredEvent& measuredEvent) const
 {
   const std::vector<MeasuredTauLepton>& measuredTauLeptons = measuredEvent.measuredTauLeptons();
   assert(measuredTauLeptons.size() == 2);
@@ -427,7 +482,8 @@ SVfitQuantityDiTauTransverseMass::SVfitQuantityDiTauTransverseMass(const std::st
   : SVfitQuantityDiTau(label)
 {}
 
-TH1* SVfitQuantityDiTauTransverseMass::createHistogram(const MeasuredEvent& measuredEvent) const
+TH1*
+SVfitQuantityDiTauTransverseMass::createHistogram(const MeasuredEvent& measuredEvent) const
 {
   const std::vector<MeasuredTauLepton>& measuredTauLeptons = measuredEvent.measuredTauLeptons();
   assert(measuredTauLeptons.size() == 2);
@@ -481,7 +537,8 @@ HistogramAdapterDiTau::~HistogramAdapterDiTau()
   delete adapter_tau2_;
 }
 
-void HistogramAdapterDiTau::setMeasurement(const MeasuredEvent& measuredEvent)
+void
+HistogramAdapterDiTau::setMeasurement(const MeasuredEvent& measuredEvent)
 {
   measuredEvent_ = measuredEvent;
   const std::vector<MeasuredTauLepton>& measuredTauLeptons = measuredEvent.measuredTauLeptons();
@@ -490,16 +547,18 @@ void HistogramAdapterDiTau::setMeasurement(const MeasuredEvent& measuredEvent)
   adapter_tau2_->setMeasurement(measuredTauLeptons[1]);
 }
 
-void HistogramAdapterDiTau::setFittedTauLeptons(const FittedTauLepton& fittedTauLepton1,  const FittedTauLepton& fittedTauLepton2)
+void
+HistogramAdapterDiTau::setFittedTauLeptons(const FittedTauLepton& fittedTauLepton1,  const FittedTauLepton& fittedTauLepton2)
 {
   fittedTau1P4_ = fittedTauLepton1.tauP4();
-  fittedTau1P4_ = fittedTauLepton2.tauP4();
+  fittedTau2P4_ = fittedTauLepton2.tauP4();
   fittedDiTauP4_ = fittedTau1P4_ + fittedTau2P4_;
   adapter_tau1_->setFittedTauLepton(fittedTauLepton1);
   adapter_tau2_->setFittedTauLepton(fittedTauLepton2);
 }
 
-void HistogramAdapterDiTau::bookHistograms(const MeasuredEvent& measuredEvent)
+void
+HistogramAdapterDiTau::bookHistograms(const MeasuredEvent& measuredEvent)
 {
   quantity_pt_->bookHistogram(measuredEvent);
   quantity_eta_->bookHistogram(measuredEvent);
@@ -513,113 +572,135 @@ void HistogramAdapterDiTau::bookHistograms(const MeasuredEvent& measuredEvent)
   adapter_tau2_->bookHistograms(measuredTauLeptons[1]);
 }
 
-void HistogramAdapterDiTau::fillHistograms(double weight) const
+void
+HistogramAdapterDiTau::fillHistograms(double weight) const
 {
   quantity_pt_->fillHistogram(fittedDiTauP4_.pt(), weight);
   quantity_eta_->fillHistogram(fittedDiTauP4_.eta(), weight);
   quantity_phi_->fillHistogram(fittedDiTauP4_.phi(), weight);
   quantity_mass_->fillHistogram(fittedDiTauP4_.mass(), weight);
-  double transverseMass2 = square(fittedTau1P4_.Et() + fittedTau1P4_.Et()) - (square(fittedDiTauP4_.px()) + square(fittedDiTauP4_.py()));
+  double transverseMass2 = square(fittedTau1P4_.Et() + fittedTau2P4_.Et()) - (square(fittedDiTauP4_.px()) + square(fittedDiTauP4_.py()));
   quantity_transverseMass_->fillHistogram(TMath::Sqrt(TMath::Max(1., transverseMass2)), weight);
   adapter_tau1_->fillHistograms(weight);
   adapter_tau2_->fillHistograms(weight);
 }
 
-HistogramAdapterTau* HistogramAdapterDiTau::tau1() const 
+HistogramAdapterTau*
+HistogramAdapterDiTau::tau1() const 
 { 
   return adapter_tau1_; 
 }
  
-HistogramAdapterTau* HistogramAdapterDiTau::tau2() const 
+HistogramAdapterTau*
+HistogramAdapterDiTau::tau2() const 
 {
   return adapter_tau2_; 
 }
 
-double HistogramAdapterDiTau::getPt() const
+double
+HistogramAdapterDiTau::getPt() const
 {
   return extractValue(quantity_pt_);
 }
 
-double HistogramAdapterDiTau::getPtErr() const
+double
+HistogramAdapterDiTau::getPtErr() const
 {
   return extractUncertainty(quantity_pt_);
 }
 
-double HistogramAdapterDiTau::getPtLmax() const
+double
+HistogramAdapterDiTau::getPtLmax() const
 {
   return extractLmax(quantity_pt_);
 }
 
-double HistogramAdapterDiTau::getEta() const
+double
+HistogramAdapterDiTau::getEta() const
 {
   return extractValue(quantity_eta_);
 }
 
-double HistogramAdapterDiTau::getEtaErr() const
+double
+HistogramAdapterDiTau::getEtaErr() const
 {
   return extractUncertainty(quantity_eta_);
 }
 
-double HistogramAdapterDiTau::getEtaLmax() const
+double
+HistogramAdapterDiTau::getEtaLmax() const
 {
   return extractLmax(quantity_eta_);
 }
 
-double HistogramAdapterDiTau::getPhi() const
+double
+HistogramAdapterDiTau::getPhi() const
 {
   return extractValue(quantity_phi_);
 }
 
-double HistogramAdapterDiTau::getPhiErr() const
+double
+HistogramAdapterDiTau::getPhiErr() const
 {
   return extractUncertainty(quantity_phi_);
 }
 
-double HistogramAdapterDiTau::getPhiLmax() const
+double
+HistogramAdapterDiTau::getPhiLmax() const
 {
   return extractLmax(quantity_phi_);
 }
 
-double HistogramAdapterDiTau::getMass() const
+double
+HistogramAdapterDiTau::getMass() const
 {
   return extractValue(quantity_mass_);
 }
 
-double HistogramAdapterDiTau::getMassErr() const
+double
+HistogramAdapterDiTau::getMassErr() const
 {
   return extractUncertainty(quantity_mass_);
 }
 
-double HistogramAdapterDiTau::getMassLmax() const
+double
+HistogramAdapterDiTau::getMassLmax() const
 {
   return extractLmax(quantity_mass_);
 }
 
-double HistogramAdapterDiTau::getTransverseMass() const
+double
+HistogramAdapterDiTau::getTransverseMass() const
 {
   return extractValue(quantity_transverseMass_);
 }
 
-double HistogramAdapterDiTau::getTransverseMassErr() const
+double
+HistogramAdapterDiTau::getTransverseMassErr() const
 {
   return extractUncertainty(quantity_transverseMass_);
 }
 
-double HistogramAdapterDiTau::getTransverseMassLmax() const
+double
+HistogramAdapterDiTau::getTransverseMassLmax() const
 {
   return extractLmax(quantity_transverseMass_);
 }
 
-classic_svFit::LorentzVector HistogramAdapterDiTau::getP4() const
+LorentzVector
+HistogramAdapterDiTau::getP4() const
 {
   TLorentzVector p4;
   p4.SetPtEtaPhiM(this->getPt(), this->getEta(), this->getPhi(), this->getMass());
-  return classic_svFit::LorentzVector(p4.Px(), p4.Py(), p4.Pz(), p4.E());
+  return LorentzVector(p4.Px(), p4.Py(), p4.Pz(), p4.E());
 }
 
-double HistogramAdapterDiTau::DoEval(const double* x) const
+double
+HistogramAdapterDiTau::DoEval(const double* x) const
 {
   fillHistograms();
   return 0.;
 }
 //-------------------------------------------------------------------------------------------------
+
+}

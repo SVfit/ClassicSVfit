@@ -6,29 +6,32 @@
 
 #include <Math/Boost.h>                                           // ROOT::Math::Boost
 
-class BoostToHelicityFrame
+namespace classic_svFit
 {
- public:
-  BoostToHelicityFrame();
-  ~BoostToHelicityFrame();
+  class BoostToHelicityFrame
+  {
+   public:
+    BoostToHelicityFrame();
+    ~BoostToHelicityFrame();
 
-  void
-  setFittedTauLeptons(const FittedTauLepton& fittedTauLepton1, const FittedTauLepton& fittedTauLepton2);
+    void
+    setFittedTauLeptons(const FittedTauLepton& fittedTauLepton1, const FittedTauLepton& fittedTauLepton2);
 
-  enum { kTauPlus, kTauMinus };
-  classic_svFit::LorentzVector
-  operator()(const classic_svFit::LorentzVector& p4, int tau);
+    enum { kTauPlus, kTauMinus };
+    LorentzVector
+    operator()(const LorentzVector& p4, int tau) const;
 
- private:
-  LorentzVector beamP4_;
+   private:
+    LorentzVector beamP4_;
 
-  ROOT::Math::Boost boost_ttrf_;
-  ROOT::Math::Boost boost_tprf_;
-  ROOT::Math::Boost boost_tmrf_;
+    ROOT::Math::Boost boost_ttrf_;
+    ROOT::Math::Boost boost_tprf_;
+    ROOT::Math::Boost boost_tmrf_;
 
-  classic_svFit::Vector r_;
-  classic_svFit::Vector n_;
-  classic_svFit::Vector k_;
-};
+    Vector r_;
+    Vector n_;
+    Vector k_;
+  };
+}
 
 #endif

@@ -1,12 +1,15 @@
 #ifndef TauAnalysis_ClassicSVfit_svFitHistogramAdapter_h
 #define TauAnalysis_ClassicSVfit_svFitHistogramAdapter_h
 
-#include "TauAnalysis/ClassicSVfit/interface/FittedTauLepton.h"
-#include "TauAnalysis/ClassicSVfit/interface/MeasuredEvent.h"
-#include "TauAnalysis/ClassicSVfit/interface/MeasuredTauLepton.h"
+#include "TauAnalysis/ClassicSVfit/interface/FittedTauLepton.h"   // FittedTauLepton
+#include "TauAnalysis/ClassicSVfit/interface/MeasuredEvent.h"     // MeasuredEvent
+#include "TauAnalysis/ClassicSVfit/interface/MeasuredTauLepton.h" // MeasuredTauLepton
 
-#include <Math/Functor.h>
-#include <TH1.h>
+#include <Math/Functor.h>                                         // ROOT::Math::Functor
+#include <TH1.h>                                                  // TH1
+
+#include <string>                                                 // std::string
+#include <vector>                                                 // std::vector<>
 
 namespace classic_svFit
 {
@@ -88,7 +91,7 @@ namespace classic_svFit
     ~HistogramAdapter();
 
     virtual
-    HistogramAdapter* clone() = 0;
+    HistogramAdapter* clone() const = 0;
 
     void
     writeHistograms(const std::string& likelihoodFileName) const;
@@ -200,7 +203,6 @@ namespace classic_svFit
 
    protected:
     MeasuredTauLepton measuredTauLepton_;
-    LorentzVector visP4_;
     LorentzVector fittedTauP4_;
 
     SVfitQuantityTauPt* quantity_pt_;
@@ -288,7 +290,7 @@ namespace classic_svFit
     setMeasurement(const MeasuredEvent& measuredEvent);
     virtual
     void
-    void setFittedTauLeptons(const FittedTauLepton& fittedTauLepton1, const FittedTauLepton& fittedTauLepton2);
+    setFittedTauLeptons(const FittedTauLepton& fittedTauLepton1, const FittedTauLepton& fittedTauLepton2);
 
     virtual
     void

@@ -1,11 +1,18 @@
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredMEt.h"
 
-#include <TMath.h>  // TMath::Pi()
+#include "TauAnalysis/ClassicSVfit/interface/svFitAuxFunctions.h" // kEventType
 
-#include <assert.h> // assert()
-#include <cmath.h>  // atan2(), pow(), std::sqrt()
+#include <TMath.h>                                                // TMath::Pi()
+#include <TMatrixDSym.h>                                          // TMatrixDSym
+#include <TMatrixDSymEigen.h>                                     // TMatrixDSymEigen
+#include <TVectorD.h>                                             // TVectorD
 
-using namespace classic_svFit;
+#include <assert.h>                                               // assert()
+#include <cmath>                                                  // atan2(), pow(), std::sqrt()
+#include <iostream>                                               // std::cout, std::endl
+
+namespace classic_svFit
+{
 
 MeasuredMEt::MeasuredMEt()
   : type_(kUndefinedCollisionType)
@@ -44,6 +51,19 @@ MeasuredMEt::MeasuredMEt(double px, double py, double pz, double energy, const T
   setCov(cov);
 }
 
+MeasuredMEt::MeasuredMEt(const MeasuredMEt& measuredMEt)
+  : type_(measuredMEt.type_)
+  , type_string_(measuredMEt.type_string_)
+  , px_(measuredMEt.px_)
+  , py_(measuredMEt.py_)
+  , pz_(measuredMEt.pz_)
+  , energy_(measuredMEt.energy_)
+  , cov_(measuredMEt.cov_)
+  , covInv_(measuredMEt.covInv_)
+  , covInv_isValid_(measuredMEt.covInv_isValid_)
+  , const_MET_(measuredMEt.const_MET_)
+{}
+
 MeasuredMEt::~MeasuredMEt()
 {}
 
@@ -77,14 +97,14 @@ MeasuredMEt::energy() const
   return energy_;
 }
 
-TMatrixD&
-MeasuredMEt::cov const
+const TMatrixD&
+MeasuredMEt::cov() const
 {
   return cov_;
 }
 
-TMatrixD&
-MeasuredMEt::covInv const
+const TMatrixD&
+MeasuredMEt::covInv() const
 {
   return covInv_;
 }
@@ -102,14 +122,14 @@ MeasuredMEt::const_MET() const
 }
 
 void
-MeasuredMEt:setCov(const TMatrixD& cov)
+MeasuredMEt::setCov(const TMatrixD& cov)
 {
   assert(cov.GetNrows() == cov.GetNcols());
   int dim = cov.GetNrows();
   if ( (type_ == kProtonProtonCollisions     && dim != 2) ||
        (type_ == kElectronPositronCollisions && dim != 4) )
   {
-    std::cerr << "ERROR: Size of covariance matrix = (" << numRows << "," << numColumns << ")" 
+    std::cerr << "ERROR: Size of covariance matrix = (" << cov.GetNrows() << "," << cov.GetNcols() << ")" 
               << " does not match size expected for " << type_string_ << " collisions !!" << std::endl;
     assert(0);
   }
@@ -140,18 +160,18 @@ std::ostream&
 operator<<(std::ostream& os, const MeasuredMEt& measuredMEt)
 {
   os << "MET: Px = " << measuredMEt.px() << ", Py = " << measuredMEt.py();
-  if ( type_ == kElectronPositronCollisions )
+  if ( measuredMEt.type() == kElectronPositronCollisions )
   {
     os << ", Pz = " << measuredMEt.pz() << ", E = " << measuredMEt.energy();
   }
-  os << "endl;
+  os << std::endl;
   const TMatrixD& cov = measuredMEt.cov();
   os << "cov:" << std::endl;
   cov.Print();
-  if ( type_ == kProtonProtonCollisions )
+  if ( measuredMEt.type() == kProtonProtonCollisions )
   {
     assert(cov.GetNrows() == 2 && cov.GetNcols() == 2);
-    int dim = numRows;
+    int dim = cov.GetNrows();
     TMatrixDSym cov_sym(dim);
     for ( int iRow = 0; iRow < dim; ++iRow )
     {
@@ -183,3 +203,5 @@ operator<<(std::ostream& os, const MeasuredMEt& measuredMEt)
   return os;
 }
 //---------------------------------------------------------------------------------------------------
+
+}

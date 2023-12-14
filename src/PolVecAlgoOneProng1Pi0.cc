@@ -1,8 +1,11 @@
 #include "TauAnalysis/ClassicSVfit/interface/PolVecAlgoOneProng1Pi0.h"
 
-#include "TauAnalysis/ClassicSVfit/interface/svFitAuxFunctions.h" // fixNeutrinoMass(), gamma_va, tauLeptonMass
+#include "TauAnalysis/ClassicSVfit/interface/svFitAuxFunctions.h" // fixNuMass(), gamma_va, tauLeptonMass
 
-#include <assert.h>
+#include <assert.h>                                               // assert()
+
+namespace classic_svFit
+{
 
 PolVecAlgoOneProng1Pi0::PolVecAlgoOneProng1Pi0()
 {}
@@ -11,15 +14,15 @@ PolVecAlgoOneProng1Pi0::~PolVecAlgoOneProng1Pi0()
 {}
 
 classic_svFit::Vector
-PolVecAlgoOneProng1Pi0::operator()(const MeasuredTauLeptonLT& measuredTauLepton, const FittedTauLepton& fittedTauLepton, int tau, 
+PolVecAlgoOneProng1Pi0::operator()(const MeasuredTauLepton& measuredTauLepton, const FittedTauLepton& fittedTauLepton, int tau, 
                                    const BoostToHelicityFrame& boostToHelicityFrame) const
 {
   const std::vector<MeasuredHadTauDecayProduct>& daughters = measuredTauLepton.measuredHadTauDecayProducts();
   const MeasuredHadTauDecayProduct* ch = nullptr;
   const MeasuredHadTauDecayProduct* pi0 = nullptr;
-  for ( const KinematicParticle& daughter : daughters )
+  for ( const MeasuredHadTauDecayProduct& daughter : daughters )
   {
-    if ( daughter->charge() != 0 )
+    if ( daughter.charge() != 0 )
     {
       ch = &daughter;
     }
@@ -51,8 +54,8 @@ PolVecAlgoOneProng1Pi0::operator()(const MeasuredTauLeptonLT& measuredTauLepton,
   //     while keeping the Px, Py, Pz momentum components fixed
   const LorentzVector& tauP4 = fittedTauLepton.tauP4();
   const LorentzVector& visP4 = fittedTauLepton.visP4();
-  LorentzVector nuP4 = fixNeutrinoMass(tauP4 - visP4);
-  LorentzVector N = fixNeutrinoMass(boostToHelicityFrame(nuP4, tau));
+  LorentzVector nuP4 = fixNuMass(tauP4 - visP4);
+  LorentzVector N = fixNuMass(boostToHelicityFrame(nuP4, tau));
   assert(nuP4.energy() >= 0. && N.energy() >= 0.);
 
   LorentzVector P = boostToHelicityFrame(tauP4, tau);
@@ -69,4 +72,6 @@ PolVecAlgoOneProng1Pi0::operator()(const MeasuredTauLeptonLT& measuredTauLepton,
   //     and drops out
   Vector h = -(sign*gamma_va*tauLeptonMass/omega)*(2.*(q.Dot(N))*q.Vect() - q.mass2()*N.Vect());
   return h.unit();
+}
+
 }

@@ -1,4 +1,4 @@
-#include "TauAnalysis/ClassicSVfitLT/interface/BoostToHelicityFrame.h"
+#include "TauAnalysis/ClassicSVfit/interface/BoostToHelicityFrame.h"
 
 #include <vector> // std::vector<>
 
@@ -10,7 +10,7 @@ namespace
   getP4_rf(const LorentzVector& p4, const ROOT::Math::Boost& boost)
   {
     // CV: boost given four-vector to restframe
-    reco::Candidate::LorentzVector p4_rf = boost(p4);
+    LorentzVector p4_rf = boost(p4);
     return p4_rf;
   }
 
@@ -25,7 +25,7 @@ namespace
   Vector
   get_h(const LorentzVector& beamP4, const ROOT::Math::Boost& boost_ttrf)
   {
-    reco::Candidate::LorentzVector beamP4_ttrf = getP4_rf(beamP4, boost_ttrf);
+    LorentzVector beamP4_ttrf = getP4_rf(beamP4, boost_ttrf);
     Vector h = beamP4_ttrf.Vect().unit();
     return h;
   }
@@ -56,7 +56,7 @@ namespace
     //    (Whether one computes the vector n using n = r x k or using n = p x k makes no difference:
     //     in both cases, the vector n refers to the direction perpendicular to the scattering plane
     //     and the vectors { n, r, k } define a right-handed coordinate system)
-    reco::Candidate::Vector n = r.Cross(k);
+    Vector n = r.Cross(k);
     return n;
   }
 
@@ -72,14 +72,14 @@ namespace
   }
 
   LorentzVector
-  getP4_hf(const LorentzVector& p4, const Vector& r, const Vector& n, Vector& k)
+  getP4_hf(const LorentzVector& p4, const Vector& r, const Vector& n, const Vector& k)
   {
     // CV: rotate given four-vector to helicity frame
-    reco::Candidate::Vector p3 = p4.Vect();
+    Vector p3 = p4.Vect();
     double Pr = p3.Dot(r);
     double Pn = p3.Dot(n);
     double Pk = p3.Dot(k);
-    reco::Candidate::LorentzVector p4_hf(Pr, Pn, Pk, p4.energy());
+    LorentzVector p4_hf(Pr, Pn, Pk, p4.energy());
     return p4_hf;
   }
 }
@@ -92,7 +92,7 @@ BoostToHelicityFrame::BoostToHelicityFrame()
   const double mBeamParticle = 0.938272; // [GeV]
   double beamPx = 0.;
   double beamPy = 0.;
-  double beamPz = std::sqrt(square(beamEnergy) - square(mBeamParticle));
+  double beamPz = std::sqrt(square(beamE) - square(mBeamParticle));
   beamP4_ = LorentzVector(beamPx, beamPy, beamPz, beamE);
 }
 
@@ -115,7 +115,7 @@ BoostToHelicityFrame::setFittedTauLeptons(const FittedTauLepton& fittedTauLepton
     }
     else if ( fittedTauLepton->getMeasuredTauLepton().charge() < 0 )
     {
-      fittedTauMinus = &fittedTauLepton;
+      fittedTauMinus = fittedTauLepton;
     }
   }
   assert(fittedTauPlus && fittedTauMinus);
@@ -135,15 +135,15 @@ BoostToHelicityFrame::setFittedTauLeptons(const FittedTauLepton& fittedTauLepton
   boost_tmrf_ = ROOT::Math::Boost(tauMinusP4_hf.BoostToCM());
 }
 
-classic_svFit::LorentzVector
-BoostToHelicityFrame::operator()(const classic_svFit::LorentzVector& p4)
+LorentzVector
+BoostToHelicityFrame::operator()(const LorentzVector& p4, int tau) const
 {
   // CV: boost given four-vector to restframe of tau pair,
   //     rotate to helicity frame,
   //     and finally boost to tau restframe
   LorentzVector p4_ttrf = getP4_rf(p4, boost_ttrf_);
   LorentzVector p4_hf = getP4_hf(p4_ttrf, r_, n_, k_);
-  ROOT::Math::Boost* boost_trf = nullptr;
+  const ROOT::Math::Boost* boost_trf = nullptr;
   if      ( tau == kTauPlus  ) boost_trf = &boost_tprf_;
   else if ( tau == kTauMinus ) boost_trf = &boost_tmrf_;
   assert(boost_trf);

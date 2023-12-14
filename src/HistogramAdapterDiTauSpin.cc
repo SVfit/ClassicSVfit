@@ -9,7 +9,7 @@ SVfitQuantityB_i::SVfitQuantityB_i(const std::string& label)
 {}
 
 TH1*
-SVfitQuantityB_i::createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
+SVfitQuantityB_i::createHistogram(const MeasuredEvent& measuredEvent) const
 {
   return HistogramTools::makeHistogram_linBinWidth("ClassicSVfitIntegrand_" + label_ + "_histogramB_i", 120, -3., +3.);
 }
@@ -19,7 +19,7 @@ SVfitQuantityC_ij::SVfitQuantityC_ij(const std::string& label)
 {}
 
 TH1*
-SVfitQuantityC_ij::createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const
+SVfitQuantityC_ij::createHistogram(const MeasuredEvent& measuredEvent) const
 {
   return HistogramTools::makeHistogram_linBinWidth("ClassicSVfitIntegrand_" + label_ + "_histogramC_ij", 360, -9., +9.);
 }

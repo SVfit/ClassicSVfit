@@ -275,9 +275,10 @@ HistogramAdapterTau::HistogramAdapterTau(const std::string& label)
   quantities_.push_back(quantity_phi_);
 }
 
+HistogramAdapter*
 HistogramAdapterTau::clone() const
 {
-  HistogramAdapter* retVal = new HistogramAdapterTau(this->label_);
+  HistogramAdapterTau* retVal = new HistogramAdapterTau(this->label_);
   retVal->setMeasurement(this->measuredTauLepton_);
   retVal->bookHistograms(this->measuredTauLepton_);
   return retVal;
@@ -286,7 +287,6 @@ HistogramAdapterTau::clone() const
 void HistogramAdapterTau::setMeasurement(const MeasuredTauLepton& measuredTauLepton)
 {
   measuredTauLepton_ = measuredTauLepton;
-  visP4_ = visP4;
 }
  
 void HistogramAdapterTau::setFittedTauLepton(const FittedTauLepton& fittedTauLepton)
@@ -469,7 +469,7 @@ HistogramAdapterDiTau::HistogramAdapterDiTau(const std::string& label)
 HistogramAdapter*
 HistogramAdapterDiTau::clone() const
 {
-  HistogramAdapterDiTau* retVal = new HistogramAdapter(this->label_);
+  HistogramAdapterDiTau* retVal = new HistogramAdapterDiTau(this->label_);
   retVal->setMeasurement(this->measuredEvent_);
   retVal->bookHistograms(this->measuredEvent_);
   return retVal;

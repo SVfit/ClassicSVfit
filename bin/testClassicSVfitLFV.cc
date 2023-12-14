@@ -81,8 +81,8 @@ int main(int argc, char* argv[])
   svFitAlgo.integrate(measuredEvent);
   bool isValidSolution = svFitAlgo.isValidSolution();
 
-  double mass = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getMass();
-  double massErr = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getMassErr();
+  double mass = svFitAlgo.getHistogramAdapter()->getMass();
+  double massErr = svFitAlgo.getHistogramAdapter()->getMassErr();
  
   if ( isValidSolution ) {
     std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 126.12 +/- 16.9431)" << std::endl;

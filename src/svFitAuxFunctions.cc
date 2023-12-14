@@ -4,7 +4,8 @@
 #include <TF1.h>
 #include <TFitResult.h>
 
-using namespace classic_svFit;
+namespace classic_svFit
+{
 
 double
 roundToNdigits(double x, int n)
@@ -31,7 +32,7 @@ roundToNdigits(const TMatrixD& m, int n)
       m_rounded(iRow,iColumn) = roundToNdigits(m(iRow,iColumn), n);
     }
   }
-  return x_rounded;
+  return m_rounded;
 }
 
 TGraphErrors*
@@ -256,19 +257,24 @@ integrationParameters::reset()
   idx_flightLength_ = -1;
 }
 
+}
+
 namespace
 {
-  LorentzVector
-  fixMass(const LorentzVector& p4, double mass)
+  classic_svFit::LorentzVector
+  fixMass(const classic_svFit::LorentzVector& p4, double mass)
   {
     double px     = p4.px();
     double py     = p4.py();
     double pz     = p4.pz();
     double energy = std::sqrt(px*px + py*py + pz*pz + mass*mass);
-    reco::Candidate::LorentzVector p4_fixed(px, py, pz, energy);
+    classic_svFit::LorentzVector p4_fixed(px, py, pz, energy);
     return p4_fixed;
   }
 }
+
+namespace classic_svFit
+{
 
 LorentzVector
 fixTauMass(const LorentzVector& tauP4)
@@ -280,4 +286,6 @@ LorentzVector
 fixNuMass(const LorentzVector& nuP4)
 {
   return fixMass(nuP4, 0.);
+}
+
 }

@@ -1,4 +1,4 @@
-#include "TauAnalysis/ClassicSVfitLT/interface/comp_PCA_line2point.h"
+#include "TauAnalysis/ClassicSVfit/interface/comp_PCA_line2point.h"
 
 #include <TVectorD.h> // TVectorD
 
@@ -19,12 +19,15 @@ namespace
     return retVal;
   }
 
-  reco::Candidate::Vector
+  Vector
   convert_to_recoVector(const TVectorD& v)
   {
     return Vector(v(0), v(1), v(2));
   }
 }
+
+namespace classic_svFit
+{
 
 Point
 comp_PCA_line2point(const Point& p1, const Vector& v1,
@@ -42,6 +45,8 @@ comp_PCA_line2point(const Point& p1, const Vector& v1,
   if ( lambda < lambdaMin ) lambda = lambdaMin;
   if ( lambda > lambdaMax ) lambda = lambdaMax;
 
-  reco::Candidate::Point pca = p1 + lambda*convert_to_recoVector(e1);
+  Point pca = p1 + lambda*convert_to_recoVector(e1);
   return pca;
+}
+
 }

@@ -1,13 +1,13 @@
-#ifndef TauAnalysis_ClassicSVfit_MeasuredTauLepton_h
-#define TauAnalysis_ClassicSVfit_MeasuredTauLepton_h
+#ifndef TauAnalysis_ClassicSVfit_MeasuredEvent_h
+#define TauAnalysis_ClassicSVfit_MeasuredEvent_h
 
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredMEt.h"       // MeasuredMEt
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredTauLepton.h" // MeasuredTauLepton
 #include "TauAnalysis/ClassicSVfit/interface/svFitAuxFunctions.h" // kEventType
 
-#include <TMatrixD.h>
+#include <TMatrixD.h>                                             // TMatrixD
 
-#include <vector>
+#include <vector>                                                 // std::vector<>
 
 namespace classic_svFit
 {
@@ -46,7 +46,7 @@ namespace classic_svFit
     measuredPrimaryVertex() const;
     const TMatrixD&
     covPrimaryVertex() const;
-    TMatrixD&
+    const TMatrixD&
     covInvPrimaryVertex() const;
     bool
     covInvPrimaryVertex_isValid() const;
@@ -57,7 +57,7 @@ namespace classic_svFit
     setTauLeptons(const std::vector<MeasuredTauLepton>&);
 
     /// set measuredMEt data-member
-    bool
+    void
     setMEt(const std::vector<MeasuredMEt>&);
 
     /// set measuredPrimaryVertex and covPrimaryVertex data-members,

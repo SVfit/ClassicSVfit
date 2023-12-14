@@ -2,7 +2,10 @@
 
 #include "TauAnalysis/ClassicSVfit/interface/svFitAuxFunctions.h" // gamma_va, tauLeptonMass2, tauLeptonMass3
 
-#include <assert.h>
+#include <assert.h>                                               // assert()
+
+namespace classic_svFit
+{
 
 PolVecAlgoOneProng0Pi0::PolVecAlgoOneProng0Pi0()
 {}
@@ -10,15 +13,15 @@ PolVecAlgoOneProng0Pi0::PolVecAlgoOneProng0Pi0()
 PolVecAlgoOneProng0Pi0::~PolVecAlgoOneProng0Pi0()
 {}
 
-classic_svFit::Vector
-PolVecAlgoOneProng0Pi0::operator()(const MeasuredTauLeptonLT& measuredTauLepton, int tau,
+Vector
+PolVecAlgoOneProng0Pi0::operator()(const MeasuredTauLepton& measuredTauLepton, int tau,
                                    const BoostToHelicityFrame& boostToHelicityFrame) const
 {
   const std::vector<MeasuredHadTauDecayProduct>& daughters = measuredTauLepton.measuredHadTauDecayProducts();
   const MeasuredHadTauDecayProduct* ch = nullptr;
   for ( const MeasuredHadTauDecayProduct& daughter : daughters )
   {
-    if ( daughter->charge() != 0 )
+    if ( daughter.charge() != 0 )
     {
       ch = &daughter;
     } 
@@ -45,4 +48,6 @@ PolVecAlgoOneProng0Pi0::operator()(const MeasuredTauLeptonLT& measuredTauLepton,
 
   Vector h = -(2.*sign*gamma_va*square(f1)*tauLeptonMass3/omega)*Q.Vect();
   return h.unit();
+}
+
 }

@@ -59,10 +59,10 @@ int main(int argc, char* argv[])
   svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
   svFitAlgo.integrate(measuredEvent);
   bool isValidSolution_1stRun = svFitAlgo.isValidSolution();
-  double mass_1stRun = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getMass();
-  double massErr_1stRun = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getMassErr();
-  double transverseMass_1stRun = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getTransverseMass();
-  double transverseMassErr_1stRun = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getTransverseMassErr();
+  double mass_1stRun = svFitAlgo.getHistogramAdapter()->getMass();
+  double massErr_1stRun = svFitAlgo.getHistogramAdapter()->getMassErr();
+  double transverseMass_1stRun = svFitAlgo.getHistogramAdapter()->getTransverseMass();
+  double transverseMassErr_1stRun = svFitAlgo.getHistogramAdapter()->getTransverseMassErr();
 
   if ( isValidSolution_1stRun ) {
     std::cout << "found valid solution: mass = " << mass_1stRun << " +/- " << massErr_1stRun << " (expected value = 115.746 +/- 87.0011),"
@@ -79,13 +79,13 @@ int main(int argc, char* argv[])
   double massContraint = 125.06;
   std::cout << "\n\nTesting integration with ditau mass constraint set to " << massContraint << std::endl;
   svFitAlgo.setLikelihoodFileName("testClassicSVfit_withMassContraint.root");
-  svFitAlgo.setDiTauMassConstraint(massContraint);
+  svFitAlgo.enableDiTauMassConstraint(massContraint);
   svFitAlgo.integrate(measuredEvent);
   bool isValidSolution_2ndRun = svFitAlgo.isValidSolution();
-  double mass_2ndRun = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getMass();
-  double massErr_2ndRun = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getMassErr();
-  double transverseMass_2ndRun = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getTransverseMass();
-  double transverseMassErr_2ndRun = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getTransverseMassErr();
+  double mass_2ndRun = svFitAlgo.getHistogramAdapter()->getMass();
+  double massErr_2ndRun = svFitAlgo.getHistogramAdapter()->getMassErr();
+  double transverseMass_2ndRun = svFitAlgo.getHistogramAdapter()->getTransverseMass();
+  double transverseMassErr_2ndRun = svFitAlgo.getHistogramAdapter()->getTransverseMassErr();
 
   if ( isValidSolution_2ndRun ) {
     std::cout << "found valid solution: mass = " << mass_2ndRun << " +/- " << massErr_2ndRun << " (expected value = 124.646 +/- 1.27575),"

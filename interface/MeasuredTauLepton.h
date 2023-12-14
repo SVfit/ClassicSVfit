@@ -92,7 +92,7 @@ namespace classic_svFit
     measuredDecayVertex() const;
     const TMatrixD&
     covDecayVertex() const;
-    TMatrixD&
+    const TMatrixD&
     covInvDecayVertex() const;
     bool
     covInvDecayVertex_isValid() const;
@@ -138,7 +138,7 @@ namespace classic_svFit
 
     /// set measuredHadTauDecayProducts data-member
     void
-    setHadTauDecayProducts();
+    setHadTauDecayProducts(const std::vector<MeasuredHadTauDecayProduct>* measuredHadTauDecayProducts);
 
     /// set visible momentum in all coordinates systems
     void
@@ -199,7 +199,7 @@ namespace classic_svFit
 
   // auxiliary function for printing MeasuredTauLepton objects (for debugging purposes)
   std::ostream&
-  operator<<(std::ostream& os, const std::vector<MeasuredTauLeptons>& measuredTauLeptons);
+  operator<<(std::ostream& os, const std::vector<MeasuredTauLepton>& measuredTauLeptons);
 
   // auxiliary class for sorting MeasuredTauLepton objects
   struct sortMeasuredTauLeptons

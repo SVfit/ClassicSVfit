@@ -2,11 +2,13 @@
 
 #include <algorithm> // std::sort()
 #include <assert.h>  // assert()
+#include <iostream>  // std::cerr, std::cout, std::endl
 
-using namespace classic_svFit;
+namespace classic_svFit
+{
 
 MeasuredEvent::MeasuredEvent()
-  : type_(kUndefinedDecayType)
+  : type_(kUndefinedCollisionType)
   , measuredTauPlus_(nullptr)
   , measuredTauMinus_(nullptr)
   , hasPrimaryVertex_(false)
@@ -36,8 +38,7 @@ MeasuredEvent::MeasuredEvent(const std::vector<MeasuredTauLepton>& measuredTauLe
 }
 
 MeasuredEvent::MeasuredEvent(const MeasuredEvent& measuredEvent)
-{
-  : type_(kUndefinedDecayType)
+  : type_(measuredEvent.type_)
   , measuredTauLeptons_(measuredEvent.measuredTauLeptons_)
   , measuredTauPlus_(measuredEvent.measuredTauPlus_)
   , measuredTauMinus_(measuredEvent.measuredTauMinus_)
@@ -102,7 +103,7 @@ MeasuredEvent::covPrimaryVertex() const
   return covPrimaryVertex_;
 }
 
-TMatrixD&
+const TMatrixD&
 MeasuredEvent::covInvPrimaryVertex() const
 {
   return covInvPrimaryVertex_;
@@ -127,7 +128,7 @@ MeasuredEvent::setTauLeptons(const std::vector<MeasuredTauLepton>& measuredTauLe
   assert(measuredTauPlus_ && measuredTauMinus_);
 }
 
-bool
+void
 MeasuredEvent::setMEt(const std::vector<MeasuredMEt>& measuredMEt)
 {
   if ( measuredMEt.size() == 0 )
@@ -175,4 +176,6 @@ MeasuredEvent::setPrimaryVertex(const Point& measuredPrimaryVertex, const TMatri
   covInvPrimaryVertex_.ResizeTo(dim,dim);
   covInvPrimaryVertex_ = TMatrixD(TMatrixD::kInverted, covPrimaryVertex_);
   covInvPrimaryVertex_isValid_ = true;
+}
+
 }

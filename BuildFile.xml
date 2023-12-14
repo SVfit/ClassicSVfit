@@ -1,10 +1,11 @@
-<use   name="TauAnalysis/SVfitTF"/>
-<use   name="boost"/>
-<use   name="root"/>
-<use   name="roofit"/>
+<use name="TauAnalysis/PolarimetricVectorTau2a1"/>
+<use name="TauAnalysis/SVfitTF"/>
+<use name="boost"/>
+<use name="root"/>
+<use name="rootmath"/>
 <Flags CPPDEFINES="USE_SVFITTF"/>
 <Flags LDFLAGS="-rdynamic" />
 <Flags ADD_SUBDIR="1"/>
 <export>
-  <lib   name="1"/>
+  <lib name="1"/>
 </export>

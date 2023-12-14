@@ -40,9 +40,9 @@ namespace classic_svFit
     energy() const;
 
     /// return uncertainty on missing momentum (covariance matrix and its inverse)
-    TMatrixD&
+    const TMatrixD&
     cov() const;
-    TMatrixD&
+    const TMatrixD&
     covInv() const;
     bool
     covInv_isValid() const;
@@ -55,7 +55,7 @@ namespace classic_svFit
    protected:
     // set cov data-member
     void
-    setCov();
+    setCov(const TMatrixD& cov);
 
     /// type of MeasuredMEt object (either proton-proton or electron-positron collisions)
     int type_;

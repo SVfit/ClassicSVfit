@@ -6,15 +6,18 @@
 #include "TauAnalysis/ClassicSVfit/interface/FittedTauLepton.h"      // FittedTauLepton
 #include "TauAnalysis/ClassicSVfit/interface/svFitAuxFunctions.h"    // Vector
 
-class PolVecAlgoOneProng1Pi0
+namespace classic_svFit
 {
- public:
-  PolVecAlgoOneProng1Pi0();
-  ~PolVecAlgoOneProng1Pi0();
+  class PolVecAlgoOneProng1Pi0
+  {
+   public:
+    PolVecAlgoOneProng1Pi0();
+    ~PolVecAlgoOneProng1Pi0();
 
-  classic_svFit::Vector
-  operator()(const MeasuredTauLeptonLT& measuredTauLepton, const FittedTauLepton& fittedTauLepton, int tau, 
-             const BoostToHelicityFrame& boostToHelicityFrame) const;
-};
+    Vector
+    operator()(const MeasuredTauLepton& measuredTauLepton, const FittedTauLepton& fittedTauLepton, int tau, 
+               const BoostToHelicityFrame& boostToHelicityFrame) const;
+  };
+}
 
 #endif

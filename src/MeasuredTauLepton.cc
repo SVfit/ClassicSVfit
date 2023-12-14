@@ -2,9 +2,11 @@
 
 #include <algorithm> // std::sort()
 #include <assert.h>  // assert()
-#include <cmath.h>   // cos(), cosh(), sin(), sinh(), std::sqrt()
+#include <cmath>     // cos(), cosh(), sin(), sinh(), std::sqrt()
+#include <iostream>  // std::cerr, std::cout, std::endl
 
-using namespace classic_svFit;
+namespace classic_svFit
+{
 
 MeasuredTauLepton::MeasuredTauLepton()
   : type_(kUndefinedDecayType)
@@ -78,7 +80,7 @@ MeasuredTauLepton::MeasuredTauLepton(const MeasuredTauLepton& measuredTauLepton)
   , covInvDecayVertex_(measuredTauLepton.covInvDecayVertex_)
   , covInvDecayVertex_isValid_(measuredTauLepton.covInvDecayVertex_isValid_)
   , hasHadTauDecayProducts_(measuredTauLepton.hasHadTauDecayProducts_)
-  , measuredHadTauDecayProducts_(measuredTauLepton.measuredHadTauDecayProducts())
+  , measuredHadTauDecayProducts_(measuredTauLepton.measuredHadTauDecayProducts_)
 {
   preciseVisMass_ = measuredTauLepton.mass();
   initialize();
@@ -177,7 +179,7 @@ MeasuredTauLepton::covDecayVertex() const
   return covDecayVertex_;
 }
 
-TMatrixD&
+const TMatrixD&
 MeasuredTauLepton::covInvDecayVertex() const
 {
   return covInvDecayVertex_;
@@ -303,13 +305,13 @@ MeasuredTauLepton::setDecayVertex(const Point& measuredDecayVertex, const TMatri
 }
 
 void
-MeasuredTauLepton::setHadTauDecayProducts()
+MeasuredTauLepton::setHadTauDecayProducts(const std::vector<MeasuredHadTauDecayProduct>* measuredHadTauDecayProducts)
 {
   if ( measuredHadTauDecayProducts )
   {
     if ( type_ != kTauToHadDecay )
     {
-      std::cerr << "ERROR: " << type_string_ << " declared for leg, but hadronic tau decay products given << " !!" << std::endl;
+      std::cerr << "ERROR: " << type_string_ << " declared for leg, but hadronic tau decay products given !!" << std::endl;
       assert(0);
     }
     
@@ -317,7 +319,7 @@ MeasuredTauLepton::setHadTauDecayProducts()
     std::sort(measuredHadTauDecayProducts_.begin(), measuredHadTauDecayProducts_.end(), sortMeasuredHadTauDecayProducts());
 
     int charge_sum = 0;
-    for ( const MeasuredHadTauDecayProduct& measuredHadTauDecayProduct : measuredHadTauDecayProduct_ )
+    for ( const MeasuredHadTauDecayProduct& measuredHadTauDecayProduct : measuredHadTauDecayProducts_ )
     {
       charge_sum += measuredHadTauDecayProduct.charge();
     }
@@ -339,7 +341,7 @@ MeasuredTauLepton::initialize()
   px_ = pt_*cos(phi_);
   py_ = pt_*sin(phi_);
   pz_ = pt_*sinh(eta_);
-  energy_ = std::::sqrt(p_*p_ + preciseVisMass_*preciseVisMass_);
+  energy_ = std::sqrt(p_*p_ + preciseVisMass_*preciseVisMass_);
   p4_ = LorentzVector(px_, py_, pz_, energy_);
   p3_ = Vector(px_, py_, pz_);
 
@@ -369,7 +371,7 @@ MeasuredTauLepton::isPrompt() const
 //---------------------------------------------------------------------------------------------------
 // auxiliary function for printing MeasuredTauLepton objects (for debugging purposes)
 std::ostream&
-operator<<(std::ostream& os, const std::vector<MeasuredTauLeptons>& measuredTauLeptons)
+operator<<(std::ostream& os, const std::vector<MeasuredTauLepton>& measuredTauLeptons)
 {
   for ( size_t idx = 0; idx < measuredTauLeptons.size(); ++idx )
   {
@@ -404,3 +406,5 @@ sortMeasuredTauLeptons::operator() (const MeasuredTauLepton& measuredTauLepton1,
   return measuredTauLepton1.pt() > measuredTauLepton2.pt();
 }
 //---------------------------------------------------------------------------------------------------
+
+}

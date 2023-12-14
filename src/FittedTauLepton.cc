@@ -2,7 +2,8 @@
 
 #include <TMath.h>
 
-using namespace classic_svFit;
+namespace classic_svFit
+{
 
 FittedTauLepton::FittedTauLepton(int iTau, int verbosity)
   : iTau_(iTau)
@@ -151,4 +152,6 @@ double FittedTauLepton::nuMass() const
 int FittedTauLepton::errorCode() const
 {
   return errorCode_;
+}
+
 }

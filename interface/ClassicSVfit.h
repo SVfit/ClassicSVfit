@@ -1,19 +1,15 @@
 #ifndef TauAnalysis_ClassicSVfit_ClassicSVfitBase_h
 #define TauAnalysis_ClassicSVfit_ClassicSVfitBase_h
 
-#include "TauAnalysis/ClassicSVfit/interface/ClassicSVfitIntegrand.h"
-#include "TauAnalysis/ClassicSVfit/interface/MeasuredEvent.h"
-#include "TauAnalysis/ClassicSVfit/interface/svFitHistogramAdapter.h"
-#include "TauAnalysis/ClassicSVfit/interface/SVfitIntegratorMarkovChain.h"
+#include "TauAnalysis/ClassicSVfit/interface/ClassicSVfitIntegrand.h"      // ClassicSVfitIntegrand
+#include "TauAnalysis/ClassicSVfit/interface/MeasuredEvent.h"              // MeasuredEvent
+#include "TauAnalysis/ClassicSVfit/interface/svFitHistogramAdapter.h"      // HistogramAdapterDiTau*
+#include "TauAnalysis/ClassicSVfit/interface/SVfitIntegratorMarkovChain.h" // SVfitIntegratorMarkovChain
 #ifdef USE_SVFITTF
-#include "TauAnalysis/SVfitTF/interface/HadTauTFBase.h"
+#include "TauAnalysis/SVfitTF/interface/HadTauTFBase.h"                    // HadTauTFBase
 #endif
 
-#include <TBenchmark.h>
-#include <TFile.h>
-#include <TGraphErrors.h>
-#include <TMath.h>
-#include <TMatrixD.h>
+#include <TBenchmark.h>                                                    // TBenchmark
 
 class ClassicSVfit
 {
@@ -77,7 +73,7 @@ class ClassicSVfit
 
   /// run integration with Markov Chain
   void
-  integrate(const MeasuredEvent& measuredEvent);
+  integrate(const classic_svFit::MeasuredEvent& measuredEvent);
 
   /// return flag indicating if algorithm succeeded to find valid solution
   bool
@@ -102,10 +98,13 @@ class ClassicSVfit
   void
   initializeLegIntegrationRanges(size_t iLeg);
 
-  classic_svFit::ClassicSVfitIntegrandBase* integrand_;
+  classic_svFit::ClassicSVfitIntegrand* integrand_;
 
   /// reference to MeasuredTauLepton objects of MeasuredEvent given as parameter to integrate() function
-  std::vector<MeasuredTauLepton> measuredTauLeptons_;
+  std::vector<classic_svFit::MeasuredTauLepton> measuredTauLeptons_;
+
+  /// account for resolution on pT of hadronic tau decays via appropriate transfer functions
+  bool useHadTauTF_; 
 
   /// enable use of transverse impact parameter (for 1-prongs) and tau decay vertex (for 3-prongs)
   bool useTauFlightLength_;
@@ -131,9 +130,6 @@ class ClassicSVfit
 
   /// flag indicating if algorithm succeeded to find valid solution
   bool isValidSolution_;
-
-  /// account for resolution on pT of hadronic tau decays via appropriate transfer functions
-  bool useHadTauTF_;
 
   /// clock for measuring run-time of algorithm
   TBenchmark* clock_;

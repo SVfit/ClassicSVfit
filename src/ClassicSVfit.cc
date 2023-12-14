@@ -1,13 +1,6 @@
 #include "TauAnalysis/ClassicSVfit/interface/ClassicSVfit.h"
 
-#include "TauAnalysis/ClassicSVfit/interface/SVfitIntegratorMarkovChain.h"
-
-#include <TGraphErrors.h>
-#include <TH1.h>
-#include <TMatrixD.h>
-#include <TMatrixDSym.h>
-#include <TMatrixDSymEigen.h>
-#include <TVectorD.h>
+#include <TMath.h> // TMath::Nint(), TMath::Pi()
 
 using namespace classic_svFit;
 
@@ -21,6 +14,8 @@ namespace
 
 ClassicSVfit::ClassicSVfit(int verbosity)
   : integrand_(nullptr)
+  , useHadTauTF_(false)
+  , useTauFlightLength_(false)
   , diTauMassConstraint_(-1.)
   , histogramAdapter_(nullptr)
   , intAlgo_(nullptr)
@@ -31,8 +26,6 @@ ClassicSVfit::ClassicSVfit(int verbosity)
   , xl_(nullptr)
   , xh_(nullptr)
   , isValidSolution_(false)
-  , useTauFlightLength_(false)
-  , useHadTauTF_(false)
   , clock_(nullptr)
   , numSeconds_cpu_(-1.)
   , numSeconds_real_(-1.)
@@ -47,7 +40,7 @@ ClassicSVfit::ClassicSVfit(int verbosity)
   clock_ = new TBenchmark();
 }
 
-ClassicSVfitBase::~ClassicSVfitBase()
+ClassicSVfit::~ClassicSVfit()
 {
   delete integrand_;
 
@@ -154,7 +147,7 @@ ClassicSVfit::getHistogramAdapter(unsigned int idx) const
   }
 }
 
-void ClassicSVfitBase::setVerbosity(int aVerbosity)
+void ClassicSVfit::setVerbosity(int aVerbosity)
 {
   verbosity_ = aVerbosity;
   integrand_->setVerbosity(verbosity_);
@@ -255,7 +248,7 @@ void ClassicSVfit::integrate(const MeasuredEvent& measuredEvent)
     unsigned int numMEtSystematics = measuredMEt.size() - 1;
     for ( unsigned int iMEtSystematic = 0; iMEtSystematic < numMEtSystematics; ++iMEtSystematic )
     {
-      HistogramAdapterDiTau* histogramAdapter = histogramAdapter_->clone();
+      HistogramAdapterDiTau* histogramAdapter = static_cast<HistogramAdapterDiTau*>(histogramAdapter_->clone());
       integrand_->setMEtSystematic(iMEtSystematic);
       integrand_->setHistogramAdapter(histogramAdapter);
 
@@ -286,12 +279,12 @@ void ClassicSVfit::integrate(const MeasuredEvent& measuredEvent)
   }
 }
 
-bool ClassicSVfitBase::isValidSolution() const 
+bool ClassicSVfit::isValidSolution() const 
 {
   return isValidSolution_;
 }
 
-void ClassicSVfit::initializeIntegrationParams(bool useDiTauMassConstraint)
+void ClassicSVfit::initializeIntegrationParams()
 {
   numDimensions_ = 0;
   bool useDiTauMassConstraint = (diTauMassConstraint_ > 0);
@@ -323,17 +316,17 @@ void ClassicSVfit::initializeIntegrationParams(bool useDiTauMassConstraint)
   }
 }
 
-double ClassicSVfitBase::getComputingTime_cpu() const 
+double ClassicSVfit::getComputingTime_cpu() const 
 {
   return numSeconds_cpu_;
 }
 
-double ClassicSVfitBase::getComputingTime_real() const 
+double ClassicSVfit::getComputingTime_real() const 
 {
   return numSeconds_real_;
 }
 
-void ClassicSVfitBase::initializeIntAlgo()
+void ClassicSVfit::initializeIntAlgo()
 {
   //unsigned numChains = TMath::Nint(maxObjFunctionCalls_/100000.);
   unsigned numChains = 1;
@@ -356,7 +349,7 @@ void ClassicSVfitBase::initializeIntAlgo()
 }
 
 void
-ClassicSVfitBase::initializeLegIntegrationParams(size_t iLeg, bool useMassConstraint)
+ClassicSVfit::initializeLegIntegrationParams(size_t iLeg, bool useMassConstraint)
 {
   assert(iLeg < measuredTauLeptons_.size());
   const MeasuredTauLepton& measuredTauLepton = measuredTauLeptons_[iLeg];
@@ -408,7 +401,7 @@ ClassicSVfitBase::initializeLegIntegrationParams(size_t iLeg, bool useMassConstr
 }
 
 void
-ClassicSVfitBase::initializeLegIntegrationRanges(size_t iLeg)
+ClassicSVfit::initializeLegIntegrationRanges(size_t iLeg)
 {
   const classic_svFit::integrationParameters& aIntParams = legIntegrationParams_[iLeg];
   if ( aIntParams.idx_X_ != -1 )

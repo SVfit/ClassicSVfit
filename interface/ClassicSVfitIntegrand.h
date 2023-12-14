@@ -5,6 +5,7 @@
 #ifdef USE_SVFITTF
 #include "TauAnalysis/SVfitTF/interface/HadTauTFBase.h"               // HadTauTFBase
 #endif
+#include "TauAnalysis/ClassicSVfit/interface/MarkovChainRecorder.h"   // MarkovChainRecorder
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredEvent.h"         // MeasuredEvent 
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredMEt.h"           // MeasuredMEt
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredTauLepton.h"     // MeasuredTauLepton
@@ -62,7 +63,8 @@ namespace classic_svFit
 
     /// set pointer to histograms used to keep track of pT, eta, phi, mass and transverse mass of di-tau system
     /// during Markov Chain integration
-    void setHistogramAdapter(HistogramAdapterDiTau* histogramAdapter);
+    void
+    setHistogramAdapter(HistogramAdapterDiTau* histogramAdapter);
 
     void
     initializeLegIntegrationParams(size_t iLeg, const integrationParameters& aParams);
@@ -74,7 +76,7 @@ namespace classic_svFit
     setVerbosity(int aVerbosity);
 
     void
-    initializeIntegrationRanges(const double* xl, const double* xh);
+    setIntegrationRanges(const double* xl, const double* xh);
 
 #ifdef USE_SVFITTF
     /// enable/disable use of transfer functions for pT of hadronic tau decays;
@@ -93,6 +95,9 @@ namespace classic_svFit
     /// where q is given in standardized range [0,1] for each dimension
     double
     Eval(const double* q) const;
+
+    /// static pointer to this (needed for interfacing the likelihood function calls to Markov Chain integration)
+    static const ClassicSVfitIntegrand* gSVfitIntegrand;
 
    protected:
     /// transform the values fo integration variables from [0,1] to desired [xMin,xMax] range
@@ -126,14 +131,14 @@ namespace classic_svFit
     MeasuredTauLepton measuredTauLepton1_;
     Point measuredDecayVertex1_;
     TMatrixD covInvDecayVertex1_;
-    MeasuredHadTauDecayProduct* measuredLeadChargedHadron1_;
+    const MeasuredHadTauDecayProduct* measuredLeadChargedHadron1_;
     bool leg1isLeptonicTauDecay_;
     bool leg1isHadronicTauDecay_;
     bool leg1isPrompt_;
     MeasuredTauLepton measuredTauLepton2_;
     Point measuredDecayVertex2_;
     TMatrixD covInvDecayVertex2_;
-    MeasuredHadTauDecayProduct* measuredLeadChargedHadron2_;
+    const MeasuredHadTauDecayProduct* measuredLeadChargedHadron2_;
     bool leg2isLeptonicTauDecay_;
     bool leg2isHadronicTauDecay_;
     bool leg2isPrompt_;
@@ -149,7 +154,8 @@ namespace classic_svFit
 
     /// flag to enable/disable use of transverse impact parameter (for 1-prongs) and tau decay vertex (for 3-prongs) information
     bool useTauFlightLength_;
-    double const_FlightLength_;
+    double const_FlightLength1_;
+    double const_FlightLength2_;
 
     /// flag to enable/disable tau-pair mass constraint
     double diTauMassConstraint_;

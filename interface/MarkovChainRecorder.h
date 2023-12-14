@@ -1,7 +1,10 @@
-#ifndef TauAnalysis_ClassicSVfit_svFitHistogramAdapter_h
-#define TauAnalysis_ClassicSVfit_svFitHistogramAdapter_h
+#ifndef TauAnalysis_ClassicSVfit_MarkovChainRecorder_h
+#define TauAnalysis_ClassicSVfit_MarkovChainRecorder_h
 
-#include <Math/Functor.h>
+#include <Math/Functor.h> // ROOT::Math::Functor
+
+#include <string>         // std::string
+#include <vector>         // std::vector<>
 
 namespace classic_svFit
 {
@@ -24,8 +27,10 @@ namespace classic_svFit
     double
     DoEval(const double* x) const;
 
-    std::vector<std::vector<double>> points_;
-    std::vector<double> values_;
+    unsigned int numDimensions_;
+
+    mutable std::vector<std::vector<double>> points_;
+    mutable std::vector<double> values_;
 
     double* x_;
   };

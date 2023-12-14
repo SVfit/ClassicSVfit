@@ -1,4 +1,4 @@
-#include "TauAnalysis/ClassicSVfitLT/interface/comp_PCA_line2line.h"
+#include "TauAnalysis/ClassicSVfit/interface/comp_PCA_line2line.h"
 
 #include <TVectorD.h> // TVectorD
 
@@ -19,12 +19,15 @@ namespace
     return retVal;
   }
 
-  reco::Candidate::Vector
+  Vector
   convert_to_recoVector(const TVectorD& v)
   {
     return Vector(v(0), v(1), v(2));
   }
 }
+
+namespace classic_svFit
+{
 
 std::pair<Point, Point>
 comp_PCA_line2line(const Point& p1, const Vector& v1,
@@ -40,10 +43,10 @@ comp_PCA_line2line(const Point& p1, const Vector& v1,
   TVectorD e2 = convert_to_mathVector(v2.unit());
   TVectorD covInv_times_e2 = covInv*e2;
   TMatrixD A(2,2);
-  A(0,0) =  e1*covInv_times_e1;
-  A(0,1) = -e1*covInv_times_e2;
-  A(1,0) =  e2*covInv_times_e1;
-  A(1,1) = -e2*covInv_times_e2;
+  A(0,0) =   e1*covInv_times_e1;
+  A(0,1) = -(e1*covInv_times_e2);
+  A(1,0) =   e2*covInv_times_e1;
+  A(1,1) = -(e2*covInv_times_e2);
   if ( A.Determinant() == 0. )
   {
     std::cerr << "ERROR: Failed to invert matrix A !!" << std::endl;
@@ -68,4 +71,6 @@ comp_PCA_line2line(const Point& p1, const Vector& v1,
   Point pca1 = p1 + lambda1*convert_to_recoVector(e1);
   Point pca2 = p2 + lambda2*convert_to_recoVector(e2);
   return std::pair<Point, Point>(pca1, pca2);
+}
+
 }

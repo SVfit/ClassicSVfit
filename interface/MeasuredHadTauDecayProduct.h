@@ -1,5 +1,5 @@
-#ifndef TauAnalysis_ClassicSVfitLT_MeasuredHadTauDecayProduct_h
-#define TauAnalysis_ClassicSVfitLT_MeasuredHadTauDecayProduct_h
+#ifndef TauAnalysis_ClassicSVfit_MeasuredHadTauDecayProduct_h
+#define TauAnalysis_ClassicSVfit_MeasuredHadTauDecayProduct_h
 
 #include "TauAnalysis/ClassicSVfit/interface/svFitAuxFunctions.h" // Vector, LorentzVector
 
@@ -8,6 +8,7 @@ namespace classic_svFit
   class MeasuredHadTauDecayProduct
   {
    public:
+    MeasuredHadTauDecayProduct();
     MeasuredHadTauDecayProduct(int, double, double, double, double);
     MeasuredHadTauDecayProduct(const MeasuredHadTauDecayProduct&);
     ~MeasuredHadTauDecayProduct();

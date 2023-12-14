@@ -1,8 +1,9 @@
-#include "TauAnalysis/ClassicSVfitLT/interface/MeasuredHadTauDecayProduct.h"
+#include "TauAnalysis/ClassicSVfit/interface/MeasuredHadTauDecayProduct.h"
 
 #include <TMath.h>
 
-using namespace classic_svFit;
+namespace classic_svFit
+{
 
 MeasuredHadTauDecayProduct::MeasuredHadTauDecayProduct()
   : charge_(0)
@@ -59,7 +60,7 @@ double MeasuredHadTauDecayProduct::phi() const
 
 double MeasuredHadTauDecayProduct::mass() const 
 { 
-  return preciseVisMass_; 
+  return mass_; 
 }
 
 double MeasuredHadTauDecayProduct::energy() const 
@@ -85,11 +86,6 @@ double MeasuredHadTauDecayProduct::pz() const
 double MeasuredHadTauDecayProduct::p() const 
 {
   return p_; 
-}
-
-int MeasuredHadTauDecayProduct::decayMode() const 
-{
-  return decayMode_; 
 }
 
 LorentzVector MeasuredHadTauDecayProduct::p4() const 
@@ -121,3 +117,5 @@ bool sortMeasuredHadTauDecayProducts::operator() (const MeasuredHadTauDecayProdu
   return ( measuredHadTauDecayProduct1.pt() > measuredHadTauDecayProduct2.pt() );
 }
 //---------------------------------------------------------------------------------------------------
+
+}

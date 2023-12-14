@@ -1,3 +1,8 @@
+#include "TauAnalysis/ClassicSVfit/interface/MarkovChainRecorder.h"
+
+#include <assert.h> // assert()
+
+using namespace classic_svFit;
 
 MarkovChainRecorder::MarkovChainRecorder(unsigned int numDimensions)
   : numDimensions_(numDimensions)
@@ -36,7 +41,7 @@ MarkovChainRecorder::getValue(unsigned int iPoint)
   return values_[iPoint];
 }
 
-void
+double
 MarkovChainRecorder::DoEval(const double* x) const
 {
   std::vector<double> point(numDimensions_);
@@ -46,4 +51,5 @@ MarkovChainRecorder::DoEval(const double* x) const
   }
   points_.push_back(point);
   values_.push_back(x[numDimensions_]);
+  return 0.;
 }

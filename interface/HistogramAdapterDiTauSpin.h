@@ -3,8 +3,12 @@
 
 #include "TauAnalysis/ClassicSVfit/interface/BoostToHelicityFrame.h"  // BoostToHelicityFrame
 #include "TauAnalysis/ClassicSVfit/interface/FittedTauLepton.h"       // FittedTauLepton
-#include "TauAnalysis/ClassicSVfit/interface/HistogramAdapterDiTau.h" // HistogramAdapterDiTau
+#include "TauAnalysis/ClassicSVfit/interface/MeasuredEvent.h"         // MeasuredEvent
 #include "TauAnalysis/ClassicSVfit/interface/PolarimeterVector.h"     // PolarimeterVector
+#include "TauAnalysis/ClassicSVfit/interface/svFitAuxFunctions.h"     // LorentzVector, Vector
+#include "TauAnalysis/ClassicSVfit/interface/svFitHistogramAdapter.h" // HistogramAdapterDiTau
+
+#include <string>                                                     // std::string
 
 namespace classic_svFit
 {
@@ -14,14 +18,14 @@ namespace classic_svFit
   {
    public:
     SVfitQuantityB_i(const std::string& label);
-    virtual TH1* createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
+    virtual TH1* createHistogram(const MeasuredEvent& measuredEvent) const;
   };
 
   class SVfitQuantityC_ij : public SVfitQuantityDiTau
   {
    public:
     SVfitQuantityC_ij(const std::string& label);
-    virtual TH1* createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
+    virtual TH1* createHistogram(const MeasuredEvent& measuredEvent) const;
   };
   //-------------------------------------------------------------------------------------------------
 
@@ -45,7 +49,7 @@ namespace classic_svFit
     setFittedTauLeptons(const FittedTauLepton& fittedTauLepton1, const FittedTauLepton& fittedTauLepton2);
 
     void
-    fillHistograms(double weight) const;
+    fillHistograms(double weight = 1.) const;
 
     /// get elements of spin polarization vectors Bp and Bm and of spin correlation matrix C
     double
@@ -116,8 +120,8 @@ namespace classic_svFit
     DoEval(const double* x) const;
 
    protected:
-    FittedTauLepton* fittedTauPlus_;
-    FittedTauLepton* fittedTauMinus_;
+    const FittedTauLepton* fittedTauPlus_;
+    const FittedTauLepton* fittedTauMinus_;
 
     BoostToHelicityFrame boostToHelicityFrame_;
     PolarimeterVector polarimeterVector_;
@@ -142,3 +146,5 @@ namespace classic_svFit
   };
   //-------------------------------------------------------------------------------------------------
 }
+
+#endif

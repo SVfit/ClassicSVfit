@@ -35,7 +35,8 @@ namespace classic_svFit
 
     /// set initial position of Markov Chain in N-dimensional space to given values,
     /// in order to start path of chain transitions from non-random point
-    void initializeStartPosition_and_Momentum(const double*);
+    void
+    initializeStartPosition_and_Momentum(const double*);
 
     /// register "call-back" functions:
     /// A user may register any number of "call-back" functions,
@@ -47,29 +48,43 @@ namespace classic_svFit
     /// The argument x is a vector of dimensionality N,
     /// represent the current position q of the Markov Chain in the
     /// N-dimensional space in which the integration is performed.
-    void registerCallBackFunction(const ROOT::Math::Functor&);
+    void
+    registerCallBackFunction(const ROOT::Math::Functor&);
+
+    /// clear list of registered "call-back" functions
+    void
+    clearCallBackFunctions();
 
     /// compute integral of function g
     /// the points xl and xh represent the lower left and upper right corner of a Hypercube in d-dimensional integration space
     typedef double (*gPtr_C)(const double*, size_t, void*);
-    void integrate(gPtr_C g, const double* xl, const double* xu, unsigned d, double& integral, double& integralErr);
+    void
+    integrate(gPtr_C g, const double* xl, const double* xu, unsigned d, double& integral, double& integralErr);
 
-    double getProbMax() const { return probMax_; }
+    double
+    getProbMax() const { return probMax_; }
 
-    void print(std::ostream&) const;
+    void
+    print(std::ostream&) const;
 
   protected:
-    void setIntegrand(gPtr_C, const double*, const double*, unsigned);
+    void
+    setIntegrand(gPtr_C, const double*, const double*, unsigned);
 
-    void initializeStartPosition_and_Momentum();
+    void
+    initializeStartPosition_and_Momentum();
 
-    void makeStochasticMove(unsigned, bool&, bool&);
+    void
+    makeStochasticMove(unsigned, bool&, bool&);
 
-    void sampleSphericallyRandom();
+    void
+    sampleSphericallyRandom();
 
-    void updateX(const std::vector<double>&);
+    void
+    updateX(const std::vector<double>&);
 
-    double evalProb(const std::vector<double>&);
+    double
+    evalProb(const std::vector<double>&);
 
     gPtr_C integrand_;
 
@@ -78,7 +93,7 @@ namespace classic_svFit
     ///  xMin:          lower boundaries of integration region
     ///  xMax:          upper boundaries of integration region
     ///  initMode:      flag indicating how initial position of Markov Chain is chosen (uniform/Gaus distribution)
-    unsigned numDimensions_;
+    unsigned int numDimensions_;
     double* x_;
     std::vector<double> xMin_; // index = dimension
     std::vector<double> xMax_; // index = dimension
@@ -90,32 +105,32 @@ namespace classic_svFit
     ///                   their purpose is to make the computed integral value ~independent
     ///                   of the initial position at which the Markov Chain is started)
     ///  numIterSampling: number of "stochastic moves" used to compute integral
-    unsigned numIterBurnin_;
-    unsigned numIterSampling_;
+    unsigned int numIterBurnin_;
+    unsigned int numIterSampling_;
 
     // maximum number of attempts to find a valid starting-position for the Markov Chain
     // (i.e. an initial point of non-zero probability)
-    unsigned maxCallsStartingPos_;
+    unsigned int maxCallsStartingPos_;
 
     /// parameters defining "simulated annealing" stage at beginning of integration
     ///  simAnnealingAlpha: number of "stochastic moves" performed at high temperature during "burnin" stage
     ///  T0:                initial annealing temperature
     ///  alpha:             speed parameter with which temperature decreases (~alpha^iteration)
-    unsigned numIterSimAnnealingPhase1_;
-    unsigned numIterSimAnnealingPhase2_;
-    unsigned numIterSimAnnealingPhase1plus2_;
+    unsigned int numIterSimAnnealingPhase1_;
+    unsigned int numIterSimAnnealingPhase2_;
+    unsigned int numIterSimAnnealingPhase1plus2_;
     double T0_;
     double sqrtT0_;
     double alpha_;
     double alpha2_;
 
     /// number of Markov Chains run in parallel
-    unsigned numChains_;
+    unsigned int numChains_;
 
     /// number of iterations per batch
     /// (used for estimation of uncertainty on computed integral value,
     ///  according to eqs. (6.39) and (6.40) in [1])
-    unsigned numBatches_;
+    unsigned int numBatches_;
 
     /// parameters defining step-sizes of Metropolis moves:
     ///  epsilon0: average step-size
@@ -146,7 +161,7 @@ namespace classic_svFit
     long numMoves_accepted_;
     long numMoves_rejected_;
 
-    unsigned numChainsRun_;
+    unsigned int numChainsRun_;
 
     long numIntegrationCalls_;
     long numMovesTotal_accepted_;
@@ -157,6 +172,7 @@ namespace classic_svFit
     int errorFlag_;
 
     std::vector<const ROOT::Math::Functor*> callBackFunctions_;
+    double* x_and_prob_;
 
     std::string treeFileName_;
     TFile* treeFile_;

@@ -1,6 +1,8 @@
 #ifndef TauAnalysis_ClassicSVfit_svFitHistogramAdapter_h
 #define TauAnalysis_ClassicSVfit_svFitHistogramAdapter_h
 
+#include "TauAnalysis/ClassicSVfit/interface/FittedTauLepton.h"
+#include "TauAnalysis/ClassicSVfit/interface/MeasuredEvent.h"
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredTauLepton.h"
 
 #include <Math/Functor.h>
@@ -11,8 +13,12 @@ namespace classic_svFit
   class HistogramTools
   {
    public:
-    static TH1* compHistogramDensity(TH1 const* histogram);
-    static void extractHistogramProperties(
+    static
+    TH1*
+    compHistogramDensity(TH1 const* histogram);
+    static
+    void
+    extractHistogramProperties(
         TH1 const* histogram,
         double& xMaximum,
         double& xMaximum_interpol,
@@ -21,29 +27,47 @@ namespace classic_svFit
         double& xQuantile050,
         double& xQuantile084
     );
-    static double extractValue(TH1 const* histogram);
-    static double extractUncertainty(TH1 const* histogram);
-    static double extractLmax(TH1 const* histogram);
-    static TH1* makeHistogram_linBinWidth(const std::string& histogramName, int numBins, double xMin, double xMax);
-    static TH1* makeHistogram_logBinWidth(const std::string& histogramName, double xMin, double xMax, double logBinWidth);
+    static
+    double
+    extractValue(TH1 const* histogram);
+    static
+    double
+    extractUncertainty(TH1 const* histogram);
+    static
+    double
+    extractLmax(TH1 const* histogram);
+    static
+    TH1*
+    makeHistogram_linBinWidth(const std::string& histogramName, int numBins, double xMin, double xMax);
+    static
+    TH1*
+    makeHistogram_logBinWidth(const std::string& histogramName, double xMin, double xMax, double logBinWidth);
   };
 
   class SVfitQuantity
   {
    public:
     SVfitQuantity(const std::string& label);
-    virtual ~SVfitQuantity();
+    virtual
+    ~SVfitQuantity();
 
-    const TH1* getHistogram() const;
-    void writeHistogram() const;
+    const TH1*
+    getHistogram() const;
+    void
+    writeHistogram() const;
 
-    void fillHistogram(double value);
+    void
+    fillHistogram(double value, double weight = 1.);
 
-    double extractValue() const;
-    double extractUncertainty() const;
-    double extractLmax() const;
+    double
+    extractValue() const;
+    double
+    extractUncertainty() const;
+    double
+    extractLmax() const;
 
-    bool isValidSolution() const;
+    bool
+    isValidSolution() const;
 
    protected:
     std::string label_;
@@ -60,15 +84,24 @@ namespace classic_svFit
   {
    public:
     HistogramAdapter(const std::string& label);
-    virtual ~HistogramAdapter();
+    virtual
+    ~HistogramAdapter();
 
-    void writeHistograms(const std::string& likelihoodFileName) const;
+    virtual
+    HistogramAdapter* clone() = 0;
 
-    double extractValue(const SVfitQuantity* quantity) const;
-    double extractUncertainty(const SVfitQuantity* quantity) const;
-    double extractLmax(const SVfitQuantity* quantity) const;
+    void
+    writeHistograms(const std::string& likelihoodFileName) const;
 
-    bool isValidSolution() const;
+    double
+    extractValue(const SVfitQuantity* quantity) const;
+    double
+    extractUncertainty(const SVfitQuantity* quantity) const;
+    double
+    extractLmax(const SVfitQuantity* quantity) const;
+
+    bool
+    isValidSolution() const;
 
    protected:
     std::string label_;
@@ -83,30 +116,39 @@ namespace classic_svFit
    public:
     SVfitQuantityTau(const std::string& label);
 
-    virtual TH1* createHistogram(const LorentzVector& visP4) const = 0;
+    virtual
+    TH1*
+    createHistogram(const MeasuredTauLepton& measuredTauLepton) const = 0;
 
-    void bookHistogram(const LorentzVector& visP4);
+    void
+    bookHistogram(const MeasuredTauLepton& measuredTauLepton);
   };
 
   class SVfitQuantityTauPt : public SVfitQuantityTau
   {
    public:
     SVfitQuantityTauPt(const std::string& label);
-    virtual TH1* createHistogram(const LorentzVector& visP4) const;
+    virtual
+    TH1*
+    createHistogram(const MeasuredTauLepton& measuredTauLepton) const;
   };
 
   class SVfitQuantityTauEta : public SVfitQuantityTau
   {
    public:
     SVfitQuantityTauEta(const std::string& label);
-    virtual TH1* createHistogram(const LorentzVector& visP4) const;
+    virtual
+    TH1*
+    createHistogram(const MeasuredTauLepton& measuredTauLepton) const;
   };
 
   class SVfitQuantityTauPhi : public SVfitQuantityTau
   {
    public:
     SVfitQuantityTauPhi(const std::string& label);
-    virtual TH1* createHistogram(const LorentzVector& visP4) const;
+    virtual
+    TH1*
+    createHistogram(const MeasuredTauLepton& measuredTauLepton) const;
   };
   
   class HistogramAdapterTau : public HistogramAdapter
@@ -114,33 +156,52 @@ namespace classic_svFit
    public:
     HistogramAdapterTau(const std::string& label);
 
-    void bookHistograms(const LorentzVector& visP4);
+    HistogramAdapter*
+    clone() const;
 
-    void setMeasurement(const LorentzVector& visP4);
-    void setTauP4(const LorentzVector& tauP4);
+    void
+    bookHistograms(const MeasuredTauLepton& measuredTauLepton);
 
-    void fillHistograms(const LorentzVector& tauP4, const LorentzVector& visP4) const;
+    void
+    setMeasurement(const MeasuredTauLepton& measuredTauLepton);
+    void
+    setFittedTauLepton(const FittedTauLepton& fittedTauLepton);
+
+    void
+    fillHistograms(double weight = 1.) const;
 
     /// get pT, eta, phi, mass of tau lepton
-    double getPt() const;
-    double getPtErr() const;
-    double getPtLmax() const;
-    double getEta() const;
-    double getEtaErr() const;
-    double getEtaLmax() const;
-    double getPhi() const;
-    double getPhiErr() const;
-    double getPhiLmax() const;
+    double
+    getPt() const;
+    double
+    getPtErr() const;
+    double
+    getPtLmax() const;
+    double
+    getEta() const;
+    double
+    getEtaErr() const;
+    double
+    getEtaLmax() const;
+    double
+    getPhi() const;
+    double
+    getPhiErr() const;
+    double
+    getPhiLmax() const;
 
     /// convenient access to tau lepton four-vector
-    LorentzVector getP4() const;
+    LorentzVector
+    getP4() const;
 
   private:
-    double DoEval(const double* x) const;
+    double
+    DoEval(const double* x) const;
 
    protected:
+    MeasuredTauLepton measuredTauLepton_;
     LorentzVector visP4_;
-    LorentzVector tauP4_;
+    LorentzVector fittedTauP4_;
 
     SVfitQuantityTauPt* quantity_pt_;
     SVfitQuantityTauEta* quantity_eta_;
@@ -155,93 +216,135 @@ namespace classic_svFit
    public:
     SVfitQuantityDiTau(const std::string& label);
 
-    virtual TH1* createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const = 0;
+    virtual
+    TH1*
+    createHistogram(const MeasuredEvent& measuredEvent) const = 0;
 
-    void bookHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met);
+    void
+    bookHistogram(const MeasuredEvent& measuredEvent);
   };
 
   class SVfitQuantityDiTauPt : public SVfitQuantityDiTau
   {
    public:
     SVfitQuantityDiTauPt(const std::string& label);
-    virtual TH1* createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
+    virtual
+    TH1*
+    createHistogram(const MeasuredEvent& measuredEvent) const;
   };
 
   class SVfitQuantityDiTauEta : public SVfitQuantityDiTau
   {
    public:
     SVfitQuantityDiTauEta(const std::string& label);
-    virtual TH1* createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
+    virtual
+    TH1*
+    createHistogram(const MeasuredEvent& measuredEvent) const;
   };
 
   class SVfitQuantityDiTauPhi : public SVfitQuantityDiTau
   {
    public:
     SVfitQuantityDiTauPhi(const std::string& label);
-    virtual TH1* createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
+    virtual
+    TH1*
+    createHistogram(const MeasuredEvent& measuredEvent) const;
   };
 
   class SVfitQuantityDiTauMass : public SVfitQuantityDiTau
   {
    public:
     SVfitQuantityDiTauMass(const std::string& label);
-    virtual TH1* createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
+    virtual
+    TH1*
+    createHistogram(const MeasuredEvent& measuredEvent) const;
   };
 
   class SVfitQuantityDiTauTransverseMass : public SVfitQuantityDiTau
   {
    public:
     SVfitQuantityDiTauTransverseMass(const std::string& label);
-    virtual TH1* createHistogram(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
+    virtual
+    TH1*
+    createHistogram(const MeasuredEvent& measuredEvent) const;
   };
 
   class HistogramAdapterDiTau : public HistogramAdapter
   {
    public:
     HistogramAdapterDiTau(const std::string& label = "ditau");
+    virtual
     ~HistogramAdapterDiTau();
 
-    void bookHistograms(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met);
+    HistogramAdapter*
+    clone() const;
 
-    void setMeasurement(const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met);
-    void setTau1And2P4(const LorentzVector& tau1P4,  const LorentzVector& tau2P4);
+    virtual
+    void
+    bookHistograms(const MeasuredEvent& measuredEvent);
 
-    void fillHistograms(const LorentzVector& tau1P4, const LorentzVector& tau2P4, const LorentzVector& ditauP4,
-			const LorentzVector& vis1P4, const LorentzVector& vis2P4, const Vector& met) const;
+    virtual
+    void
+    setMeasurement(const MeasuredEvent& measuredEvent);
+    virtual
+    void
+    void setFittedTauLeptons(const FittedTauLepton& fittedTauLepton1, const FittedTauLepton& fittedTauLepton2);
 
-    HistogramAdapterTau* tau1() const;
-    HistogramAdapterTau* tau2() const;
+    virtual
+    void
+    fillHistograms(double weight = 1.) const;
+
+    HistogramAdapterTau*
+    tau1() const;
+    HistogramAdapterTau*
+    tau2() const;
 
     /// get pT, eta, phi, mass and transverse mass of di-tau system
-    double getPt() const;
-    double getPtErr() const;
-    double getPtLmax() const;
-    double getEta() const;
-    double getEtaErr() const;
-    double getEtaLmax() const;
-    double getPhi() const;
-    double getPhiErr() const;
-    double getPhiLmax() const;
-    double getMass() const;
-    double getMassErr() const;
-    double getMassLmax() const;
-    double getTransverseMass() const;
-    double getTransverseMassErr() const;
-    double getTransverseMassLmax() const;
+    double
+    getPt() const;
+    double
+    getPtErr() const;
+    double
+    getPtLmax() const;
+    double
+    getEta() const;
+    double
+    getEtaErr() const;
+    double
+    getEtaLmax() const;
+    double
+    getPhi() const;
+    double
+    getPhiErr() const;
+    double
+    getPhiLmax() const;
+    double
+    getMass() const;
+    double
+    getMassErr() const;
+    double
+    getMassLmax() const;
+    double
+    getTransverseMass() const;
+    double
+    getTransverseMassErr() const;
+    double
+    getTransverseMassLmax() const;
 
     /// convenient access to four-vector of di-tau system 
-    LorentzVector getP4() const;
+    LorentzVector
+    getP4() const;
 
-  private:
-    double DoEval(const double* x) const;
+   private:
+    double
+    DoEval(const double* x) const;
 
    protected:
-    LorentzVector vis1P4_;
-    LorentzVector vis2P4_;
-    Vector met_;
-    LorentzVector tau1P4_;
-    LorentzVector tau2P4_;
-    LorentzVector ditauP4_;
+    MeasuredEvent measuredEvent_;
+
+    LorentzVector fittedTau1P4_;
+    LorentzVector fittedTau2P4_;
+    LorentzVector fittedDiTauP4_;
 
     SVfitQuantityDiTauPt* quantity_pt_;
     SVfitQuantityDiTauEta* quantity_eta_;

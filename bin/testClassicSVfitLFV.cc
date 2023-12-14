@@ -22,15 +22,15 @@ int main(int argc, char* argv[])
   */
 
   // define MET
-  double measuredMETx = 17.6851;
-  double measuredMETy = 23.5161;
+  double measuredMEtPx = 17.6851;
+  double measuredMEtPy = 23.5161;
 
   // define MET covariance
-  TMatrixD covMET(2, 2);
-  covMET[0][0] = 284.0;
-  covMET[1][0] =  13.4;
-  covMET[0][1] =  13.4;
-  covMET[1][1] = 255.6;
+  TMatrixD covMEt(2, 2);
+  covMEt[0][0] = 284.0;
+  covMEt[1][0] =  13.4;
+  covMEt[0][1] =  13.4;
+  covMEt[1][1] = 255.6;
 
   //-------------------------------------------------------------------------------------------------
   // CV: this code is a bad example! 
@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
   double leg1Py   = -13.6761;
   double leg1Pz   = -61.7664;
   double leg1Mass =   0.105658;
-  double leg1En = TMath::Sqrt(leg1Px*leg1Px + leg1Py*leg1Py + leg1Pz*leg1Pz + leg1Mass*leg1Mass);
+  double leg1En   = TMath::Sqrt(leg1Px*leg1Px + leg1Py*leg1Py + leg1Pz*leg1Pz + leg1Mass*leg1Mass);
   classic_svFit::LorentzVector leg1P4(leg1Px, leg1Py, leg1Pz, leg1En); 
   
   double leg2Px   =  35.0206;
@@ -54,13 +54,16 @@ int main(int argc, char* argv[])
 
   // define lepton four vectors
   std::vector<MeasuredTauLepton> measuredTauLeptons;
-  measuredTauLeptons.push_back(MeasuredTauLepton(MeasuredTauLepton::kPrompt, leg1P4.pt(), leg1P4.eta(), leg1P4.phi(), leg1P4.mass())); // "prompt" muon (muon directly originating from LFV Higgs boson decay)
-  measuredTauLeptons.push_back(MeasuredTauLepton(MeasuredTauLepton::kTauToHadDecay, leg2P4.pt(), leg2P4.eta(), leg2P4.phi(), leg2P4.mass(), 10)); // tau -> tau_h nu (3-prong) decay
+  measuredTauLeptons.push_back(MeasuredTauLepton(MeasuredTauLepton::kPrompt, +1, leg1P4.pt(), leg1P4.eta(), leg1P4.phi(), leg1P4.mass())); // "prompt" muon (muon directly originating from LFV Higgs boson decay)
+  measuredTauLeptons.push_back(MeasuredTauLepton(MeasuredTauLepton::kTauToHadDecay, -1, leg2P4.pt(), leg2P4.eta(), leg2P4.phi(), leg2P4.mass(), 10)); // tau -> tau_h nu (3-prong) decay
   /*
      tauDecayModes:  0 one-prong without neutral pions
                      1 one-prong with neutral pions
                     10 three-prong without neutral pions
   */
+
+  MeasuredMEt measuredMEt(measuredMEtPx, measuredMEtPy, covMEt);
+  MeasuredEvent measuredEvent(measuredTauLeptons, { measuredMEt });
 
   int verbosity = 1;
   ClassicSVfit svFitAlgo(verbosity);
@@ -70,12 +73,12 @@ int main(int argc, char* argv[])
   //svFitAlgo.enableHadTauTF();
 #endif
 
-  //svFitAlgo.addLogM_fixed(false); 
-  svFitAlgo.addLogM_fixed(true, 3);
+  svFitAlgo.enableLogM(3.);
+  //svFitAlgo.disableLogM(); 
   //svFitAlgo.setMaxObjFunctionCalls(100000); // CV: default is 100000 evaluations of integrand per event
   svFitAlgo.setLikelihoodFileName("testClassicSVfitLFV.root");
 
-  svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+  svFitAlgo.integrate(measuredEvent);
   bool isValidSolution = svFitAlgo.isValidSolution();
 
   double mass = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getMass();

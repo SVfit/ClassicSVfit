@@ -4,28 +4,44 @@
 #include <TF1.h>
 #include <TFitResult.h>
 
-namespace classic_svFit
-{
+using namespace classic_svFit;
 
-double roundToNdigits(double x, int n)
+double
+roundToNdigits(double x, int n)
 {
   double tmp = TMath::Power(10., n);
-  if ( x != 0. ) {
+  if ( x != 0. )
+  {
     tmp /= TMath::Power(10., TMath::Floor(TMath::Log10(TMath::Abs(x))));
   }
   double x_rounded = TMath::Nint(x*tmp)/tmp;
-  //std::cout << "<roundToNdigits>: x = " << x << ", x_rounded = " << x_rounded << std::endl;
   return x_rounded;
 }
 
-TGraphErrors* makeGraph(const std::string& graphName, const std::vector<GraphPoint>& graphPoints)
+TMatrixD
+roundToNdigits(const TMatrixD& m, int n)
 {
-  //std::cout << "<makeGraph>:" << std::endl;
+  int nRows = m.GetNrows();
+  int nColumns = m.GetNcols();
+  TMatrixD m_rounded(nRows, nColumns);
+  for ( int iRow = 0; iRow < nRows; ++iRow )
+  {
+    for ( int iColumn = 0; iColumn < nColumns; ++iColumn )
+    {
+      m_rounded(iRow,iColumn) = roundToNdigits(m(iRow,iColumn), n);
+    }
+  }
+  return x_rounded;
+}
+
+TGraphErrors*
+makeGraph(const std::string& graphName, const std::vector<GraphPoint>& graphPoints)
+{
   size_t numPoints = graphPoints.size();
-  //std::cout << " numPoints = " << numPoints << std::endl;
   TGraphErrors* graph = new TGraphErrors(numPoints);
   graph->SetName(graphName.data());
-  for ( size_t iPoint = 0; iPoint < numPoints; ++iPoint ) {
+  for ( size_t iPoint = 0; iPoint < numPoints; ++iPoint )
+  {
     const GraphPoint& graphPoint = graphPoints[iPoint];
     graph->SetPoint(iPoint, graphPoint.x_, graphPoint.y_);
     graph->SetPointError(iPoint, graphPoint.xErr_, graphPoint.yErr_);
@@ -33,16 +49,19 @@ TGraphErrors* makeGraph(const std::string& graphName, const std::vector<GraphPoi
   return graph;
 }
 
-void extractResult(TGraphErrors* graph, double& mass, double& massErr, double& Lmax, int verbosity)
+void
+extractResult(TGraphErrors* graph, double& mass, double& massErr, double& Lmax, int verbosity)
 {
   // determine range of mTest values that are within ~2 sigma interval within maximum of likelihood function
   double x_Lmax = 0.;
   double y_Lmax = 0.;
   double idxPoint_Lmax = -1;
-  for ( int iPoint = 0; iPoint < graph->GetN(); ++iPoint ) {
+  for ( int iPoint = 0; iPoint < graph->GetN(); ++iPoint )
+  {
     double x, y;
     graph->GetPoint(iPoint, x, y);
-    if ( y > y_Lmax ) {
+    if ( y > y_Lmax )
+    {
       x_Lmax = x;
       y_Lmax = y;
       idxPoint_Lmax = iPoint;
@@ -51,7 +70,8 @@ void extractResult(TGraphErrors* graph, double& mass, double& massErr, double& L
 
   double xMin = 1.e+6;
   double xMax = 0.;
-  for ( int iPoint = 0; iPoint < graph->GetN(); ++iPoint ) {
+  for ( int iPoint = 0; iPoint < graph->GetN(); ++iPoint )
+  {
     double x, y;
     graph->GetPoint(iPoint, x, y);
     if ( x < xMin ) xMin = x;
@@ -63,13 +83,14 @@ void extractResult(TGraphErrors* graph, double& mass, double& massErr, double& L
   std::vector<GraphPoint> graphPoints_forFit;
   double xMin_fit = 1.e+6;
   double xMax_fit = 0.;
-  for ( int iPoint = 0; iPoint < graph->GetN(); ++iPoint ) {
+  for ( int iPoint = 0; iPoint < graph->GetN(); ++iPoint )
+  {
     double x, y;
     graph->GetPoint(iPoint, x, y);
     double xErr = graph->GetErrorX(iPoint);
     double yErr = graph->GetErrorY(iPoint);
-    //std::cout << "point #" << iPoint << ": x = " << x << " +/- " << xErr << ", y = " << y << " +/- " << yErr << std::endl;
-    if ( y > (1.e-1*y_Lmax) && TMath::Abs(iPoint - idxPoint_Lmax) <= 5 ) {
+    if ( y > (1.e-1*y_Lmax) && TMath::Abs(iPoint - idxPoint_Lmax) <= 5 )
+    {
       GraphPoint graphPoint;
       graphPoint.x_ = x;
       graphPoint.xErr_ = xErr;
@@ -84,7 +105,8 @@ void extractResult(TGraphErrors* graph, double& mass, double& massErr, double& L
   TGraphErrors* likelihoodGraph_forFit = classic_svFit::makeGraph("svFitLikelihoodGraph_forFit", graphPoints_forFit);
   int numPoints = likelihoodGraph_forFit->GetN();
   bool useFit = false;
-  if ( numPoints >= 3 ) {
+  if ( numPoints >= 3 )
+  {
     TF1* fitFunction = new TF1("fitFunction", "TMath::Power((x - [0])/[1], 2.) + [2]", xMin_fit, xMax_fit);
     fitFunction->SetParameter(0, x_Lmax);
     fitFunction->SetParameter(1, 0.20*x_Lmax);
@@ -93,8 +115,10 @@ void extractResult(TGraphErrors* graph, double& mass, double& massErr, double& L
     std::string fitOptions = "NSQ";
     //if ( !verbosity ) fitOptions.append("Q");
     TFitResultPtr fitResult = likelihoodGraph_forFit->Fit(fitFunction, fitOptions.data());
-    if ( fitResult.Get() ) {
-      if ( verbosity >= 1 ) {
+    if ( fitResult.Get() )
+    {
+      if ( verbosity >= 1 )
+      {
         std::cout << "fitting graph of p versus M(test) in range " << xMin_fit << ".." << xMax_fit << ", result:" << std::endl;
         std::cout << " parameter #0 = " << fitFunction->GetParameter(0) << " +/- " << fitFunction->GetParError(0) << std::endl;
         std::cout << " parameter #1 = " << fitFunction->GetParameter(1) << " +/- " << fitFunction->GetParError(1) << std::endl;
@@ -107,25 +131,27 @@ void extractResult(TGraphErrors* graph, double& mass, double& massErr, double& L
         mass = fitFunction->GetParameter(0);
         massErr = TMath::Sqrt(square(fitFunction->GetParameter(1)) + square(fitFunction->GetParError(0)));
         Lmax = TMath::Exp(-fitFunction->GetParameter(2));
-        //std::cout << "fit: mass = " << mass << " +/- " << massErr << " (Lmax = " << Lmax << ")" << std::endl;
         useFit = true;
       }
-    } else {
+    } 
+    else
+    {
       std::cerr << "Warning in <extractResult>: Fit did not converge !!" << std::endl;
     }
     delete fitFunction;
   }
-  if ( !useFit ) {
+  if ( !useFit )
+  {
     mass = x_Lmax;
     massErr = TMath::Sqrt(0.5*(square(x_Lmax - xMin_fit) + square(xMax_fit - x_Lmax)))/TMath::Sqrt(2.*TMath::Log(10.));
     Lmax = y_Lmax;
-    //std::cout << "graph: mass = " << mass << " +/- " << massErr << " (Lmax = " << Lmax << ")" << std::endl;
   }
 
   delete likelihoodGraph_forFit;
 }
 
-Vector normalize(const Vector& p)
+Vector
+normalize(const Vector& p)
 {
   double p_x = p.x();
   double p_y = p.y();
@@ -136,12 +162,14 @@ Vector normalize(const Vector& p)
   return Vector(p_x/mag, p_y/mag, p_z/mag);
 }
 
-double compScalarProduct(const Vector& p1, const Vector& p2)
+double
+compScalarProduct(const Vector& p1, const Vector& p2)
 {
   return (p1.x()*p2.x() + p1.y()*p2.y() + p1.z()*p2.z());
 }
 
-Vector compCrossProduct(const Vector& p1, const Vector& p2)
+Vector
+compCrossProduct(const Vector& p1, const Vector& p2)
 {
   double p3_x = p1.y()*p2.z() - p1.z()*p2.y();
   double p3_y = p1.z()*p2.x() - p1.x()*p2.z();
@@ -149,22 +177,16 @@ Vector compCrossProduct(const Vector& p1, const Vector& p2)
   return Vector(p3_x, p3_y, p3_z);
 }
 
-double compCosThetaNuNu(double visEn, double visP, double visMass2, double nunuEn, double nunuP, double nunuMass2)
+double
+compCosThetaNuNu(double visEn, double visP, double visMass2, double nunuEn, double nunuP, double nunuMass2)
 {
   double cosThetaNuNu = (visEn*nunuEn - 0.5*(tauLeptonMass2 - (visMass2 + nunuMass2)))/(visP*nunuP);
   return cosThetaNuNu;
 }
 
-double compPSfactor_tauToLepDecay(double x, double visEn, double visP, double visMass, double nunuEn, double nunuP, double nunuMass)
+double
+compPSfactor_tauToLepDecay(double x, double visEn, double visP, double visMass, double nunuEn, double nunuP, double nunuMass)
 {
-  //std::cout << "<compPSfactor_tauToLepDecay>:" << std::endl;
-  //std::cout << " x = " << x << std::endl;
-  //std::cout << " visEn = " << visEn << std::endl;
-  //std::cout << " visP = " << visP << std::endl;
-  //std::cout << " visMass = " << visMass << std::endl;
-  //std::cout << " nunuEn = " << nunuEn << std::endl;
-  //std::cout << " nunuP = " << nunuP << std::endl;
-  //std::cout << " nunuMass = " << nunuMass << std::endl;
   double visMass2 = square(visMass);
   double nunuMass2 = square(nunuMass);
   if ( x >= (visMass2/tauLeptonMass2) && x <= 1. && nunuMass2 < ((1. - x)*tauLeptonMass2) ) { // physical solution
@@ -190,19 +212,12 @@ double compPSfactor_tauToLepDecay(double x, double visEn, double visP, double vi
   }
 }
 
-double compPSfactor_tauToHadDecay(double x, double visEn, double visP, double visMass, double nuEn, double nuP)
+double
+compPSfactor_tauToHadDecay(double x, double visEn, double visP, double visMass, double nuEn, double nuP)
 {
-  //std::cout << "<compPSfactor_tauToHadDecay>:" << std::endl;
-  //std::cout << " x = " << x << std::endl;
-  //std::cout << " visEn = " << visEn << std::endl;
-  //std::cout << " visP = " << visP << std::endl;
-  //std::cout << " visMass = " << visMass << std::endl;
-  //std::cout << " nuEn = " << nuEn << std::endl;
-  //std::cout << " nuP = " << nuP << std::endl;
   double visMass2 = square(visMass);
   if ( x >= (visMass2/tauLeptonMass2) && x <= 1. ) { // physical solution
     double cosThetaNu = classic_svFit::compCosThetaNuNu(visEn, visP, visMass2, nuEn, nuP, 0.);
-    //std::cout << "cosThetaNu = " << cosThetaNu << std::endl;
     if ( !(cosThetaNu >= (-1. + epsilon) && cosThetaNu <= +1.) ) return 0.;
     double PSfactor = (visEn + nuEn)/(8.*visP*square(x)*TMath::Sqrt(square(visP) + square(nuP) + 2.*visP*nuP*cosThetaNu + tauLeptonMass2));
     PSfactor *= 1.0/(tauLeptonMass2 - visMass2);
@@ -216,7 +231,9 @@ double compPSfactor_tauToHadDecay(double x, double visEn, double visP, double vi
     #endif
     //-------------------------------------------------------------------------
     return PSfactor;
-  } else {
+  } 
+  else 
+  {
     return 0.;
   }
 }
@@ -226,12 +243,41 @@ integrationParameters::integrationParameters()
   reset();
 }
 
-void integrationParameters::reset()
+integrationParameters::~integrationParameters()
+{}
+
+void
+integrationParameters::reset()
 {
   idx_X_ = -1;
   idx_phi_ = -1;
   idx_VisPtShift_ = -1;
   idx_mNuNu_ = -1;
+  idx_flightLength_ = -1;
 }
 
+namespace
+{
+  LorentzVector
+  fixMass(const LorentzVector& p4, double mass)
+  {
+    double px     = p4.px();
+    double py     = p4.py();
+    double pz     = p4.pz();
+    double energy = std::sqrt(px*px + py*py + pz*pz + mass*mass);
+    reco::Candidate::LorentzVector p4_fixed(px, py, pz, energy);
+    return p4_fixed;
+  }
+}
+
+LorentzVector
+fixTauMass(const LorentzVector& tauP4)
+{
+  return fixMass(tauP4, tauLeptonMass);
+}
+
+LorentzVector
+fixNuMass(const LorentzVector& nuP4)
+{
+  return fixMass(nuP4, 0.);
 }

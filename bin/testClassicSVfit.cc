@@ -5,6 +5,8 @@
 */
 
 #include "TauAnalysis/ClassicSVfit/interface/ClassicSVfit.h"
+#include "TauAnalysis/ClassicSVfit/interface/MeasuredEvent.h"
+#include "TauAnalysis/ClassicSVfit/interface/MeasuredMEt.h"
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredTauLepton.h"
 #include "TauAnalysis/ClassicSVfit/interface/svFitHistogramAdapter.h"
 //#include "TauAnalysis/SVfitTF/interface/HadTauTFCrystalBall2.h"
@@ -20,25 +22,28 @@ int main(int argc, char* argv[])
   */
 
   // define MET
-  double measuredMETx =  11.7491;
-  double measuredMETy = -51.9172;
+  double measuredMEtPx =  11.7491;
+  double measuredMEtPy = -51.9172;
 
   // define MET covariance
-  TMatrixD covMET(2, 2);
-  covMET[0][0] =  787.352;
-  covMET[1][0] = -178.63;
-  covMET[0][1] = -178.63;
-  covMET[1][1] =  179.545;
+  TMatrixD covMEt(2, 2);
+  covMEt[0][0] =  787.352;
+  covMEt[1][0] = -178.63;
+  covMEt[0][1] = -178.63;
+  covMEt[1][1] =  179.545;
 
   // define lepton four vectors
   std::vector<MeasuredTauLepton> measuredTauLeptons;
-  measuredTauLeptons.push_back(MeasuredTauLepton(MeasuredTauLepton::kTauToElecDecay, 33.7393, 0.9409,  -0.541458, 0.51100e-3)); // tau -> electron decay (Pt, eta, phi, mass)
-  measuredTauLeptons.push_back(MeasuredTauLepton(MeasuredTauLepton::kTauToHadDecay,  25.7322, 0.618228, 2.79362,  0.13957, 0)); // tau -> 1prong0pi0 hadronic decay (Pt, eta, phi, mass)
+  measuredTauLeptons.push_back(MeasuredTauLepton(MeasuredTauLepton::kTauToElecDecay, +1, 33.7393, 0.9409,  -0.541458, 0.51100e-3)); // tau -> electron decay (Pt, eta, phi, mass)
+  measuredTauLeptons.push_back(MeasuredTauLepton(MeasuredTauLepton::kTauToHadDecay,  -1, 25.7322, 0.618228, 2.79362,  0.13957, 0)); // tau -> 1prong0pi0 hadronic decay (Pt, eta, phi, mass)
   /*
      tauDecayModes:  0 one-prong without neutral pions
                      1 one-prong with neutral pions
                     10 three-prong without neutral pions
   */
+
+  MeasuredMEt measuredMEt(measuredMEtPx, measuredMEtPy, covMEt);
+  MeasuredEvent measuredEvent(measuredTauLeptons, { measuredMEt });
 
   int verbosity = 1;
   ClassicSVfit svFitAlgo(verbosity);
@@ -48,12 +53,11 @@ int main(int argc, char* argv[])
   //svFitAlgo.enableHadTauTF();
 #endif
 
-  //svFitAlgo.addLogM_fixed(false);
-  svFitAlgo.addLogM_fixed(true, 6.);
-  //svFitAlgo.addLogM_dynamic(true, "(m/1000.)*15.");
+  svFitAlgo.enableLogM(6.);
+  //svFitAlgo.disableLogM();
   //svFitAlgo.setMaxObjFunctionCalls(100000); // CV: default is 100000 evaluations of integrand per event
   svFitAlgo.setLikelihoodFileName("testClassicSVfit.root");
-  svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+  svFitAlgo.integrate(measuredEvent);
   bool isValidSolution_1stRun = svFitAlgo.isValidSolution();
   double mass_1stRun = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getMass();
   double massErr_1stRun = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getMassErr();
@@ -76,7 +80,7 @@ int main(int argc, char* argv[])
   std::cout << "\n\nTesting integration with ditau mass constraint set to " << massContraint << std::endl;
   svFitAlgo.setLikelihoodFileName("testClassicSVfit_withMassContraint.root");
   svFitAlgo.setDiTauMassConstraint(massContraint);
-  svFitAlgo.integrate(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+  svFitAlgo.integrate(measuredEvent);
   bool isValidSolution_2ndRun = svFitAlgo.isValidSolution();
   double mass_2ndRun = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getMass();
   double massErr_2ndRun = static_cast<HistogramAdapterDiTau*>(svFitAlgo.getHistogramAdapter())->getMassErr();

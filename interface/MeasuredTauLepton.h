@@ -1,7 +1,12 @@
 #ifndef TauAnalysis_ClassicSVfit_MeasuredTauLepton_h
 #define TauAnalysis_ClassicSVfit_MeasuredTauLepton_h
 
-#include "TauAnalysis/ClassicSVfit/interface/svFitAuxFunctions.h" // Vector, LorentzVector
+#include "TauAnalysis/ClassicSVfit/interface/MeasuredHadTauDecayProduct.h" // MeasuredHadTauDecayProduct
+#include "TauAnalysis/ClassicSVfit/interface/svFitAuxFunctions.h"          // Vector, LorentzVector, Point
+
+#include <string>                                                          // std::string
+#include <ostream>                                                         // std::ostream
+#include <vector>                                                          // std::vector<>
 
 namespace classic_svFit
 {
@@ -12,73 +17,139 @@ namespace classic_svFit
        \enum    MeasuredTauLepton::kDecayType
        \brief   enumeration of all tau decay types
     */
-    enum kDecayType {
+    enum kDecayType
+    {
       kUndefinedDecayType,
-      kTauToHadDecay,  /* < hadronic tau lepton decay                                                        */
-      kTauToElecDecay, /* < tau lepton decay to electron                                                     */
-      kTauToMuDecay,   /* < tau lepton decay to muon                                                         */
-      kPrompt          /* < electron or muon directly originating from LFV Higgs boson decay                 */
+      kTauToHadDecay,  /* < hadronic tau lepton decay                                        */
+      kTauToElecDecay, /* < tau lepton decay to electron                                     */
+      kTauToMuDecay,   /* < tau lepton decay to muon                                         */
+      kPrompt          /* < electron or muon directly originating from LFV Higgs boson decay */
     };
 
     MeasuredTauLepton();
-    MeasuredTauLepton(int, double, double, double, double, int = -1);
+    MeasuredTauLepton(int,
+                      int, double, double, double, double,
+                      int = -1, const std::vector<MeasuredHadTauDecayProduct>* = 0);
+    MeasuredTauLepton(int, 
+                      int, double, double, double, double, 
+                      const Point&, const TMatrixD&,
+                      int = -1, const std::vector<MeasuredHadTauDecayProduct>* = 0);
     MeasuredTauLepton(const MeasuredTauLepton&);
     ~MeasuredTauLepton();
 
     /// return decay type of the tau lepton
-    int type() const;
+    int
+    type() const;
 
-    /// return pt of the measured tau lepton in labframe
-    double pt() const;
-    /// return pseudo-rapidity of the measured tau lepton in labframe
-    double eta() const;
-    /// return azimuthal angle of the measured tau lepton in labframe
-    double phi() const;
-    /// return visible mass in labframe
-    double mass() const;
+    /// return charge
+    int
+    charge() const;
 
-    /// return visible energy in labframe
-    double energy() const;
-    /// return px of the measured tau lepton in labframe
-    double px() const;
-    /// return py of the measured tau lepton in labframe
-    double py() const;
-    /// return pz of the measured tau lepton in labframe
-    double pz() const;
+    /// return pt in labframe
+    double
+    pt() const;
 
-    /// return the measured tau lepton momentum in labframe
-    double p() const;
+    /// return pseudo-rapidity in labframe
+    double
+    eta() const;
+
+    /// return azimuthal angle in labframe
+    double
+    phi() const;
+
+    /// return mass
+    double
+    mass() const;
+
+    /// return energy in labframe
+    double
+    energy() const;
+
+    /// return px in labframe
+    double
+    px() const;
+
+    /// return py in labframe
+    double
+    py() const;
+
+    /// return pz in labframe
+    double
+    pz() const;
+
+    /// return magnitude of momentum vector in labframe
+    double
+    p() const;
 
     /// return decay mode of the reconstructed hadronic tau decay
-    int decayMode() const;
+    int
+    decayMode() const;
 
-    /// return the lorentz vector in the labframe
-    LorentzVector p4() const;
+    /// return position of tau decay vertex and its uncertainty
+    bool
+    hasDecayVertex() const;
+    const Point&
+    measuredDecayVertex() const;
+    const TMatrixD&
+    covDecayVertex() const;
+    TMatrixD&
+    covInvDecayVertex() const;
+    bool
+    covInvDecayVertex_isValid() const;
 
-    /// return the momentum vector in the labframe
-    Vector p3() const;
+    /// return individual charged and neutral pions produced in hadronic tau decay
+    bool
+    hasHadTauDecayProducts() const;
+    const std::vector<MeasuredHadTauDecayProduct>&
+    measuredHadTauDecayProducts() const;
 
-    /// return auxiliary data-members to speed-up numerical computations
-    double cosPhi_sinTheta() const;
-    double sinPhi_sinTheta() const;
-    double cosTheta() const;
+    /// return four-vector in labframe
+    const LorentzVector&
+    p4() const;
 
-    void roundToNdigits(unsigned int nDigis = 3);
+    /// return momentum vector in labframe
+    const Vector&
+    p3() const;
 
-    /// flag indicating if tau decayed leptonically or hadronically 
-    bool isLeptonicTauDecay() const;
-    bool isHadronicTauDecay() const;
+    /// return flags indicating if tau decayed leptonically or hadronically 
+    bool
+    isLeptonicTauDecay() const;
+    bool
+    isHadronicTauDecay() const;
 
-    /// flag indicating electrons or muons directly originating from LFV Higgs boson decay
-    bool isPrompt() const;
+    /// return flag indicating electrons or muons directly originating from LFV Higgs boson decay
+    bool
+    isPrompt() const;
 
    protected:
-    /// set visible momentum in all coordinates systems
-    void initialize();
+    /// check that MeasuredTauLepton is of valid type
+    void
+    checkType();
 
-   private:
+    /// check that mass of MeasuredTauLepton matches given type
+    /// and set preciseVisMass data-member
+    void
+    setMass();
+
+    /// set measuredDecayVertex and covDecayVertex data-members,
+    /// compute inverse of covariance matrix
+    void
+    setDecayVertex(const Point&, const TMatrixD&);
+
+    /// set measuredHadTauDecayProducts data-member
+    void
+    setHadTauDecayProducts();
+
+    /// set visible momentum in all coordinates systems
+    void
+    initialize();
+
     /// decay type
     int type_;
+    std::string type_string_;
+
+    /// charge
+    int charge_;
 
     /// visible momentum in labframe (in polar coordinates)
     double pt_;
@@ -92,11 +163,22 @@ namespace classic_svFit
     double py_;
     double pz_;
 
-    /// visible momentum in labframe (magnitude);
+    /// magnitude of visible momentum in labframe (magnitude)
     double p_;
 
     /// decay mode (hadronic tau decays only)
     int decayMode_;
+
+    /// position of tau decay vertex and its uncertainty
+    bool hasDecayVertex_;
+    Point measuredDecayVertex_;
+    TMatrixD covDecayVertex_;
+    TMatrixD covInvDecayVertex_;
+    bool covInvDecayVertex_isValid_;
+
+    /// individual charged and neutral pions (hadronic tau decays only)
+    bool hasHadTauDecayProducts_;
+    std::vector<MeasuredHadTauDecayProduct> measuredHadTauDecayProducts_;
 
     /// visible momentum in labframe (four-vector)
     LorentzVector p4_;
@@ -107,16 +189,19 @@ namespace classic_svFit
     /// mass of visible tau decay products (recomputed to reduce rounding errors)
     double preciseVisMass_;
 
-    /// auxiliary data-members to speed-up numerical computations
-    double cosPhi_sinTheta_;
-    double sinPhi_sinTheta_;
-    double cosTheta_;
+    /// flags indicating if tau decayed leptonically or hadronically
     bool isLeptonicTauDecay_;
     bool isHadronicTauDecay_;
+
+    /// flag indicating electrons or muons directly originating from LFV Higgs boson decay
     bool isPrompt_;
   };
 
-  // auxiliary class for sorting MeasuredTauLeptons
+  // auxiliary function for printing MeasuredTauLepton objects (for debugging purposes)
+  std::ostream&
+  operator<<(std::ostream& os, const std::vector<MeasuredTauLeptons>& measuredTauLeptons);
+
+  // auxiliary class for sorting MeasuredTauLepton objects
   struct sortMeasuredTauLeptons
   {
     bool operator() (const MeasuredTauLepton& measuredTauLepton1, const MeasuredTauLepton& measuredTauLepton2);

@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
   double massErr = svFitAlgo.getHistogramAdapter()->getMassErr();
  
   if ( isValidSolution ) {
-    std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 126.12 +/- 16.9431)" << std::endl;
+    std::cout << "found valid solution: mass = " << mass << " +/- " << massErr << " (expected value = 126.12 +/- 16.3127)" << std::endl;
   } else {
     std::cout << "sorry, failed to find valid solution !!" << std::endl;
   }

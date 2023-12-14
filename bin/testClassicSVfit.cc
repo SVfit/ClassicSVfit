@@ -90,8 +90,8 @@ int main(int argc, char* argv[])
 
   if ( isValidSolution_2ndRun )
   {
-    std::cout << "found valid solution: mass = " << mass_2ndRun << " +/- " << massErr_2ndRun << " (expected value = 124.646 +/- 1.27575),"
-              << " transverse mass = " << transverseMass_2ndRun << " +/- " << transverseMassErr_2ndRun << " (expected value = 123.026 +/- 1.19297)" << std::endl;
+    std::cout << "found valid solution: mass = " << mass_2ndRun << " +/- " << massErr_2ndRun << " (expected value = 124.646 +/- 1.27228),"
+              << " transverse mass = " << transverseMass_2ndRun << " +/- " << transverseMassErr_2ndRun << " (expected value = 123.026 +/- 1.18168)" << std::endl;
   } 
   else
   {

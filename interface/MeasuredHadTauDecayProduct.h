@@ -91,6 +91,10 @@ namespace classic_svFit
     Vector p3_;
   };
 
+  // auxiliary function for printing MeasuredTauLepton objects (for debugging purposes)
+  std::ostream&
+  operator<<(std::ostream& os, const std::vector<MeasuredHadTauDecayProduct>& measuredHadTauDecayProducts);
+
   // auxiliary class for sorting MeasuredHadTauDecayProduct objects
   struct sortMeasuredHadTauDecayProducts
   {

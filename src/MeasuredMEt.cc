@@ -8,7 +8,7 @@
 #include <TVectorD.h>                                             // TVectorD
 
 #include <assert.h>                                               // assert()
-#include <cmath>                                                  // atan2(), pow(), std::sqrt()
+#include <cmath>                                                  // atan2(), pow(), std::fabs(), std::sqrt()
 #include <iostream>                                               // std::cout, std::endl
 
 namespace classic_svFit
@@ -169,7 +169,7 @@ MeasuredMEt::setCov(const TMatrixD& cov)
   covInv_.ResizeTo(dim,dim);
   covInv_ = TMatrixD(TMatrixD::kInverted, cov_);
   covInv_isValid_ = true;
-  const_MET_ = 1./(pow(2.*TMath::Pi(), 0.5*dim)*std::sqrt(cov_.Determinant()));
+  const_MET_ = 1./(pow(2.*TMath::Pi(), 0.5*dim)*std::sqrt(std::fabs(cov_.Determinant())));
 }
 
 //---------------------------------------------------------------------------------------------------

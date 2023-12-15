@@ -41,6 +41,9 @@ namespace classic_svFit
     int
     type() const;
 
+    std::string
+    type_string() const;
+
     /// return charge
     int
     charge() const;

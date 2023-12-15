@@ -95,6 +95,12 @@ MeasuredTauLepton::type() const
   return type_; 
 }
 
+std::string
+MeasuredTauLepton::type_string() const
+{
+  return type_string_; 
+}
+
 int
 MeasuredTauLepton::charge() const 
 { 
@@ -325,8 +331,10 @@ MeasuredTauLepton::setHadTauDecayProducts(const std::vector<MeasuredHadTauDecayP
     }
     if ( charge_sum != charge_ )
     {
-      std::cerr << "ERROR: Charge-sum of hadronic tau decay products does not match charge " << charge_ << " declared for leg:" 
+      std::cerr << "ERROR: Charge-sum of tau decay products does not match charge " << charge_ << " declared for leg:" 
                 << " Pt = " << pt_ << ", eta = " << eta_ << ", phi = " << phi_ << ", mass = " << mass_ << " !!" << std::endl;
+      std::cout << "tau decay products:" << std::endl;
+      std::cout << measuredHadTauDecayProducts_;
       assert(0);
     }
   }
@@ -376,7 +384,8 @@ operator<<(std::ostream& os, const std::vector<MeasuredTauLepton>& measuredTauLe
   for ( size_t idx = 0; idx < measuredTauLeptons.size(); ++idx )
   {
     const MeasuredTauLepton& measuredTauLepton = measuredTauLeptons[idx];
-    os << "measuredTauLepton #" << idx << " (type = " << measuredTauLepton.type() << "):" 
+    os << "measuredTauLepton #" << idx 
+       << " (type = " << measuredTauLepton.type_string() << ", charge = " << measuredTauLepton.charge() << "):" 
        << " Pt = " << measuredTauLepton.pt() << ","
        << " eta = " << measuredTauLepton.eta() << " (theta = " << measuredTauLepton.p3().theta() << ")" << "," 
        << " phi = " << measuredTauLepton.phi() << ","

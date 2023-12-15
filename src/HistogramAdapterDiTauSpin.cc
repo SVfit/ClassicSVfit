@@ -94,6 +94,7 @@ HistogramAdapterDiTauSpin::clone() const
 void
 HistogramAdapterDiTauSpin::bookHistograms(const MeasuredEvent& measuredEvent)
 {
+  HistogramAdapterDiTau::bookHistograms(measuredEvent);
   quantity_Bp_n_->bookHistogram(measuredEvent);
   quantity_Bp_r_->bookHistogram(measuredEvent);
   quantity_Bp_k_->bookHistogram(measuredEvent);

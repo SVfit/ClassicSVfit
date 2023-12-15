@@ -408,6 +408,12 @@ HistogramAdapterTau::getP4() const
   return LorentzVector(p4.Px(), p4.Py(), p4.Pz(), p4.E());
 }
 
+int
+HistogramAdapterTau::getCharge() const
+{
+  return measuredTauLepton_.charge();
+}
+
 double
 HistogramAdapterTau::DoEval(const double* x) const
 {

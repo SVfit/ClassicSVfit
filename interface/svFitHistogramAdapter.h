@@ -197,6 +197,9 @@ namespace classic_svFit
     LorentzVector
     getP4() const;
 
+    int
+    getCharge() const;
+
   private:
     double
     DoEval(const double* x) const;

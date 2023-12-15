@@ -9,7 +9,7 @@
 #include <TString.h>                                                // Form()
 #include <TVectorD.h>                                               // TVectorD
 
-#include <cmath>                                                    // exp(), std::sqrt()
+#include <cmath>                                                    // exp(), std::fabs(), std::sqrt()
 
 namespace classic_svFit
 {
@@ -332,22 +332,25 @@ ClassicSVfitIntegrand::setMeasurement(const MeasuredEvent& measuredEvent)
       }
     }
 
-    TMatrixD covDecayVertex1 = measuredTauLepton1_.covDecayVertex() + measuredEvent.covPrimaryVertex();
+    covDecayVertex1_.ResizeTo(3,3);
+    covDecayVertex1_ = measuredTauLepton1_.covDecayVertex() + measuredEvent.covPrimaryVertex();
     covInvDecayVertex1_.ResizeTo(3,3);
     bool errorFlag1 = false;
-    covInvDecayVertex1_ = invertexMatrix("covDecayVertex1", covDecayVertex1, errorFlag1);
-    TMatrixD covDecayVertex2 = measuredTauLepton2_.covDecayVertex() + measuredEvent.covPrimaryVertex();
+    covInvDecayVertex1_ = invertexMatrix("covDecayVertex1", covDecayVertex1_, errorFlag1);
+    covDecayVertex2_.ResizeTo(3,3);
+    covDecayVertex2_ = measuredTauLepton2_.covDecayVertex() + measuredEvent.covPrimaryVertex();
     covInvDecayVertex2_.ResizeTo(3,3);
     bool errorFlag2 = false;
-    covInvDecayVertex2_ = invertexMatrix("covDecayVertex2", covDecayVertex2, errorFlag2);
+    covInvDecayVertex2_ = invertexMatrix("covDecayVertex2", covDecayVertex2_, errorFlag2);
     if ( errorFlag1 || errorFlag2 )
     {
       std::cerr << "ERROR: Failed to invert covariance matrix of decay vertex (det=0) !!" << std::endl;
       errorCode_ |= MatrixInversion;
     }
-
-    const_FlightLength1_ = 1./(pow(2.*TMath::Pi(), 1.5)*std::sqrt(covDecayVertex1.Determinant()));
-    const_FlightLength2_ = 1./(pow(2.*TMath::Pi(), 1.5)*std::sqrt(covDecayVertex2.Determinant()));
+std::cout << "covDecayVertex1_.Determinant() = " << covDecayVertex1_.Determinant() << std::endl;
+std::cout << "covDecayVertex2_.Determinant() = " << covDecayVertex2_.Determinant() << std::endl;
+    const_FlightLength1_ = 1./(pow(2.*TMath::Pi(), 1.5)*std::sqrt(std::fabs(covDecayVertex1_.Determinant())));
+    const_FlightLength2_ = 1./(pow(2.*TMath::Pi(), 1.5)*std::sqrt(std::fabs(covDecayVertex2_.Determinant())));
   
     measuredLeadChargedHadron1_ = findLeadChargedHadron(measuredTauLepton1_);
     measuredLeadChargedHadron2_ = findLeadChargedHadron(measuredTauLepton2_);
@@ -380,6 +383,7 @@ ClassicSVfitIntegrand::Eval(const double* q) const
   if ( isCentral_ || idxMEtSystematic_ == 0 )
   {
     probPS_ = EvalPS();
+    if ( errorCode_ & TauDecayParameters ) return 0.;
     probFlightLength_ = EvalFlightLength();
   }
   if ( (probPS_*probFlightLength_) < 1.e-300 ) return 0.;
@@ -621,10 +625,18 @@ ClassicSVfitIntegrand::EvalFlightLength() const
     const MeasuredTauLepton& measuredTauLepton = fittedTauLepton->getMeasuredTauLepton();
     if ( measuredTauLepton.isPrompt() ) continue;
     const Point& measuredDecayVertex = measuredTauLepton.measuredDecayVertex();
+    const TMatrixD* covDecayVertex = nullptr;
     const TMatrixD* covInvDecayVertex = nullptr;
-    if      ( iTau == 0 ) covInvDecayVertex = &covInvDecayVertex1_;
-    else if ( iTau == 1 ) covInvDecayVertex = &covInvDecayVertex2_;
-    else assert(0);
+    if ( iTau == 0 )
+    {
+      covDecayVertex = &covDecayVertex1_;
+      covInvDecayVertex = &covInvDecayVertex1_;
+    }
+    else if ( iTau == 1 )
+    {
+      covDecayVertex = &covDecayVertex2_;
+      covInvDecayVertex = &covInvDecayVertex2_;
+    } else assert(0);
 
     Point pca;
     if ( measuredTauLepton.decayMode() == reco::PFTau::kThreeProng0PiZero || 
@@ -645,18 +657,22 @@ ClassicSVfitIntegrand::EvalFlightLength() const
                                0., 1.e+6, -1.e+6, +1.e+6).first;
     }
     double d_pca = std::sqrt(pca.mag2());
-
     TVectorD eTau = convert_to_mathVector(std::sqrt(1./tauP3.mag2())*tauP3);
-
-    double sigma = std::sqrt(eTau*((*covInvDecayVertex)*eTau));
-    double dmin = std::max(d_pca - 5.*sigma, 0.);
     double gamma = tauP4.energy()/tauLeptonMass;
-    double dmax = std::min(d_pca + 5.*sigma, 10.*gamma*cTauLifetime);
+    double sigma = std::sqrt(eTau*((*covDecayVertex)*eTau));
+    double dmin = d_pca - 5.*sigma;
+    double dmax = d_pca + 5.*sigma;
+    if ( dmin < 0. )
+    {
+      dmin = 0.;
+      dmax = std::min(d_pca + 5.*sigma, 10.*gamma*cTauLifetime);
+    }
     assert(dmax > dmin);
 
     int idx_flightLength = legIntegrationParams_[iTau].idx_flightLength_;
     double x_flightLength = x_[idx_flightLength];
     double d = (1. - x_flightLength)*dmin + x_flightLength*dmax;
+    double prob_expDecay = (1./(gamma*cTauLifetime))*exp(-d/(gamma*cTauLifetime));
 
     double const_FlightLength = 0.;
     if      ( iTau == 0 ) const_FlightLength = const_FlightLength1_;
@@ -664,10 +680,22 @@ ClassicSVfitIntegrand::EvalFlightLength() const
     else assert(0);
     TVectorD residual = convert_to_mathVector(measuredDecayVertex - measuredPrimaryVertex_) - d*eTau;
     double pull2 = residual*((*covInvDecayVertex)*residual);
+    double prob_TF = const_FlightLength*exp(-0.5*pull2);
 
     double jacobiFactor = dmax - dmin;
+    double prob_i = prob_expDecay*prob_TF*jacobiFactor;
+    if ( verbosity_ >= 2 )
+    {
+      std::cout << "prob(flightLength #" << iTau << "):" 
+                << " expDecay = " << prob_expDecay << ", TF = " << prob_TF << ", Jacobi = " << jacobiFactor << ","
+                << " prob_i = " << prob_i << std::endl;
+    }
 
-    prob *= const_FlightLength*exp(-0.5*pull2)*jacobiFactor;
+    prob *= prob_i;
+  }
+  if ( verbosity_ >= 2 )
+  {
+    std::cout << " --> returning " << prob << std::endl;
   }
   return prob;
 }

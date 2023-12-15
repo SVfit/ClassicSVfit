@@ -130,6 +130,7 @@ namespace classic_svFit
     Point measuredPrimaryVertex_;
     MeasuredTauLepton measuredTauLepton1_;
     Point measuredDecayVertex1_;
+    TMatrixD covDecayVertex1_;
     TMatrixD covInvDecayVertex1_;
     const MeasuredHadTauDecayProduct* measuredLeadChargedHadron1_;
     bool leg1isLeptonicTauDecay_;
@@ -137,6 +138,7 @@ namespace classic_svFit
     bool leg1isPrompt_;
     MeasuredTauLepton measuredTauLepton2_;
     Point measuredDecayVertex2_;
+    TMatrixD covDecayVertex2_;
     TMatrixD covInvDecayVertex2_;
     const MeasuredHadTauDecayProduct* measuredLeadChargedHadron2_;
     bool leg2isLeptonicTauDecay_;

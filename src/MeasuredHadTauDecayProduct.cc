@@ -111,6 +111,25 @@ void MeasuredHadTauDecayProduct::initialize()
 }
 
 //---------------------------------------------------------------------------------------------------
+// auxiliary function for printing MeasuredTauLepton objects (for debugging purposes)
+std::ostream&
+operator<<(std::ostream& os, const std::vector<MeasuredHadTauDecayProduct>& measuredHadTauDecayProducts)
+{
+  for ( size_t idx = 0; idx < measuredHadTauDecayProducts.size(); ++idx )
+  {
+    const MeasuredHadTauDecayProduct& measuredHadTauDecayProduct = measuredHadTauDecayProducts[idx];
+    os << "measuredHadTauDecayProduct #" << idx << ":" 
+       << " (charge = " << measuredHadTauDecayProduct.charge() << "):" 
+       << " Pt = " << measuredHadTauDecayProduct.pt() << ","
+       << " eta = " << measuredHadTauDecayProduct.eta() << " (theta = " << measuredHadTauDecayProduct.p3().theta() << ")" << "," 
+       << " phi = " << measuredHadTauDecayProduct.phi() << ","
+       << " mass = " << measuredHadTauDecayProduct.mass() << std::endl;
+  }
+  return os;
+}
+//---------------------------------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------------------------------
 // auxiliary class for sorting MeasuredHadTauDecayProduct objects
 bool sortMeasuredHadTauDecayProducts::operator() (const MeasuredHadTauDecayProduct& measuredHadTauDecayProduct1, const MeasuredHadTauDecayProduct& measuredHadTauDecayProduct2)
 {

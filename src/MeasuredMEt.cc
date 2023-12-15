@@ -67,6 +67,24 @@ MeasuredMEt::MeasuredMEt(const MeasuredMEt& measuredMEt)
 MeasuredMEt::~MeasuredMEt()
 {}
 
+MeasuredMEt& 
+MeasuredMEt::operator=(const MeasuredMEt& measuredMEt)
+{
+  type_ = measuredMEt.type_;
+  type_string_ = measuredMEt.type_string_;
+  px_ = measuredMEt.px_;
+  py_ = measuredMEt.py_;
+  pz_ = measuredMEt.pz_;
+  energy_ = measuredMEt.energy_;
+  cov_.ResizeTo(measuredMEt.cov_.GetNrows(),measuredMEt.cov_.GetNcols());
+  cov_ = measuredMEt.cov_;
+  covInv_.ResizeTo(measuredMEt.covInv_.GetNrows(),measuredMEt.covInv_.GetNcols());
+  covInv_ = measuredMEt.covInv_;
+  covInv_isValid_ = measuredMEt.covInv_isValid_;
+  const_MET_ = measuredMEt.const_MET_;
+  return *this;
+}
+
 int
 MeasuredMEt::type() const
 {

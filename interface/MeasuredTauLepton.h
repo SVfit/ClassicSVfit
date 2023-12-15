@@ -37,6 +37,9 @@ namespace classic_svFit
     MeasuredTauLepton(const MeasuredTauLepton&);
     ~MeasuredTauLepton();
 
+    MeasuredTauLepton& 
+    operator=(const MeasuredTauLepton&);
+
     /// return decay type of the tau lepton
     int
     type() const;

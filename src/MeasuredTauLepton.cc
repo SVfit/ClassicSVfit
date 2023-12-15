@@ -89,6 +89,30 @@ MeasuredTauLepton::MeasuredTauLepton(const MeasuredTauLepton& measuredTauLepton)
 MeasuredTauLepton::~MeasuredTauLepton()
 {}
 
+MeasuredTauLepton& 
+MeasuredTauLepton::operator=(const MeasuredTauLepton& measuredTauLepton)
+{
+  type_ = measuredTauLepton.type_;
+  charge_ = measuredTauLepton.charge_;
+  pt_ = measuredTauLepton.pt_;
+  eta_ = measuredTauLepton.eta_;
+  phi_ = measuredTauLepton.phi_;
+  mass_ = measuredTauLepton.mass_;
+  decayMode_ = measuredTauLepton.decayMode_;
+  hasDecayVertex_ = measuredTauLepton.hasDecayVertex_;
+  measuredDecayVertex_ = measuredTauLepton.measuredDecayVertex_;
+  covDecayVertex_.ResizeTo(measuredTauLepton.covDecayVertex_.GetNrows(),measuredTauLepton.covDecayVertex_.GetNcols());
+  covDecayVertex_ = measuredTauLepton.covDecayVertex_;
+  covInvDecayVertex_.ResizeTo(measuredTauLepton.covInvDecayVertex_.GetNrows(),measuredTauLepton.covInvDecayVertex_.GetNcols());
+  covInvDecayVertex_ = measuredTauLepton.covInvDecayVertex_;
+  covInvDecayVertex_isValid_ = measuredTauLepton.covInvDecayVertex_isValid_;
+  hasHadTauDecayProducts_ = measuredTauLepton.hasHadTauDecayProducts_;
+  measuredHadTauDecayProducts_ = measuredTauLepton.measuredHadTauDecayProducts_;
+  preciseVisMass_ = measuredTauLepton.mass();
+  initialize();
+  return *this;
+}
+
 int
 MeasuredTauLepton::type() const 
 { 

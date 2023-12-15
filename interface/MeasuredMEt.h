@@ -25,6 +25,10 @@ namespace classic_svFit
     // destructor
     ~MeasuredMEt();
 
+    // assignment operator
+    MeasuredMEt& 
+    operator=(const MeasuredMEt&);
+
     /// return type of event (either proton-proton or electron-positron collisions)
     int
     type() const;

@@ -53,6 +53,24 @@ MeasuredEvent::MeasuredEvent(const MeasuredEvent& measuredEvent)
 MeasuredEvent::~MeasuredEvent()
 {}
 
+MeasuredEvent& 
+MeasuredEvent::operator=(const MeasuredEvent& measuredEvent)
+{
+  type_ = measuredEvent.type_;
+  measuredTauLeptons_ = measuredEvent.measuredTauLeptons_;
+  measuredTauPlus_ = measuredEvent.measuredTauPlus_;
+  measuredTauMinus_ = measuredEvent.measuredTauMinus_;
+  measuredMEt_ = measuredEvent.measuredMEt_;
+  hasPrimaryVertex_ = measuredEvent.hasPrimaryVertex_;
+  measuredPrimaryVertex_ = measuredEvent.measuredPrimaryVertex_;
+  covPrimaryVertex_.ResizeTo(measuredEvent.covPrimaryVertex_.GetNrows(),measuredEvent.covPrimaryVertex_.GetNcols());
+  covPrimaryVertex_ = measuredEvent.covPrimaryVertex_;
+  covInvPrimaryVertex_.ResizeTo(measuredEvent.covInvPrimaryVertex_.GetNrows(),measuredEvent.covInvPrimaryVertex_.GetNcols());
+  covInvPrimaryVertex_ = measuredEvent.covInvPrimaryVertex_;
+  covInvPrimaryVertex_isValid_ = measuredEvent.covInvPrimaryVertex_isValid_;
+  return *this;
+}
+
 int
 MeasuredEvent::type() const
 {

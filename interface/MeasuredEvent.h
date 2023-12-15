@@ -19,8 +19,10 @@ namespace classic_svFit
     MeasuredEvent(const std::vector<MeasuredTauLepton>&, const std::vector<MeasuredMEt>&,
                   const Point&, const TMatrixD&);
     MeasuredEvent(const MeasuredEvent&);
-
     ~MeasuredEvent();
+
+    MeasuredEvent& 
+    operator=(const MeasuredEvent&);
 
     /// return type of event (either proton-proton or electron-positron collisions)
     int

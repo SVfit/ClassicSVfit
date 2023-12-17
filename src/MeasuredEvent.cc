@@ -184,8 +184,8 @@ MeasuredEvent::setPrimaryVertex(const Point& primaryVertex, const TMatrixD& prim
       primaryVertexCov_(iRow,iColumn) = roundToNdigits(primaryVertexCov(iRow,iColumn));
     }
   }
-  std::cout << "primaryVertexCov:" << std::endl;
-  primaryVertexCov_.Print();
+  //std::cout << "primaryVertexCov:" << std::endl;
+  //primaryVertexCov_.Print();
   if ( primaryVertexCov_.Determinant() == 0. )
   {
     std::cout << "primaryVertexCov:" << std::endl;
@@ -193,11 +193,12 @@ MeasuredEvent::setPrimaryVertex(const Point& primaryVertex, const TMatrixD& prim
     std::cerr << "ERROR: Failed to invert matrix primaryVertexCov (det=0) !!" << std::endl;
     return;
   }
+
   primaryVertexCovInv_.ResizeTo(dim,dim);
-std::cout << "break-point C.1 reached" << std::endl;
   primaryVertexCovInv_ = TMatrixD(TMatrixD::kInverted, primaryVertexCov_);
-std::cout << "break-point C.2 reached" << std::endl;
   primaryVertexCovInv_isValid_ = true;
+  //std::cout << "primaryVertexCovInv:" << std::endl;
+  //primaryVertexCovInv_.Print();
 }
 
 }

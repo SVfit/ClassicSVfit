@@ -21,11 +21,11 @@ namespace
     const TMatrixD& covInv,
     double lambda1Min = -1.e+6, double lambda1Max = +1.e+6, double lambda2Min = -1.e+6, double lambda2Max = +1.e+6)
   {
-std::cout << "<comp_PCA_line2line>:" << std::endl;
-std::cout << " p1: x = " << p1.x() << ", y = " << p1.y() << ", z = " << p1.z() << std::endl;
-std::cout << " v1: theta = " << v1.theta() << ", phi = " << p1.phi() << std::endl;
-std::cout << " p2: x = " << p2.x() << ", y = " << p2.y() << ", z = " << p2.z() << std::endl;
-std::cout << " v2: theta = " << v2.theta() << ", phi = " << p2.phi() << std::endl;
+//std::cout << "<comp_PCA_line2line>:" << std::endl;
+//std::cout << " p1: x = " << p1.x() << ", y = " << p1.y() << ", z = " << p1.z() << std::endl;
+//std::cout << " v1: theta = " << v1.theta() << ", phi = " << p1.phi() << std::endl;
+//std::cout << " p2: x = " << p2.x() << ", y = " << p2.y() << ", z = " << p2.z() << std::endl;
+//std::cout << " v2: theta = " << v2.theta() << ", phi = " << p2.phi() << std::endl;
     // CV: compute point of closest approach (PCA) between two straight lines (p1 + lambda1*v1) and (p2 + lambda2*v2) in three dimensions;
     //     code based on https://math.stackexchange.com/questions/1993953/closest-points-between-two-lines
 
@@ -61,8 +61,8 @@ std::cout << " v2: theta = " << v2.theta() << ", phi = " << p2.phi() << std::end
 
     Point pca1 = p1 + lambda1*convert_to_recoVector(e1);
     Point pca2 = p2 + lambda2*convert_to_recoVector(e2);
-std::cout << "pca1: x = " << pca1.x() << ", y = " << pca1.y() << ", z = " << pca1.z() << std::endl;
-std::cout << "pca2: x = " << pca2.x() << ", y = " << pca2.y() << ", z = " << pca2.z() << std::endl;
+//std::cout << "pca1: x = " << pca1.x() << ", y = " << pca1.y() << ", z = " << pca1.z() << std::endl;
+//std::cout << "pca2: x = " << pca2.x() << ", y = " << pca2.y() << ", z = " << pca2.z() << std::endl;
     return std::pair<Point, Point>(pca1, pca2);
   }
 

@@ -478,16 +478,24 @@ namespace
   double
   compStartPos_phi(const LorentzVector& startPos_tauP4, const MeasuredTauLepton& measuredTauLepton)
   {
+//std::cout << "<compStartPos_phi>:" << std::endl;
     Vector beamAxis(0., 0., 1.);
     Vector eZ = normalize(measuredTauLepton.p3());
     Vector eY = normalize(compCrossProduct(eZ, beamAxis));
     Vector eX = normalize(compCrossProduct(eY, eZ));
+//std::cout << "eX: x = " << eX.x() << ", y = " << eX.y() << ", z = " << eX.z() << std::endl;
+//std::cout << "eY: x = " << eY.x() << ", y = " << eY.y() << ", z = " << eY.z() << std::endl;
+//std::cout << "eZ: x = " << eZ.x() << ", y = " << eZ.y() << ", z = " << eZ.z() << std::endl;
 
     Vector nuP3 = startPos_tauP4.Vect() - measuredTauLepton.p3();
+//std::cout << "nuEn = " << (startPos_tauP4 - measuredTauLepton.p4()).energy() << std::endl;
+//std::cout << "nuP = " << std::sqrt(nuP3.mag2()) << std::endl;
     double nuPx_local = compScalarProduct(nuP3, eX);
     double nuPy_local = compScalarProduct(nuP3, eY);
+//std::cout << "nuPx_local = " << nuPx_local << ", nuPy_local = " << nuPy_local << std::endl;
 
     double startPos_phi = atan2(nuPy_local, nuPx_local);
+//std::cout << "startPos_phi = " << startPos_phi << std::endl; 
     return startPos_phi;
   }
 
@@ -536,6 +544,9 @@ namespace
                 const LorentzVector& startPos_tauP4, const MeasuredTauLepton& measuredTauLepton,
                 const integrationParameters& aIntParams)
   {
+//std::cout << "<setStartPos_x>:" << std::endl;
+//LorentzVector nuP4 = startPos_tauP4 - measuredTauLepton.p4();
+//std::cout << "cosThetaNu = " << measuredTauLepton.p3().Dot(nuP4.Vect())/(measuredTauLepton.p()*nuP4.P()) << std::endl;
     double X = measuredTauLepton.energy()/startPos_tauP4.energy();
     double phi = compStartPos_phi(startPos_tauP4, measuredTauLepton);
     double mNuNu = (startPos_tauP4 - measuredTauLepton.p4()).mass();

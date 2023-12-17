@@ -18,30 +18,41 @@ namespace classic_svFit
     FittedTauLepton(int iTau, int verbosity);
     ~FittedTauLepton();
 
-    void setMeasuredTauLepton(const MeasuredTauLepton& measuredTauLepton);
-    const MeasuredTauLepton& getMeasuredTauLepton() const;
+    void
+    setMeasuredTauLepton(const MeasuredTauLepton& measuredTauLepton);
+    const MeasuredTauLepton&
+    getMeasuredTauLepton() const;
 
     /// scale momenta of visible tau decays products
-    void updateVisMomentum(double visPtShift);
+    void
+    updateVisMomentum(double visPtShift);
 
     /// reconstruct tau lepton momentum, given momentum of visible tau decays products and the three parameters x, nuPhi, nuMass
-    void updateTauMomentum(double x, double phiNu, double nuMass);
+    void
+    updateTauMomentum(double x, double phiNu, double nuMass);
 
     /// momentum of visible tau decay products (in labframe)  
-    const LorentzVector& visP4() const;
+    const LorentzVector&
+    visP4() const;
 
     /// sum of momenta of all neutrinos produced in tau decay (in labframe)
-    const LorentzVector& nuP4() const;
+    const LorentzVector&
+    nuP4() const;
 
     /// tau lepton momentum (in labframe)
-    const LorentzVector& tauP4() const;
+    const LorentzVector&
+    tauP4() const;
 
     /// parameters x, phiNu, nuMass 
-    double x() const;
-    double phiNu() const;
-    double nuMass() const;
+    double
+    x() const;
+    double
+    phiNu() const;
+    double
+    nuMass() const;
 
-    int errorCode() const;
+    int
+    errorCode() const;
 
    private:
     /// instance counter (only used for debug output)

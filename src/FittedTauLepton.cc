@@ -37,7 +37,8 @@ void FittedTauLepton::setMeasuredTauLepton(const MeasuredTauLepton& measuredTauL
   Vector eZ = normalize(measuredTauLepton_.p3());
   Vector eY = normalize(compCrossProduct(eZ, beamAxis));
   Vector eX = normalize(compCrossProduct(eY, eZ));
-  if ( verbosity_ >= 2 ) {
+  if ( verbosity_ >= 2 ) 
+  {
     std::cout << "eX" << (iTau_ + 1) << ": theta = " << eX.theta() << ", phi = " << eX.phi() << ", norm = " << norm(eX) << std::endl;
     std::cout << "eY" << (iTau_ + 1) << ": theta = " << eY.theta() << ", phi = " << eY.phi() << ", norm = " << norm(eY) << std::endl;
     std::cout << "eZ" << (iTau_ + 1) << ": theta = " << eZ.theta() << ", phi = " << eZ.phi() << ", norm = " << norm(eZ) << std::endl;
@@ -56,12 +57,14 @@ void FittedTauLepton::setMeasuredTauLepton(const MeasuredTauLepton& measuredTauL
   eZ_z_ = eZ.z();
 }
 
-const MeasuredTauLepton& FittedTauLepton::getMeasuredTauLepton() const
+const MeasuredTauLepton&
+FittedTauLepton::getMeasuredTauLepton() const
 {
   return measuredTauLepton_;
 }
 
-void FittedTauLepton::updateVisMomentum(double visPtShift)
+void
+FittedTauLepton::updateVisMomentum(double visPtShift)
 {
   // compute four-vector of visible decay products
   double visPx = visPtShift*measuredTauLepton_.px();
@@ -73,37 +76,52 @@ void FittedTauLepton::updateVisMomentum(double visPtShift)
 
   // set tau lepton four-vector to four-vector of visible decay products and neutrino four-vector to zero,
   // in case of electrons or muons directly originating from LFV Higgs boson decay
-  if ( measuredTauLepton_.type() == MeasuredTauLepton::kPrompt ) {
+  if ( measuredTauLepton_.type() == MeasuredTauLepton::kPrompt )
+  {
     nuP4_.SetPxPyPzE(0., 0., 0., 0.);
     tauP4_ = visP4_;
   }
 }
 
-void FittedTauLepton::updateTauMomentum(double x, double phiNu, double nuMass)
+void
+FittedTauLepton::updateTauMomentum(double x, double phiNu, double nuMass)
 {
+//std::cout << "<FittedTauLepton::updateTauMomentum>:" << std::endl;
+//std::cout << "x = " << x << ", phiNu = " << phiNu << ", nuMass = " << nuMass << std::endl;
+  // the phiNu and nuMass variables are normalized such that they are within the range [0,1];
+  // scale these variables such that they extend over the full range 
+  // defined in the function ClassicSVfit::initializeLegIntegrationRanges
   x_ = x;
-  phiNu_ = phiNu;
-  nuMass_ = nuMass;
+  phiNu_ = (phiNu - 0.5)*2.*TMath::Pi();
+  nuMass_ = nuMass*tauLeptonMass2;
 
   errorCode_ = None;
 
   // compute neutrino and tau lepton four-vector 
   double nuEn = visP4_.E()*(1. - x_)/x_;
+//std::cout << "nuEn = " << nuEn << std::endl;
   double nuMass2 = square(nuMass_);
   double nuP = TMath::Sqrt(TMath::Max(0., square(nuEn) - nuMass2));
   double cosThetaNu = compCosThetaNuNu(visP4_.E(), visP4_.P(), measuredTauLepton_mass2_, nuEn, nuP, nuMass2);
-  if ( !(cosThetaNu >= -1. && cosThetaNu <= +1.) ) {
+  if ( !(cosThetaNu >= -1. && cosThetaNu <= +1.) )
+  {
     errorCode_ |= TauDecayParameters;
     return;
   }
+//std::cout << "nuP = " << nuP << ", cosThetaNu = " << cosThetaNu << std::endl;
 
   double cosPhiNu, sinPhiNu;
   sincos(phiNu_, &sinPhiNu, &cosPhiNu);
   double thetaNu = TMath::ACos(cosThetaNu);
   double sinThetaNu = TMath::Sin(thetaNu);
 
+//std::cout << "eX: x = " << eX_x_ << ", y = " << eX_y_ << ", z = " << eX_z_ << std::endl;
+//std::cout << "eY: x = " << eY_x_ << ", y = " << eY_y_ << ", z = " << eY_z_ << std::endl;
+//std::cout << "eZ: x = " << eZ_x_ << ", y = " << eZ_y_ << ", z = " << eZ_z_ << std::endl;
+
   double nuPx_local = nuP*cosPhiNu*sinThetaNu;
   double nuPy_local = nuP*sinPhiNu*sinThetaNu;
+//std::cout << "nuPx_local = " << nuPx_local << ", nuPy_local = " << nuPy_local << std::endl;
   double nuPz_local = nuP*cosThetaNu;
   double nuPx = nuPx_local*eX_x_ + nuPy_local*eY_x_ + nuPz_local*eZ_x_;
   double nuPy = nuPx_local*eX_y_ + nuPy_local*eY_y_ + nuPz_local*eZ_y_;
@@ -119,37 +137,44 @@ void FittedTauLepton::updateTauMomentum(double x, double phiNu, double nuMass)
   tauP4_.SetPxPyPzE(tauPx, tauPy, tauPz, tauEn);
 }
 
-const LorentzVector& FittedTauLepton::visP4() const
+const LorentzVector&
+FittedTauLepton::visP4() const
 {
   return visP4_;
 }
 
-const LorentzVector& FittedTauLepton::nuP4() const
+const LorentzVector&
+FittedTauLepton::nuP4() const
 {
   return nuP4_;
 }
 
-const LorentzVector& FittedTauLepton::tauP4() const
+const LorentzVector&
+FittedTauLepton::tauP4() const
 {
   return tauP4_;
 }
 
-double FittedTauLepton::x() const
+double
+FittedTauLepton::x() const
 {
   return x_;
 }
 
-double FittedTauLepton::phiNu() const
+double
+FittedTauLepton::phiNu() const
 {
   return phiNu_;
 }
 
-double FittedTauLepton::nuMass() const
+double
+FittedTauLepton::nuMass() const
 {
   return nuMass_;
 }
 
-int FittedTauLepton::errorCode() const
+int
+FittedTauLepton::errorCode() const
 {
   return errorCode_;
 }

@@ -408,8 +408,8 @@ MeasuredTauLepton::setDecayVertex(const Point& decayVertex, double decayVertexSi
   decayVertexCov_local(0,0) = square(decayVertexSigma_perp);
   decayVertexCov_local(1,1) = square(decayVertexSigma_perp);
   decayVertexCov_local(2,2) = square(decayVertexSigma_parl);
-  std::cout << "decayVertexCov(local):" << std::endl;
-  decayVertexCov_local.Print();
+  //std::cout << "decayVertexCov(local):" << std::endl;
+  //decayVertexCov_local.Print();
 
   TMatrixD decayVertexCovInv_local(3,3);
   decayVertexCovInv_local(0,0) = 1./square(decayVertexSigma_perp);
@@ -420,8 +420,8 @@ MeasuredTauLepton::setDecayVertex(const Point& decayVertex, double decayVertexSi
 
   decayVertexCov_.ResizeTo(3,3);
   decayVertexCov_ = rotateCovMatrix(decayVertexCov_local, rotMatrix_rnk2xyz);
-  std::cout << "decayVertexCov:" << std::endl;
-  decayVertexCov_.Print();
+  //std::cout << "decayVertexCov:" << std::endl;
+  //decayVertexCov_.Print();
 
   decayVertexCovInv_.ResizeTo(3,3);
   decayVertexCovInv_ = rotateCovMatrix(decayVertexCovInv_local, rotMatrix_rnk2xyz);

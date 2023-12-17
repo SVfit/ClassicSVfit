@@ -34,6 +34,10 @@ namespace classic_svFit
                       int, double, double, double, double, 
                       const Point&, const TMatrixD&,
                       int = -1, const std::vector<MeasuredHadTauDecayProduct>* = 0);
+    MeasuredTauLepton(int, 
+                      int, double, double, double, double, 
+                      const Point&, double, double,
+                      int = -1, const std::vector<MeasuredHadTauDecayProduct>* = 0);
     MeasuredTauLepton(const MeasuredTauLepton&);
     ~MeasuredTauLepton();
 
@@ -95,19 +99,21 @@ namespace classic_svFit
     bool
     hasDecayVertex() const;
     const Point&
-    measuredDecayVertex() const;
+    decayVertex() const;
     const TMatrixD&
-    covDecayVertex() const;
+    decayVertexCov() const;
     const TMatrixD&
-    covInvDecayVertex() const;
+    decayVertexCovInv() const;
     bool
-    covInvDecayVertex_isValid() const;
+    decayVertexCovInv_isValid() const;
 
     /// return individual charged and neutral pions produced in hadronic tau decay
     bool
     hasHadTauDecayProducts() const;
     const std::vector<MeasuredHadTauDecayProduct>&
-    measuredHadTauDecayProducts() const;
+    hadTauDecayProducts() const;
+    const MeasuredHadTauDecayProduct*
+    leadChargedHadron() const;
 
     /// return four-vector in labframe
     const LorentzVector&
@@ -141,10 +147,12 @@ namespace classic_svFit
     /// compute inverse of covariance matrix
     void
     setDecayVertex(const Point&, const TMatrixD&);
+    void
+    setDecayVertex(const Point&, double, double);
 
     /// set measuredHadTauDecayProducts data-member
     void
-    setHadTauDecayProducts(const std::vector<MeasuredHadTauDecayProduct>* measuredHadTauDecayProducts);
+    setHadTauDecayProducts(const std::vector<MeasuredHadTauDecayProduct>*);
 
     /// set visible momentum in all coordinates systems
     void
@@ -177,14 +185,15 @@ namespace classic_svFit
 
     /// position of tau decay vertex and its uncertainty
     bool hasDecayVertex_;
-    Point measuredDecayVertex_;
-    TMatrixD covDecayVertex_;
-    TMatrixD covInvDecayVertex_;
-    bool covInvDecayVertex_isValid_;
+    Point decayVertex_;
+    TMatrixD decayVertexCov_;
+    TMatrixD decayVertexCovInv_;
+    bool decayVertexCovInv_isValid_;
 
     /// individual charged and neutral pions (hadronic tau decays only)
     bool hasHadTauDecayProducts_;
-    std::vector<MeasuredHadTauDecayProduct> measuredHadTauDecayProducts_;
+    std::vector<MeasuredHadTauDecayProduct> hadTauDecayProducts_;
+    const MeasuredHadTauDecayProduct* leadChargedHadron_;
 
     /// visible momentum in labframe (four-vector)
     LorentzVector p4_;

@@ -140,11 +140,11 @@ void
 HistogramAdapterDiTauSpin::fillHistograms(double weight) const
 {
   HistogramAdapterDiTau::fillHistograms(weight);
-  Vector hPlus = polarimeterVector_(measuredEvent_.measuredTauPlus(), *fittedTauPlus_, BoostToHelicityFrame::kTauPlus, boostToHelicityFrame_);
+  Vector hPlus = polarimeterVector_(measuredEvent_.tauPlus(), *fittedTauPlus_, BoostToHelicityFrame::kTauPlus, boostToHelicityFrame_);
   double hPlus_r = hPlus.x();
   double hPlus_n = hPlus.y();
   double hPlus_k = hPlus.z();
-  Vector hMinus = polarimeterVector_(measuredEvent_.measuredTauMinus(), *fittedTauMinus_, BoostToHelicityFrame::kTauMinus, boostToHelicityFrame_);
+  Vector hMinus = polarimeterVector_(measuredEvent_.tauMinus(), *fittedTauMinus_, BoostToHelicityFrame::kTauMinus, boostToHelicityFrame_);
   double hMinus_r = hMinus.x();
   double hMinus_n = hMinus.y();
   double hMinus_k = hMinus.z();

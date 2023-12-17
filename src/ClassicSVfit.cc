@@ -1,7 +1,11 @@
 #include "TauAnalysis/ClassicSVfit/interface/ClassicSVfit.h"
 
-#include <TH1.h>   // TH1::AddDirectory()
-#include <TMath.h> // TMath::Nint(), TMath::Pi()
+#include "TauAnalysis/ClassicSVfit/interface/comp_PCA.h" // comp_PCA()
+
+#include <TH1.h>                                         // TH1::AddDirectory()
+#include <TMath.h>                                       // TMath::Nint(), TMath::Pi()
+
+#include <cmath>                                         // atan2
 
 using namespace classic_svFit;
 
@@ -15,9 +19,10 @@ namespace
 
 ClassicSVfit::ClassicSVfit(int verbosity)
   : integrand_(nullptr)
-  , useHadTauTF_(false)
   , useTauFlightLength_(false)
   , diTauMassConstraint_(-1.)
+  , useHadTauTF_(false)
+  , useStartPos_(false)
   , histogramAdapter_(nullptr)
   , intAlgo_(nullptr)
   , maxObjFunctionCalls_(100000)
@@ -32,6 +37,11 @@ ClassicSVfit::ClassicSVfit(int verbosity)
   , numSeconds_real_(-1.)
   , verbosity_(verbosity)
 {
+  if ( verbosity_ >= 1 )
+  {
+    std::cout << "<ClassicSVfit::ClassicSVfit>:" << std::endl;
+  }
+
   integrand_ = new ClassicSVfitIntegrand(verbosity_);
 
   histogramAdapter_ = new HistogramAdapterDiTau("ditau");
@@ -125,6 +135,14 @@ ClassicSVfit::disableHadTauTF()
 #endif
 
 void
+ClassicSVfit::setStartPosition(const LorentzVector& tauPlusP4, const LorentzVector& tauMinusP4)
+{
+  useStartPos_ = true;
+  startPos_tauPlusP4_ = tauPlusP4;
+  startPos_tauMinusP4_ = tauMinusP4;
+}
+
+void
 ClassicSVfit::setHistogramAdapter(classic_svFit::HistogramAdapterDiTau* histogramAdapter)
 {
   if ( histogramAdapter_ )
@@ -205,7 +223,8 @@ void ClassicSVfit::integrate(const MeasuredEvent& measuredEvent)
   clock_->Reset();
   clock_->Start("<ClassicSVfit::integrate>");
 
-  measuredTauLeptons_ = measuredEvent.measuredTauLeptons();
+  measuredEvent_ = measuredEvent;
+  measuredTauLeptons_ = measuredEvent.tauLeptons();
   if ( verbosity_ >= 1 )
   {
     std::cout << measuredTauLeptons_;
@@ -227,7 +246,6 @@ void ClassicSVfit::integrate(const MeasuredEvent& measuredEvent)
     histogramAdapter_->bookHistograms(measuredEvent);
   } else assert(0);
 
-
   initializeIntegrationParams();
   initializeIntegrand(measuredEvent);
   if ( !intAlgo_ )
@@ -236,7 +254,7 @@ void ClassicSVfit::integrate(const MeasuredEvent& measuredEvent)
   }
   intAlgo_->clearCallBackFunctions();
 
-  const std::vector<MeasuredMEt>& measuredMEt = measuredEvent.measuredMEt();
+  const std::vector<MeasuredMEt>& measuredMEt = measuredEvent.MEt();
   MarkovChainRecorder mcRecorder(numDimensions_);
   if ( measuredMEt.size() > 1 )
   {
@@ -244,6 +262,10 @@ void ClassicSVfit::integrate(const MeasuredEvent& measuredEvent)
   }
 
   intAlgo_->registerCallBackFunction(*histogramAdapter_);
+  if ( useStartPos_ )
+  {
+    setStartPositionImp();
+  }
   integrand_->setCentral();
   double theIntegral, theIntegralErr;
   intAlgo_->integrate(&g_C, xl_, xh_, numDimensions_, theIntegral, theIntegralErr);
@@ -280,6 +302,8 @@ void ClassicSVfit::integrate(const MeasuredEvent& measuredEvent)
     histogramAdapter_->writeHistograms(likelihoodFileName_);
   }
   
+  useStartPos_ = false;
+
   clock_->Stop("<ClassicSVfit::integrate>");
   numSeconds_cpu_ = clock_->GetCpuTime("<ClassicSVfit::integrate>");
   numSeconds_real_ = clock_->GetRealTime("<ClassicSVfit::integrate>");
@@ -410,7 +434,7 @@ ClassicSVfit::initializeLegIntegrationParams(size_t iLeg, bool useMassConstraint
 void
 ClassicSVfit::initializeLegIntegrationRanges(size_t iLeg)
 {
-  const classic_svFit::integrationParameters& aIntParams = legIntegrationParams_[iLeg];
+  const integrationParameters& aIntParams = legIntegrationParams_[iLeg];
   if ( aIntParams.idx_X_ != -1 )
   {
     xl_[aIntParams.idx_X_] = 0.;
@@ -447,4 +471,137 @@ ClassicSVfit::initializeLegIntegrationRanges(size_t iLeg)
     xl_[aIntParams.idx_flightLength_] = 0.;
     xh_[aIntParams.idx_flightLength_] = 1.;
   }
+}
+
+namespace
+{
+  double
+  compStartPos_phi(const LorentzVector& startPos_tauP4, const MeasuredTauLepton& measuredTauLepton)
+  {
+    Vector beamAxis(0., 0., 1.);
+    Vector eZ = normalize(measuredTauLepton.p3());
+    Vector eY = normalize(compCrossProduct(eZ, beamAxis));
+    Vector eX = normalize(compCrossProduct(eY, eZ));
+
+    Vector nuP3 = startPos_tauP4.Vect() - measuredTauLepton.p3();
+    double nuPx_local = compScalarProduct(nuP3, eX);
+    double nuPy_local = compScalarProduct(nuP3, eY);
+
+    double startPos_phi = atan2(nuPy_local, nuPx_local);
+    return startPos_phi;
+  }
+
+  double
+  compStartPos_flightLength(const MeasuredEvent& measuredEvent,
+                            const LorentzVector& startPos_tauP4, const MeasuredTauLepton& measuredTauLepton)
+  {
+    const MeasuredHadTauDecayProduct* leadChargedHadron = measuredTauLepton.leadChargedHadron();
+    assert(leadChargedHadron);
+
+    TMatrixD decayVertexCov = measuredTauLepton.decayVertexCov() + measuredEvent.primaryVertexCov();
+    bool errorFlag = false;
+    TMatrixD decayVertexCovInv = invertMatrix("decayVertexCov", decayVertexCov, errorFlag);
+    if ( errorFlag )
+    {
+      std::cerr << "ERROR: Failed to invert matrix decayVertexCov !!" << std::endl;
+      assert(0);
+    }
+
+    Point pca = comp_PCA(
+                  startPos_tauP4,
+                  measuredTauLepton, *leadChargedHadron,
+                  measuredEvent.primaryVertex(), measuredTauLepton.decayVertex(), decayVertexCovInv);
+    Vector flightLength = pca - measuredEvent.primaryVertex();
+    double d = std::sqrt(flightLength.mag2());
+
+    std::pair<double,double> dmin_and_dmax = comp_dmin_and_dmax(startPos_tauP4, flightLength, decayVertexCov);
+    double dmin = dmin_and_dmax.first;
+    double dmax = dmin_and_dmax.second;
+
+    double startPos_flightLength = d/(dmax - dmin);
+    if ( startPos_flightLength > 1. ) startPos_flightLength = 1.;
+    return startPos_flightLength;
+  }
+
+  void
+  setStartPos_x(std::vector<double>& startPos_x,
+                int idx, double value)
+  {
+    if ( idx != -1 ) startPos_x[idx] = value;
+  }
+
+  void
+  setStartPos_x(std::vector<double>& startPos_x,
+                const MeasuredEvent& measuredEvent,
+                const LorentzVector& startPos_tauP4, const MeasuredTauLepton& measuredTauLepton,
+                const integrationParameters& aIntParams)
+  {
+    double X = measuredTauLepton.energy()/startPos_tauP4.energy();
+    double phi = compStartPos_phi(startPos_tauP4, measuredTauLepton);
+    double mNuNu = (startPos_tauP4 - measuredTauLepton.p4()).mass();
+    double flightLength = 0.;
+    if ( aIntParams.idx_flightLength_ )
+    {
+      flightLength = compStartPos_flightLength(measuredEvent, startPos_tauP4, measuredTauLepton);
+    }
+    setStartPos_x(startPos_x, aIntParams.idx_X_,             X);
+    setStartPos_x(startPos_x, aIntParams.idx_phi_,           phi);
+    setStartPos_x(startPos_x, aIntParams.idx_VisPtShift_,    0.);
+    setStartPos_x(startPos_x, aIntParams.idx_mNuNu_,         mNuNu);
+    setStartPos_x(startPos_x, aIntParams.idx_flightLength_,  flightLength);
+  }
+}
+
+void
+ClassicSVfit::setStartPositionImp()
+{
+  int tauPlus_iLeg  = -1;
+  int tauMinus_iLeg = -1;
+  for ( size_t iTau = 0; iTau < measuredTauLeptons_.size(); ++iTau )
+  {
+    const MeasuredTauLepton& measuredTauLepton = measuredTauLeptons_[iTau];
+    if      ( measuredTauLepton.charge() > 0 ) tauPlus_iLeg  = iTau;
+    else if ( measuredTauLepton.charge() < 0 ) tauMinus_iLeg = iTau;
+  }
+  if ( tauPlus_iLeg == -1 || tauMinus_iLeg == -1 )
+  {
+    std::cerr << "ERROR: Failed to find decay products of tau+ and tau- !!" << std::endl;
+    assert(0);
+  }
+
+  startPos_x_.resize(numDimensions_);
+
+  const MeasuredTauLepton& measuredTauPlus  = measuredTauLeptons_[tauPlus_iLeg];
+  const integrationParameters& tauPlus_aIntParams = legIntegrationParams_[tauPlus_iLeg];
+  setStartPos_x(startPos_x_, measuredEvent_, startPos_tauPlusP4_, measuredTauPlus, tauPlus_aIntParams);
+
+  const MeasuredTauLepton& measuredTauMinus  = measuredTauLeptons_[tauMinus_iLeg];
+  const integrationParameters& tauMinus_aIntParams = legIntegrationParams_[tauMinus_iLeg];
+  setStartPos_x(startPos_x_, measuredEvent_, startPos_tauMinusP4_, measuredTauMinus, tauMinus_aIntParams);
+
+  // transform to match convention used by SVfitIntegratorMarkovChain::setStartPosition function
+  for ( unsigned int iDimension = 0; iDimension < numDimensions_; ++iDimension )
+  {
+    double value = (startPos_x_[iDimension] - xl_[iDimension])/(xh_[iDimension] - xl_[iDimension]);
+    if ( !(value >= 0. && value <= 1.) )
+    {
+      std::cerr << "WARNING: start position #" << iDimension << " outside of range [0,1] !!" << std::endl;
+      if      ( value < 0. ) value = 0.;
+      else if ( value > 1. ) value = 1.;
+    }
+    startPos_x_[iDimension] = value;
+  }
+
+  if ( verbosity_ >= 1 )
+  {
+    std::cout << "setting start-position for Markov-Chain integration to x = { ";
+    for ( unsigned int iDimension = 0; iDimension < numDimensions_; ++iDimension )
+    {
+      std::cout << startPos_x_[iDimension];
+      if ( iDimension < (numDimensions_ - 1) ) std::cout << ", ";
+    }
+    std::cout << " }" << std::endl;
+  }
+
+  intAlgo_->setStartPosition(startPos_x_);
 }

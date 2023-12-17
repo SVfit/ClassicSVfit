@@ -36,7 +36,7 @@ namespace classic_svFit
     /// set initial position of Markov Chain in N-dimensional space to given values,
     /// in order to start path of chain transitions from non-random point
     void
-    initializeStartPosition_and_Momentum(const double*);
+    setStartPosition(const std::vector<double>&);
 
     /// register "call-back" functions:
     /// A user may register any number of "call-back" functions,
@@ -95,6 +95,8 @@ namespace classic_svFit
     ///  initMode:      flag indicating how initial position of Markov Chain is chosen (uniform/Gaus distribution)
     unsigned int numDimensions_;
     double* x_;
+    std::vector<double> startPos_x_;
+    bool hasStartPos_x_;
     std::vector<double> xMin_; // index = dimension
     std::vector<double> xMax_; // index = dimension
     int initMode_;

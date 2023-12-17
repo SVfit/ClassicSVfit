@@ -29,7 +29,7 @@ Vector
 PolVecAlgoThreeProng0Pi0::operator()(const MeasuredTauLepton& measuredTauLepton, int tau,
                                      const BoostToHelicityFrame& boostToHelicityFrame) const
 {
-  const std::vector<MeasuredHadTauDecayProduct>& daughters = measuredTauLepton.measuredHadTauDecayProducts();
+  const std::vector<MeasuredHadTauDecayProduct>& daughters = measuredTauLepton.hadTauDecayProducts();
   std::vector<const MeasuredHadTauDecayProduct*> chsPlus;
   std::vector<const MeasuredHadTauDecayProduct*> chsMinus;
   int charge_sum = 0;

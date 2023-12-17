@@ -159,6 +159,8 @@ MeasuredMEt::setCov(const TMatrixD& cov)
       cov_(iRow,iColumn) = roundToNdigits(cov(iRow,iColumn));
     }
   }
+  std::cout << "cov:" << std::endl;
+  cov_.Print();
   if ( cov_.Determinant() == 0. )
   {
     std::cout << "cov:" << std::endl;
@@ -167,7 +169,9 @@ MeasuredMEt::setCov(const TMatrixD& cov)
     return;
   }
   covInv_.ResizeTo(dim,dim);
+std::cout << "break-point B.1 reached" << std::endl;
   covInv_ = TMatrixD(TMatrixD::kInverted, cov_);
+std::cout << "break-point B.2 reached" << std::endl;
   covInv_isValid_ = true;
   const_MET_ = 1./(pow(2.*TMath::Pi(), 0.5*dim)*std::sqrt(std::fabs(cov_.Determinant())));
 }

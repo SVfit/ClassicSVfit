@@ -17,7 +17,7 @@ Vector
 PolVecAlgoOneProng0Pi0::operator()(const MeasuredTauLepton& measuredTauLepton, int tau,
                                    const BoostToHelicityFrame& boostToHelicityFrame) const
 {
-  const std::vector<MeasuredHadTauDecayProduct>& daughters = measuredTauLepton.measuredHadTauDecayProducts();
+  const std::vector<MeasuredHadTauDecayProduct>& daughters = measuredTauLepton.hadTauDecayProducts();
   const MeasuredHadTauDecayProduct* ch = nullptr;
   for ( const MeasuredHadTauDecayProduct& daughter : daughters )
   {

@@ -9,45 +9,45 @@ namespace classic_svFit
 
 MeasuredEvent::MeasuredEvent()
   : type_(kUndefinedCollisionType)
-  , measuredTauPlus_(nullptr)
-  , measuredTauMinus_(nullptr)
+  , tauPlus_(nullptr)
+  , tauMinus_(nullptr)
   , hasPrimaryVertex_(false)
-  , covInvPrimaryVertex_isValid_(false)
+  , primaryVertexCovInv_isValid_(false)
 {}
 
 MeasuredEvent::MeasuredEvent(const std::vector<MeasuredTauLepton>& measuredTauLeptons, const std::vector<MeasuredMEt>& measuredMEt)
-  : measuredTauPlus_(nullptr)
-  , measuredTauMinus_(nullptr)
+  : tauPlus_(nullptr)
+  , tauMinus_(nullptr)
   , hasPrimaryVertex_(false)
-  , covInvPrimaryVertex_isValid_(false)
+  , primaryVertexCovInv_isValid_(false)
 {
   setTauLeptons(measuredTauLeptons);
   setMEt(measuredMEt);
 }
 
 MeasuredEvent::MeasuredEvent(const std::vector<MeasuredTauLepton>& measuredTauLeptons, const std::vector<MeasuredMEt>& measuredMEt,
-                             const Point& measuredPrimaryVertex, const TMatrixD& covPrimaryVertex)
-  : measuredTauPlus_(nullptr)
-  , measuredTauMinus_(nullptr)
+                             const Point& primaryVertex, const TMatrixD& primaryVertexCov)
+  : tauPlus_(nullptr)
+  , tauMinus_(nullptr)
   , hasPrimaryVertex_(true)
-  , covInvPrimaryVertex_isValid_(false)
+  , primaryVertexCovInv_isValid_(false)
 {
   setTauLeptons(measuredTauLeptons);
   setMEt(measuredMEt);
-  setPrimaryVertex(measuredPrimaryVertex, covPrimaryVertex);
+  setPrimaryVertex(primaryVertex, primaryVertexCov);
 }
 
 MeasuredEvent::MeasuredEvent(const MeasuredEvent& measuredEvent)
   : type_(measuredEvent.type_)
-  , measuredTauLeptons_(measuredEvent.measuredTauLeptons_)
-  , measuredTauPlus_(measuredEvent.measuredTauPlus_)
-  , measuredTauMinus_(measuredEvent.measuredTauMinus_)
-  , measuredMEt_(measuredEvent.measuredMEt_)
+  , tauLeptons_(measuredEvent.tauLeptons_)
+  , tauPlus_(measuredEvent.tauPlus_)
+  , tauMinus_(measuredEvent.tauMinus_)
+  , MEt_(measuredEvent.MEt_)
   , hasPrimaryVertex_(measuredEvent.hasPrimaryVertex_)
-  , measuredPrimaryVertex_(measuredEvent.measuredPrimaryVertex_)
-  , covPrimaryVertex_(measuredEvent.covPrimaryVertex_)
-  , covInvPrimaryVertex_(measuredEvent.covInvPrimaryVertex_)
-  , covInvPrimaryVertex_isValid_(measuredEvent.covInvPrimaryVertex_isValid_)
+  , primaryVertex_(measuredEvent.primaryVertex_)
+  , primaryVertexCov_(measuredEvent.primaryVertexCov_)
+  , primaryVertexCovInv_(measuredEvent.primaryVertexCovInv_)
+  , primaryVertexCovInv_isValid_(measuredEvent.primaryVertexCovInv_isValid_)
 {}
 
 MeasuredEvent::~MeasuredEvent()
@@ -57,17 +57,17 @@ MeasuredEvent&
 MeasuredEvent::operator=(const MeasuredEvent& measuredEvent)
 {
   type_ = measuredEvent.type_;
-  measuredTauLeptons_ = measuredEvent.measuredTauLeptons_;
-  measuredTauPlus_ = measuredEvent.measuredTauPlus_;
-  measuredTauMinus_ = measuredEvent.measuredTauMinus_;
-  measuredMEt_ = measuredEvent.measuredMEt_;
+  tauLeptons_ = measuredEvent.tauLeptons_;
+  tauPlus_ = measuredEvent.tauPlus_;
+  tauMinus_ = measuredEvent.tauMinus_;
+  MEt_ = measuredEvent.MEt_;
   hasPrimaryVertex_ = measuredEvent.hasPrimaryVertex_;
-  measuredPrimaryVertex_ = measuredEvent.measuredPrimaryVertex_;
-  covPrimaryVertex_.ResizeTo(measuredEvent.covPrimaryVertex_.GetNrows(),measuredEvent.covPrimaryVertex_.GetNcols());
-  covPrimaryVertex_ = measuredEvent.covPrimaryVertex_;
-  covInvPrimaryVertex_.ResizeTo(measuredEvent.covInvPrimaryVertex_.GetNrows(),measuredEvent.covInvPrimaryVertex_.GetNcols());
-  covInvPrimaryVertex_ = measuredEvent.covInvPrimaryVertex_;
-  covInvPrimaryVertex_isValid_ = measuredEvent.covInvPrimaryVertex_isValid_;
+  primaryVertex_ = measuredEvent.primaryVertex_;
+  primaryVertexCov_.ResizeTo(measuredEvent.primaryVertexCov_.GetNrows(),measuredEvent.primaryVertexCov_.GetNcols());
+  primaryVertexCov_ = measuredEvent.primaryVertexCov_;
+  primaryVertexCovInv_.ResizeTo(measuredEvent.primaryVertexCovInv_.GetNrows(),measuredEvent.primaryVertexCovInv_.GetNcols());
+  primaryVertexCovInv_ = measuredEvent.primaryVertexCovInv_;
+  primaryVertexCovInv_isValid_ = measuredEvent.primaryVertexCovInv_isValid_;
   return *this;
 }
 
@@ -78,29 +78,29 @@ MeasuredEvent::type() const
 }
 
 const std::vector<MeasuredTauLepton>&
-MeasuredEvent::measuredTauLeptons() const
+MeasuredEvent::tauLeptons() const
 {
-  return measuredTauLeptons_;
+  return tauLeptons_;
 }
 
 const MeasuredTauLepton&
-MeasuredEvent::measuredTauPlus() const
+MeasuredEvent::tauPlus() const
 {
-  assert(measuredTauPlus_);
-  return *measuredTauPlus_;
+  assert(tauPlus_);
+  return *tauPlus_;
 }
 
 const MeasuredTauLepton&
-MeasuredEvent::measuredTauMinus() const
+MeasuredEvent::tauMinus() const
 {
-  assert(measuredTauMinus_);
-  return *measuredTauMinus_;
+  assert(tauMinus_);
+  return *tauMinus_;
 }
 
 const std::vector<MeasuredMEt>&
-MeasuredEvent::measuredMEt() const
+MeasuredEvent::MEt() const
 {
-  return measuredMEt_;
+  return MEt_;
 }
 
 bool
@@ -110,40 +110,40 @@ MeasuredEvent::hasPrimaryVertex() const
 }
 
 const Point&
-MeasuredEvent::measuredPrimaryVertex() const
+MeasuredEvent::primaryVertex() const
 {
-  return measuredPrimaryVertex_;
+  return primaryVertex_;
 }
 
 const TMatrixD&
-MeasuredEvent::covPrimaryVertex() const
+MeasuredEvent::primaryVertexCov() const
 {
-  return covPrimaryVertex_;
+  return primaryVertexCov_;
 }
 
 const TMatrixD&
-MeasuredEvent::covInvPrimaryVertex() const
+MeasuredEvent::primaryVertexCovInv() const
 {
-  return covInvPrimaryVertex_;
+  return primaryVertexCovInv_;
 }
 
 bool
-MeasuredEvent::covInvPrimaryVertex_isValid() const
+MeasuredEvent::primaryVertexCovInv_isValid() const
 {
-  return covInvPrimaryVertex_isValid_;
+  return primaryVertexCovInv_isValid_;
 }
 
 void
 MeasuredEvent::setTauLeptons(const std::vector<MeasuredTauLepton>& measuredTauLeptons)
 {
-  measuredTauLeptons_ = measuredTauLeptons;
-  std::sort(measuredTauLeptons_.begin(), measuredTauLeptons_.end(), sortMeasuredTauLeptons());
-  for ( const MeasuredTauLepton& measuredTauLepton : measuredTauLeptons_ )
+  tauLeptons_ = measuredTauLeptons;
+  std::sort(tauLeptons_.begin(), tauLeptons_.end(), sortMeasuredTauLeptons());
+  for ( const MeasuredTauLepton& tauLepton : tauLeptons_ )
   {
-    if      ( measuredTauLepton.charge() > 0 ) measuredTauPlus_ = &measuredTauLepton;
-    else if ( measuredTauLepton.charge() < 0 ) measuredTauMinus_ = &measuredTauLepton;
+    if      ( tauLepton.charge() > 0 ) tauPlus_  = &tauLepton;
+    else if ( tauLepton.charge() < 0 ) tauMinus_ = &tauLepton;
   }
-  assert(measuredTauPlus_ && measuredTauMinus_);
+  assert(tauPlus_ && tauMinus_);
 }
 
 void
@@ -163,37 +163,41 @@ MeasuredEvent::setMEt(const std::vector<MeasuredMEt>& measuredMEt)
       assert(0);
     }
   }
-  measuredMEt_ = measuredMEt;
+  MEt_ = measuredMEt;
 }
 
 void
-MeasuredEvent::setPrimaryVertex(const Point& measuredPrimaryVertex, const TMatrixD& covPrimaryVertex)
+MeasuredEvent::setPrimaryVertex(const Point& primaryVertex, const TMatrixD& primaryVertexCov)
 {
-  double measuredPrimaryVertexX = roundToNdigits(measuredPrimaryVertex.x());
-  double measuredPrimaryVertexY = roundToNdigits(measuredPrimaryVertex.y());
-  double measuredPrimaryVertexZ = roundToNdigits(measuredPrimaryVertex.z());
-  measuredPrimaryVertex_ = Point(measuredPrimaryVertexX, measuredPrimaryVertexY, measuredPrimaryVertexZ);
+  double primaryVertexX = roundToNdigits(primaryVertex.x());
+  double primaryVertexY = roundToNdigits(primaryVertex.y());
+  double primaryVertexZ = roundToNdigits(primaryVertex.z());
+  primaryVertex_ = Point(primaryVertexX, primaryVertexY, primaryVertexZ);
 
-  assert(covPrimaryVertex.GetNrows() == covPrimaryVertex.GetNcols());
-  int dim = covPrimaryVertex.GetNrows();
-  covPrimaryVertex_.ResizeTo(dim,dim);
+  assert(primaryVertexCov.GetNrows() == primaryVertexCov.GetNcols());
+  int dim = primaryVertexCov.GetNrows();
+  primaryVertexCov_.ResizeTo(dim,dim);
   for ( int iRow = 0; iRow < dim; ++iRow )
   {
     for ( int iColumn = 0; iColumn < dim; ++iColumn )
     {
-      covPrimaryVertex_(iRow,iColumn) = roundToNdigits(covPrimaryVertex(iRow,iColumn));
+      primaryVertexCov_(iRow,iColumn) = roundToNdigits(primaryVertexCov(iRow,iColumn));
     }
   }
-  if ( covPrimaryVertex_.Determinant() == 0. )
+  std::cout << "primaryVertexCov:" << std::endl;
+  primaryVertexCov_.Print();
+  if ( primaryVertexCov_.Determinant() == 0. )
   {
-    std::cout << "covPrimaryVertex:" << std::endl;
-    covPrimaryVertex_.Print();
-    std::cerr << "ERROR: Failed to invert matrix covPrimaryVertex (det=0) !!" << std::endl;
+    std::cout << "primaryVertexCov:" << std::endl;
+    primaryVertexCov_.Print();
+    std::cerr << "ERROR: Failed to invert matrix primaryVertexCov (det=0) !!" << std::endl;
     return;
   }
-  covInvPrimaryVertex_.ResizeTo(dim,dim);
-  covInvPrimaryVertex_ = TMatrixD(TMatrixD::kInverted, covPrimaryVertex_);
-  covInvPrimaryVertex_isValid_ = true;
+  primaryVertexCovInv_.ResizeTo(dim,dim);
+std::cout << "break-point C.1 reached" << std::endl;
+  primaryVertexCovInv_ = TMatrixD(TMatrixD::kInverted, primaryVertexCov_);
+std::cout << "break-point C.2 reached" << std::endl;
+  primaryVertexCovInv_isValid_ = true;
 }
 
 }

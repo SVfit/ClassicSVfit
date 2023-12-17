@@ -60,11 +60,10 @@ SVfitIntegratorMarkovChain::SVfitIntegratorMarkovChain(const std::string& initMo
 {
   if      ( initMode == "uniform" ) initMode_ = kUniform;
   else if ( initMode == "Gaus"    ) initMode_ = kGaus;
-  else if ( initMode == "none"    ) initMode_ = kNone;
   else
   {
     std::cerr << "ERROR: Invalid configuration parameter 'initMode' = " << initMode << ","
-              << " expected to be either \"uniform\", \"Gaus\" or \"none\" --> ABORTING !!\n";
+              << " expected to be either \"uniform\" or \"Gaus\" --> ABORTING !!\n";
     assert(0);
   }
 
@@ -139,7 +138,15 @@ SVfitIntegratorMarkovChain::~SVfitIntegratorMarkovChain()
   delete [] x_;
 }
 
-void SVfitIntegratorMarkovChain::setIntegrand(gPtr_C g, const double* xl, const double* xu, unsigned d)
+void
+SVfitIntegratorMarkovChain::setStartPosition(const std::vector<double>& startPos_x)
+{
+  startPos_x_ = startPos_x;
+  hasStartPos_x_ = true;
+}
+
+void
+SVfitIntegratorMarkovChain::setIntegrand(gPtr_C g, const double* xl, const double* xu, unsigned d)
 {
   numDimensions_ = d;
 
@@ -154,6 +161,10 @@ void SVfitIntegratorMarkovChain::setIntegrand(gPtr_C g, const double* xl, const 
   {
     xMin_[iDimension] = xl[iDimension];
     xMax_[iDimension] = xu[iDimension];
+    if ( verbosity_ >= 1 )
+    {
+      std::cout << "dimension #" << iDimension << ": min = " << xMin_[iDimension] << ", max = " << xMax_[iDimension] << std::endl;
+    }
   }
 
   epsilon0s_.resize(numDimensions_);
@@ -205,16 +216,6 @@ SVfitIntegratorMarkovChain::integrate(gPtr_C g, const double* xl, const double* 
     assert(0);
   }
 
-  for ( unsigned int iDimension = 0; iDimension < numDimensions_; ++iDimension )
-  {
-    xMin_[iDimension] = xl[iDimension];
-    xMax_[iDimension] = xu[iDimension];
-    if ( verbosity_ >= 1 )
-    {
-      std::cout << "dimension #" << iDimension << ": min = " << xMin_[iDimension] << ", max = " << xMax_[iDimension] << std::endl;
-    }
-  }
-
 //--- CV: set random number generator used to initialize starting-position
 //        for each integration, in order to make integration results independent of processing history
   rnd_.SetSeed(12345);
@@ -245,35 +246,23 @@ SVfitIntegratorMarkovChain::integrate(gPtr_C g, const double* xl, const double* 
   for ( unsigned int iChain = 0; iChain < numChains_; ++iChain )
   {
     bool isValidStartPos = false;
-    if ( initMode_ == kNone )
+    if ( hasStartPos_x_ && iChain == 0 )
     {
+      if ( startPos_x_.size() != numDimensions_ )
+      {
+        std::cerr << "<SVfitIntegratorMarkovChain>:"
+                  << "Size of start-position vector (" << startPos_x_.size() << ")"
+                  << " does not match number of dimensions (" << numDimensions_ << ") --> ABORTING !!\n";
+        assert(0);
+      }
+      for ( unsigned int iDimension = 0; iDimension < numDimensions_; ++iDimension )
+      {
+        q_[iDimension] = (startPos_x_[iDimension] - xMin_[iDimension])/(xMax_[iDimension] - xMin_[iDimension]);
+      }
       prob_ = evalProb(q_);
       if ( prob_ > 0. )
       {
-        bool isWithinBounds = true;
-        for ( unsigned int iDimension = 0; iDimension < numDimensions_; ++iDimension )
-        {
-          double q_i = q_[iDimension];
-          if ( !(q_i > 0. && q_i < 1.) ) isWithinBounds = false;
-        }
-        if ( isWithinBounds )
-        {
-          isValidStartPos = true;
-        }
-        else
-        {
-          if ( verbosity_ >= 1 )
-          {
-            std::cerr << "<SVfitIntegratorMarkovChain>:"
-                      << "Warning: Requested start-position = " << format_vdouble(q_) << " not within interval ]0..1[ --> searching for valid alternative !!\n";
-          }
-        }
-      } else {
-        if ( verbosity_ >= 1 )
-        {
-          std::cerr << "<SVfitIntegratorMarkovChain>:"
-                    << "Warning: Requested start-position = " << format_vdouble(q_) << " returned probability zero --> searching for valid alternative !!";
-        }
+        isValidStartPos = true;
       }
     }
     unsigned int iTry = 0;
@@ -407,6 +396,8 @@ SVfitIntegratorMarkovChain::integrate(gPtr_C g, const double* xl, const double* 
   treeFile_ = 0;
   //delete tree_;
   tree_ = 0;
+  
+  hasStartPos_x_ = false;
 
   if ( verbosity_ >= 1 )
   {
@@ -469,7 +460,8 @@ SVfitIntegratorMarkovChain::initializeStartPosition_and_Momentum()
       }
     }
   }
-  if ( verbosity_ >= 2 ) {
+  if ( verbosity_ >= 2 )
+  {
     std::cout << "<SVfitIntegratorMarkovChain::initializeStartPosition_and_Momentum>:" << std::endl;
     std::cout << " q = " << format_vdouble(q_) << std::endl;
   }

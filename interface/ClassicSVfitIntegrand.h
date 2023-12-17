@@ -127,20 +127,20 @@ namespace classic_svFit
 
     /// momenta and mass of visible tau decay products
     MeasuredEvent measuredEvent_;
-    Point measuredPrimaryVertex_;
+    Point primaryVertex_;
     MeasuredTauLepton measuredTauLepton1_;
-    Point measuredDecayVertex1_;
-    TMatrixD covDecayVertex1_;
-    TMatrixD covInvDecayVertex1_;
-    const MeasuredHadTauDecayProduct* measuredLeadChargedHadron1_;
+    Point leg1decayVertex_;
+    TMatrixD leg1decayVertexCov_;
+    TMatrixD leg1decayVertexCovInv_;
+    const MeasuredHadTauDecayProduct* leg1leadChargedHadron_;
     bool leg1isLeptonicTauDecay_;
     bool leg1isHadronicTauDecay_;
     bool leg1isPrompt_;
     MeasuredTauLepton measuredTauLepton2_;
-    Point measuredDecayVertex2_;
-    TMatrixD covDecayVertex2_;
-    TMatrixD covInvDecayVertex2_;
-    const MeasuredHadTauDecayProduct* measuredLeadChargedHadron2_;
+    Point leg2decayVertex_;
+    TMatrixD leg2decayVertexCov_;
+    TMatrixD leg2decayVertexCovInv_;
+    const MeasuredHadTauDecayProduct* leg2leadChargedHadron_;
     bool leg2isLeptonicTauDecay_;
     bool leg2isHadronicTauDecay_;
     bool leg2isPrompt_;

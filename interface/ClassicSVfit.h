@@ -3,6 +3,7 @@
 
 #include "TauAnalysis/ClassicSVfit/interface/ClassicSVfitIntegrand.h"      // ClassicSVfitIntegrand
 #include "TauAnalysis/ClassicSVfit/interface/MeasuredEvent.h"              // MeasuredEvent
+#include "TauAnalysis/ClassicSVfit/interface/MeasuredTauLepton.h"          // MeasuredTauLepton
 #include "TauAnalysis/ClassicSVfit/interface/svFitHistogramAdapter.h"      // HistogramAdapterDiTau*
 #include "TauAnalysis/ClassicSVfit/interface/SVfitIntegratorMarkovChain.h" // SVfitIntegratorMarkovChain
 #ifdef USE_SVFITTF
@@ -43,6 +44,12 @@ class ClassicSVfit
   void
   disableHadTauTF();
 #endif
+
+  /// set start-position for Markov-Chain integration;
+  /// calling this function is not neccessary, but reduces the computing time 
+  /// by avoiding that SVfitIntegratorMarkovChain needs to find the start-position by try & error
+  void
+  setStartPosition(const classic_svFit::LorentzVector& tauPlusP4, const classic_svFit::LorentzVector& tauMinusP4);
 
   /// set and get histogram adapter
   void
@@ -98,19 +105,31 @@ class ClassicSVfit
   void
   initializeLegIntegrationRanges(size_t iLeg);
 
+  /// compute start-position for Markov-Chain integration
+  /// based on the tau+ and tau- four-vectors passed to setStartPosition function
+  void
+  setStartPositionImp();
+
   classic_svFit::ClassicSVfitIntegrand* integrand_;
 
   /// reference to MeasuredTauLepton objects of MeasuredEvent given as parameter to integrate() function
+  classic_svFit::MeasuredEvent measuredEvent_;
   std::vector<classic_svFit::MeasuredTauLepton> measuredTauLeptons_;
-
-  /// account for resolution on pT of hadronic tau decays via appropriate transfer functions
-  bool useHadTauTF_; 
 
   /// enable use of transverse impact parameter (for 1-prongs) and tau decay vertex (for 3-prongs)
   bool useTauFlightLength_;
 
   /// tau-pair mass contraint (default is -1, corresponding to constraint being disabled)
   double diTauMassConstraint_;
+
+  /// account for resolution on pT of hadronic tau decays via appropriate transfer functions
+  bool useHadTauTF_; 
+
+  /// set start-position for Markov-Chain integration
+  bool useStartPos_;
+  classic_svFit::LorentzVector startPos_tauPlusP4_;
+  classic_svFit::LorentzVector startPos_tauMinusP4_;
+  std::vector<double> startPos_x_;
 
   /// histograms for evaluation of pT, eta, phi, mass and transverse mass of di-tau system
   mutable classic_svFit::HistogramAdapterDiTau* histogramAdapter_;

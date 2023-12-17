@@ -30,28 +30,28 @@ namespace classic_svFit
 
     /// return visible tau decay products
     const std::vector<MeasuredTauLepton>&
-    measuredTauLeptons() const;
+    tauLeptons() const;
 
     const MeasuredTauLepton&
-    measuredTauPlus() const;
+    tauPlus() const;
     const MeasuredTauLepton&
-    measuredTauMinus() const;
+    tauMinus() const;
 
     /// return missing momentum
     const std::vector<MeasuredMEt>&
-    measuredMEt() const;
+    MEt() const;
 
     /// return position of primary vertex and its uncertainty
     bool
     hasPrimaryVertex() const;
     const Point&
-    measuredPrimaryVertex() const;
+    primaryVertex() const;
     const TMatrixD&
-    covPrimaryVertex() const;
+    primaryVertexCov() const;
     const TMatrixD&
-    covInvPrimaryVertex() const;
+    primaryVertexCovInv() const;
     bool
-    covInvPrimaryVertex_isValid() const;
+    primaryVertexCovInv_isValid() const;
 
    protected:
     /// set measuredTauLeptons data-member
@@ -71,19 +71,19 @@ namespace classic_svFit
     int type_;
 
     /// visible tau decay products
-    std::vector<MeasuredTauLepton> measuredTauLeptons_;
-    const MeasuredTauLepton* measuredTauPlus_;
-    const MeasuredTauLepton* measuredTauMinus_;
+    std::vector<MeasuredTauLepton> tauLeptons_;
+    const MeasuredTauLepton* tauPlus_;
+    const MeasuredTauLepton* tauMinus_;
 
     /// missing momentum
-    std::vector<MeasuredMEt> measuredMEt_;
+    std::vector<MeasuredMEt> MEt_;
 
     /// position of tau primary vertex and its uncertainty
     bool hasPrimaryVertex_;
-    Point measuredPrimaryVertex_;
-    TMatrixD covPrimaryVertex_;
-    TMatrixD covInvPrimaryVertex_;
-    bool covInvPrimaryVertex_isValid_;
+    Point primaryVertex_;
+    TMatrixD primaryVertexCov_;
+    TMatrixD primaryVertexCovInv_;
+    bool primaryVertexCovInv_isValid_;
   };
 }
 

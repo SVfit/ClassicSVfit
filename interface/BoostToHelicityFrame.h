@@ -21,6 +21,8 @@ namespace classic_svFit
     LorentzVector
     operator()(const LorentzVector& p4, int tau) const;
 
+    
+
    private:
     LorentzVector beamP4_;
 

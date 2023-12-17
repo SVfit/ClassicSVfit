@@ -17,14 +17,14 @@ MeasuredTauLepton::MeasuredTauLepton()
   , mass_(0.)
   , decayMode_(-1)
   , hasDecayVertex_(false)
-  , covInvDecayVertex_isValid_(false)
+  , decayVertexCovInv_isValid_(false)
   , hasHadTauDecayProducts_(false)
 {
   initialize();
 }
 
 MeasuredTauLepton::MeasuredTauLepton(int type, int charge, double pt, double eta, double phi, double mass,
-                                     int decayMode, const std::vector<MeasuredHadTauDecayProduct>* measuredHadTauDecayProducts)
+                                     int decayMode, const std::vector<MeasuredHadTauDecayProduct>* hadTauDecayProducts)
   : type_(type)
   , type_string_("undefined")
   , charge_(charge)
@@ -34,19 +34,19 @@ MeasuredTauLepton::MeasuredTauLepton(int type, int charge, double pt, double eta
   , mass_(roundToNdigits(mass))
   , decayMode_(decayMode)
   , hasDecayVertex_(false)
-  , covInvDecayVertex_isValid_(false)
-  , hasHadTauDecayProducts_(measuredHadTauDecayProducts != nullptr) 
+  , decayVertexCovInv_isValid_(false)
+  , hasHadTauDecayProducts_(hadTauDecayProducts != nullptr) 
 {
   checkType();
   setMass();
-  setHadTauDecayProducts(measuredHadTauDecayProducts);
+  setHadTauDecayProducts(hadTauDecayProducts);
   initialize();
 }
 
 MeasuredTauLepton::MeasuredTauLepton(int type, 
                                      int charge, double pt, double eta, double phi, double mass, 
-                                     const Point& measuredDecayVertex, const TMatrixD& covDecayVertex,
-                                     int decayMode, const std::vector<MeasuredHadTauDecayProduct>* measuredHadTauDecayProducts)
+                                     const Point& decayVertex, const TMatrixD& decayVertexCov,
+                                     int decayMode, const std::vector<MeasuredHadTauDecayProduct>* hadTauDecayProducts)
   : type_(type)
   , type_string_("undefined")
   , charge_(charge)
@@ -56,13 +56,38 @@ MeasuredTauLepton::MeasuredTauLepton(int type,
   , mass_(roundToNdigits(mass))
   , decayMode_(decayMode)
   , hasDecayVertex_(true)
-  , covInvDecayVertex_isValid_(false)
-  , hasHadTauDecayProducts_(measuredHadTauDecayProducts != nullptr)
+  , decayVertexCovInv_isValid_(false)
+  , hasHadTauDecayProducts_(hadTauDecayProducts != nullptr)
+  , leadChargedHadron_(nullptr)
 {
   checkType();
   setMass();
-  setDecayVertex(measuredDecayVertex, covDecayVertex);
-  setHadTauDecayProducts(measuredHadTauDecayProducts);
+  setHadTauDecayProducts(hadTauDecayProducts);
+  setDecayVertex(decayVertex, decayVertexCov);
+  initialize();
+}
+
+MeasuredTauLepton::MeasuredTauLepton(int type, 
+                                     int charge, double pt, double eta, double phi, double mass, 
+                                     const Point& decayVertex, double decayVertexSigma_parl, double decayVertexSigma_perp,
+                                     int decayMode, const std::vector<MeasuredHadTauDecayProduct>* hadTauDecayProducts)
+  : type_(type)
+  , type_string_("undefined")
+  , charge_(charge)
+  , pt_(roundToNdigits(pt))
+  , eta_(roundToNdigits(eta))
+  , phi_(roundToNdigits(phi))
+  , mass_(roundToNdigits(mass))
+  , decayMode_(decayMode)
+  , hasDecayVertex_(true)
+  , decayVertexCovInv_isValid_(false)
+  , hasHadTauDecayProducts_(hadTauDecayProducts != nullptr)
+  , leadChargedHadron_(nullptr)
+{
+  checkType();
+  setMass();
+  setHadTauDecayProducts(hadTauDecayProducts);
+  setDecayVertex(decayVertex, decayVertexSigma_parl, decayVertexSigma_perp);
   initialize();
 }
 
@@ -75,14 +100,14 @@ MeasuredTauLepton::MeasuredTauLepton(const MeasuredTauLepton& measuredTauLepton)
   , mass_(measuredTauLepton.mass_)
   , decayMode_(measuredTauLepton.decayMode_)
   , hasDecayVertex_(measuredTauLepton.hasDecayVertex_)
-  , measuredDecayVertex_(measuredTauLepton.measuredDecayVertex_)
-  , covDecayVertex_(measuredTauLepton.covDecayVertex_)
-  , covInvDecayVertex_(measuredTauLepton.covInvDecayVertex_)
-  , covInvDecayVertex_isValid_(measuredTauLepton.covInvDecayVertex_isValid_)
+  , decayVertex_(measuredTauLepton.decayVertex_)
+  , decayVertexCov_(measuredTauLepton.decayVertexCov_)
+  , decayVertexCovInv_(measuredTauLepton.decayVertexCovInv_)
+  , decayVertexCovInv_isValid_(measuredTauLepton.decayVertexCovInv_isValid_)
   , hasHadTauDecayProducts_(measuredTauLepton.hasHadTauDecayProducts_)
-  , measuredHadTauDecayProducts_(measuredTauLepton.measuredHadTauDecayProducts_)
 {
   preciseVisMass_ = measuredTauLepton.mass();
+  setHadTauDecayProducts(&measuredTauLepton.hadTauDecayProducts_);
   initialize();
 }
 
@@ -100,15 +125,15 @@ MeasuredTauLepton::operator=(const MeasuredTauLepton& measuredTauLepton)
   mass_ = measuredTauLepton.mass_;
   decayMode_ = measuredTauLepton.decayMode_;
   hasDecayVertex_ = measuredTauLepton.hasDecayVertex_;
-  measuredDecayVertex_ = measuredTauLepton.measuredDecayVertex_;
-  covDecayVertex_.ResizeTo(measuredTauLepton.covDecayVertex_.GetNrows(),measuredTauLepton.covDecayVertex_.GetNcols());
-  covDecayVertex_ = measuredTauLepton.covDecayVertex_;
-  covInvDecayVertex_.ResizeTo(measuredTauLepton.covInvDecayVertex_.GetNrows(),measuredTauLepton.covInvDecayVertex_.GetNcols());
-  covInvDecayVertex_ = measuredTauLepton.covInvDecayVertex_;
-  covInvDecayVertex_isValid_ = measuredTauLepton.covInvDecayVertex_isValid_;
+  decayVertex_ = measuredTauLepton.decayVertex_;
+  decayVertexCov_.ResizeTo(measuredTauLepton.decayVertexCov_.GetNrows(),measuredTauLepton.decayVertexCov_.GetNcols());
+  decayVertexCov_ = measuredTauLepton.decayVertexCov_;
+  decayVertexCovInv_.ResizeTo(measuredTauLepton.decayVertexCovInv_.GetNrows(),measuredTauLepton.decayVertexCovInv_.GetNcols());
+  decayVertexCovInv_ = measuredTauLepton.decayVertexCovInv_;
+  decayVertexCovInv_isValid_ = measuredTauLepton.decayVertexCovInv_isValid_;
   hasHadTauDecayProducts_ = measuredTauLepton.hasHadTauDecayProducts_;
-  measuredHadTauDecayProducts_ = measuredTauLepton.measuredHadTauDecayProducts_;
   preciseVisMass_ = measuredTauLepton.mass();
+  setHadTauDecayProducts(&measuredTauLepton.hadTauDecayProducts_);
   initialize();
   return *this;
 }
@@ -198,27 +223,27 @@ MeasuredTauLepton::hasDecayVertex() const
 }
 
 const Point&
-MeasuredTauLepton::measuredDecayVertex() const
+MeasuredTauLepton::decayVertex() const
 {
-  return measuredDecayVertex_;
+  return decayVertex_;
 }
 
 const TMatrixD&
-MeasuredTauLepton::covDecayVertex() const
+MeasuredTauLepton::decayVertexCov() const
 {
-  return covDecayVertex_;
+  return decayVertexCov_;
 }
 
 const TMatrixD&
-MeasuredTauLepton::covInvDecayVertex() const
+MeasuredTauLepton::decayVertexCovInv() const
 {
-  return covInvDecayVertex_;
+  return decayVertexCovInv_;
 }
 
 bool
-MeasuredTauLepton::covInvDecayVertex_isValid() const
+MeasuredTauLepton::decayVertexCovInv_isValid() const
 {
-  return covInvDecayVertex_isValid_;
+  return decayVertexCovInv_isValid_;
 }
 
 bool
@@ -228,9 +253,15 @@ MeasuredTauLepton::hasHadTauDecayProducts() const
 }
 
 const std::vector<MeasuredHadTauDecayProduct>&
-MeasuredTauLepton::measuredHadTauDecayProducts() const
+MeasuredTauLepton::hadTauDecayProducts() const
 {
-  return measuredHadTauDecayProducts_;
+  return hadTauDecayProducts_;
+}
+
+const MeasuredHadTauDecayProduct*
+MeasuredTauLepton::leadChargedHadron() const
+{
+  return leadChargedHadron_;
 }
 
 const LorentzVector&
@@ -296,48 +327,111 @@ MeasuredTauLepton::setMass()
   preciseVisMass_ = mass_;
   if ( preciseVisMass_ < (0.9*minVisMass) || preciseVisMass_ > (1.1*maxVisMass) ) 
   {
-    std::cerr << "WARNING: " << type_string_ << " declared for leg:" 
+    std::cerr << "WARNING: " << type_string_;
+    if ( type_ == kTauToHadDecay ) std::cerr << " (decayMode = " << decayMode_ << ")";
+    std::cerr << " declared for leg:" 
               << " Pt = " << pt_ << ", eta = " << eta_ << ", phi = " << phi_ << ", mass = " << mass_ << " !!" << std::endl;
-    std::cerr << " (mass expected in the range = " << minVisMass << ".." << maxVisMass << ")" << std::endl;
+    std::cerr << " (mass expected within the range = " << minVisMass << ".." << maxVisMass << ")" << std::endl;
   }
   if ( preciseVisMass_ < minVisMass ) preciseVisMass_ = minVisMass;
   if ( preciseVisMass_ > maxVisMass ) preciseVisMass_ = maxVisMass;
 }
 
 void
-MeasuredTauLepton::setDecayVertex(const Point& measuredDecayVertex, const TMatrixD& covDecayVertex)
+MeasuredTauLepton::setDecayVertex(const Point& decayVertex, const TMatrixD& decayVertexCov)
 {
-  double measuredDecayVertexX = roundToNdigits(measuredDecayVertex.x());
-  double measuredDecayVertexY = roundToNdigits(measuredDecayVertex.y());
-  double measuredDecayVertexZ = roundToNdigits(measuredDecayVertex.z());
-  measuredDecayVertex_ = Point(measuredDecayVertexX, measuredDecayVertexY, measuredDecayVertexZ);
+  double decayVertexX = roundToNdigits(decayVertex.x());
+  double decayVertexY = roundToNdigits(decayVertex.y());
+  double decayVertexZ = roundToNdigits(decayVertex.z());
+  decayVertex_ = Point(decayVertexX, decayVertexY, decayVertexZ);
 
-  assert(covDecayVertex.GetNrows() == covDecayVertex.GetNcols());
-  int dim = covDecayVertex.GetNrows();
-  covDecayVertex_.ResizeTo(dim,dim);
+  assert(decayVertexCov.GetNrows() == decayVertexCov.GetNcols());
+  int dim = decayVertexCov.GetNrows();
+  decayVertexCov_.ResizeTo(dim,dim);
   for ( int iRow = 0; iRow < dim; ++iRow )
   {
     for ( int iColumn = 0; iColumn < dim; ++iColumn )
     {
-      covDecayVertex_(iRow,iColumn) = roundToNdigits(covDecayVertex(iRow,iColumn));
+      decayVertexCov_(iRow,iColumn) = roundToNdigits(decayVertexCov(iRow,iColumn));
     }
   }
-  if ( covDecayVertex_.Determinant() == 0. )
+  //std::cout << "decayVertexCov:" << std::endl;
+  //decayVertexCov_.Print();
+
+  if ( !leadChargedHadron_ )
   {
-    std::cout << "covDecayVertex:" << std::endl;
-    covDecayVertex_.Print();
-    std::cerr << "ERROR: Failed to invert matrix covDecayVertex (det=0) !!" << std::endl;
+    std::cerr << "ERROR: Failed to find leading charged hadron !!" << std::endl;
+    assert(0);
+  }
+
+  Vector r, n, k;
+  get_localCoordinateSystem(leadChargedHadron_->p3(), r, n, k);
+
+  TMatrixD rotMatrix_xyz2rnk = get_rotationMatrix(r, n, k);
+  TMatrixD rotMatrix_rnk2xyz = get_rotationMatrixInv(r, n, k);
+
+  TMatrixD decayVertexCov_local = rotateCovMatrix(decayVertexCov_, rotMatrix_xyz2rnk);
+  //std::cout << "decayVertexCov(local):" << std::endl;
+  //decayVertexCov_local.Print();
+  if ( decayVertexCov_local.Determinant() == 0. )
+  {
+    std::cout << "decayVertexCov_local:" << std::endl;
+    decayVertexCov_local.Print();
+    std::cerr << "ERROR: Failed to invert matrix decayVertexCov_local (det=0) !!" << std::endl;
     return;
   }
-  covInvDecayVertex_.ResizeTo(dim,dim);
-  covInvDecayVertex_ = TMatrixD(TMatrixD::kInverted, covDecayVertex_);
-  covInvDecayVertex_isValid_ = true;
+
+  TMatrixD decayVertexCovInv_local(TMatrixD::kInverted, decayVertexCov_local);
+  decayVertexCovInv_.ResizeTo(dim,dim);
+  decayVertexCovInv_ = rotateCovMatrix(decayVertexCovInv_local, rotMatrix_rnk2xyz);
+  decayVertexCovInv_isValid_ = true;
 }
 
 void
-MeasuredTauLepton::setHadTauDecayProducts(const std::vector<MeasuredHadTauDecayProduct>* measuredHadTauDecayProducts)
+MeasuredTauLepton::setDecayVertex(const Point& decayVertex, double decayVertexSigma_parl, double decayVertexSigma_perp)
 {
-  if ( measuredHadTauDecayProducts )
+  double decayVertexX = roundToNdigits(decayVertex.x());
+  double decayVertexY = roundToNdigits(decayVertex.y());
+  double decayVertexZ = roundToNdigits(decayVertex.z());
+  decayVertex_ = Point(decayVertexX, decayVertexY, decayVertexZ);
+
+  if ( !leadChargedHadron_ )
+  {
+    std::cerr << "ERROR: Failed to find leading charged hadron !!" << std::endl;
+    assert(0);
+  }
+
+  Vector r, n, k;
+  get_localCoordinateSystem(leadChargedHadron_->p3(), r, n, k);
+
+  TMatrixD decayVertexCov_local(3,3);
+  decayVertexCov_local(0,0) = square(decayVertexSigma_perp);
+  decayVertexCov_local(1,1) = square(decayVertexSigma_perp);
+  decayVertexCov_local(2,2) = square(decayVertexSigma_parl);
+  std::cout << "decayVertexCov(local):" << std::endl;
+  decayVertexCov_local.Print();
+
+  TMatrixD decayVertexCovInv_local(3,3);
+  decayVertexCovInv_local(0,0) = 1./square(decayVertexSigma_perp);
+  decayVertexCovInv_local(1,1) = 1./square(decayVertexSigma_perp);
+  decayVertexCovInv_local(2,2) = 1./square(decayVertexSigma_parl);
+
+  TMatrixD rotMatrix_rnk2xyz = get_rotationMatrixInv(r, n, k);
+
+  decayVertexCov_.ResizeTo(3,3);
+  decayVertexCov_ = rotateCovMatrix(decayVertexCov_local, rotMatrix_rnk2xyz);
+  std::cout << "decayVertexCov:" << std::endl;
+  decayVertexCov_.Print();
+
+  decayVertexCovInv_.ResizeTo(3,3);
+  decayVertexCovInv_ = rotateCovMatrix(decayVertexCovInv_local, rotMatrix_rnk2xyz);
+  decayVertexCovInv_isValid_ = true;
+}
+
+void
+MeasuredTauLepton::setHadTauDecayProducts(const std::vector<MeasuredHadTauDecayProduct>* hadTauDecayProducts)
+{
+  if ( hadTauDecayProducts )
   {
     if ( type_ != kTauToHadDecay )
     {
@@ -345,20 +439,21 @@ MeasuredTauLepton::setHadTauDecayProducts(const std::vector<MeasuredHadTauDecayP
       assert(0);
     }
     
-    measuredHadTauDecayProducts_ = (*measuredHadTauDecayProducts);
-    std::sort(measuredHadTauDecayProducts_.begin(), measuredHadTauDecayProducts_.end(), sortMeasuredHadTauDecayProducts());
+    hadTauDecayProducts_ = (*hadTauDecayProducts);
+    std::sort(hadTauDecayProducts_.begin(), hadTauDecayProducts_.end(), sortMeasuredHadTauDecayProducts());
 
-    int charge_sum = 0;
-    for ( const MeasuredHadTauDecayProduct& measuredHadTauDecayProduct : measuredHadTauDecayProducts_ )
+    double max_pt = -1.;
+    for ( const MeasuredHadTauDecayProduct& hadTauDecayProduct : hadTauDecayProducts_ )
     {
-      charge_sum += measuredHadTauDecayProduct.charge();
+      if ( hadTauDecayProduct.charge() != 0 && hadTauDecayProduct.pt() > max_pt )
+      {
+        leadChargedHadron_ = &hadTauDecayProduct;
+        max_pt = hadTauDecayProduct.pt();
+      }
     }
-    if ( charge_sum != charge_ )
+    if ( !leadChargedHadron_ )
     {
-      std::cerr << "ERROR: Charge-sum of tau decay products does not match charge " << charge_ << " declared for leg:" 
-                << " Pt = " << pt_ << ", eta = " << eta_ << ", phi = " << phi_ << ", mass = " << mass_ << " !!" << std::endl;
-      std::cout << "tau decay products:" << std::endl;
-      std::cout << measuredHadTauDecayProducts_;
+      std::cerr << "ERROR: Failed to find leading charged hadron !!" << std::endl;
       assert(0);
     }
   }

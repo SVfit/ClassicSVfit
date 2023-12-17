@@ -1,26 +1,25 @@
 #include "TauAnalysis/ClassicSVfit/interface/svFitAuxFunctions.h"
 
-#include <TMath.h>
-#include <TF1.h>
-#include <TFitResult.h>
+#include <TMath.h>    // TMath::Floor(), TMath::Nint()
 
-namespace classic_svFit
-{
+#include <cmath>      // log10(), pow(), std::fabs(), std::sqrt()
+
+using namespace classic_svFit;
 
 double
-roundToNdigits(double x, int n)
+classic_svFit::roundToNdigits(double x, int n)
 {
-  double tmp = TMath::Power(10., n);
+  double tmp = pow(10., n);
   if ( x != 0. )
   {
-    tmp /= TMath::Power(10., TMath::Floor(TMath::Log10(TMath::Abs(x))));
+    tmp /= pow(10., TMath::Floor(log10(std::fabs(x))));
   }
   double x_rounded = TMath::Nint(x*tmp)/tmp;
   return x_rounded;
 }
 
 TMatrixD
-roundToNdigits(const TMatrixD& m, int n)
+classic_svFit::roundToNdigits(const TMatrixD& m, int n)
 {
   int nRows = m.GetNrows();
   int nColumns = m.GetNcols();
@@ -35,142 +34,26 @@ roundToNdigits(const TMatrixD& m, int n)
   return m_rounded;
 }
 
-TGraphErrors*
-makeGraph(const std::string& graphName, const std::vector<GraphPoint>& graphPoints)
-{
-  size_t numPoints = graphPoints.size();
-  TGraphErrors* graph = new TGraphErrors(numPoints);
-  graph->SetName(graphName.data());
-  for ( size_t iPoint = 0; iPoint < numPoints; ++iPoint )
-  {
-    const GraphPoint& graphPoint = graphPoints[iPoint];
-    graph->SetPoint(iPoint, graphPoint.x_, graphPoint.y_);
-    graph->SetPointError(iPoint, graphPoint.xErr_, graphPoint.yErr_);
-  }
-  return graph;
-}
-
-void
-extractResult(TGraphErrors* graph, double& mass, double& massErr, double& Lmax, int verbosity)
-{
-  // determine range of mTest values that are within ~2 sigma interval within maximum of likelihood function
-  double x_Lmax = 0.;
-  double y_Lmax = 0.;
-  double idxPoint_Lmax = -1;
-  for ( int iPoint = 0; iPoint < graph->GetN(); ++iPoint )
-  {
-    double x, y;
-    graph->GetPoint(iPoint, x, y);
-    if ( y > y_Lmax )
-    {
-      x_Lmax = x;
-      y_Lmax = y;
-      idxPoint_Lmax = iPoint;
-    }
-  }
-
-  double xMin = 1.e+6;
-  double xMax = 0.;
-  for ( int iPoint = 0; iPoint < graph->GetN(); ++iPoint )
-  {
-    double x, y;
-    graph->GetPoint(iPoint, x, y);
-    if ( x < xMin ) xMin = x;
-    if ( x > xMax ) xMax = x;
-  }
-
-  // fit log-likelihood function within ~2 sigma interval within maximum
-  // with parabola
-  std::vector<GraphPoint> graphPoints_forFit;
-  double xMin_fit = 1.e+6;
-  double xMax_fit = 0.;
-  for ( int iPoint = 0; iPoint < graph->GetN(); ++iPoint )
-  {
-    double x, y;
-    graph->GetPoint(iPoint, x, y);
-    double xErr = graph->GetErrorX(iPoint);
-    double yErr = graph->GetErrorY(iPoint);
-    if ( y > (1.e-1*y_Lmax) && TMath::Abs(iPoint - idxPoint_Lmax) <= 5 )
-    {
-      GraphPoint graphPoint;
-      graphPoint.x_ = x;
-      graphPoint.xErr_ = xErr;
-      if ( (x - xErr) < xMin_fit ) xMin_fit = x - xErr;
-      if ( (x + xErr) > xMax_fit ) xMax_fit = x + xErr;
-      graphPoint.y_ = -TMath::Log(y);
-      graphPoint.yErr_ = yErr/y;
-      graphPoints_forFit.push_back(graphPoint);
-    }
-  }
-
-  TGraphErrors* likelihoodGraph_forFit = classic_svFit::makeGraph("svFitLikelihoodGraph_forFit", graphPoints_forFit);
-  int numPoints = likelihoodGraph_forFit->GetN();
-  bool useFit = false;
-  if ( numPoints >= 3 )
-  {
-    TF1* fitFunction = new TF1("fitFunction", "TMath::Power((x - [0])/[1], 2.) + [2]", xMin_fit, xMax_fit);
-    fitFunction->SetParameter(0, x_Lmax);
-    fitFunction->SetParameter(1, 0.20*x_Lmax);
-    fitFunction->SetParameter(2, -TMath::Log(y_Lmax));
-
-    std::string fitOptions = "NSQ";
-    //if ( !verbosity ) fitOptions.append("Q");
-    TFitResultPtr fitResult = likelihoodGraph_forFit->Fit(fitFunction, fitOptions.data());
-    if ( fitResult.Get() )
-    {
-      if ( verbosity >= 1 )
-      {
-        std::cout << "fitting graph of p versus M(test) in range " << xMin_fit << ".." << xMax_fit << ", result:" << std::endl;
-        std::cout << " parameter #0 = " << fitFunction->GetParameter(0) << " +/- " << fitFunction->GetParError(0) << std::endl;
-        std::cout << " parameter #1 = " << fitFunction->GetParameter(1) << " +/- " << fitFunction->GetParError(1) << std::endl;
-        std::cout << " parameter #2 = " << fitFunction->GetParameter(2) << " +/- " << fitFunction->GetParError(2) << std::endl;
-        std::cout << "chi^2 = " << fitResult->Chi2() << std::endl;
-      }
-      if ( fitResult->Chi2() < (10.*numPoints) &&
-           fitFunction->GetParameter(0) > xMin && fitFunction->GetParameter(0) < xMax &&
-           TMath::Abs(fitFunction->GetParameter(0) - x_Lmax) < (0.10*x_Lmax) ) {
-        mass = fitFunction->GetParameter(0);
-        massErr = TMath::Sqrt(square(fitFunction->GetParameter(1)) + square(fitFunction->GetParError(0)));
-        Lmax = TMath::Exp(-fitFunction->GetParameter(2));
-        useFit = true;
-      }
-    } 
-    else
-    {
-      std::cerr << "WARNING: Fit did not converge !!" << std::endl;
-    }
-    delete fitFunction;
-  }
-  if ( !useFit )
-  {
-    mass = x_Lmax;
-    massErr = TMath::Sqrt(0.5*(square(x_Lmax - xMin_fit) + square(xMax_fit - x_Lmax)))/TMath::Sqrt(2.*TMath::Log(10.));
-    Lmax = y_Lmax;
-  }
-
-  delete likelihoodGraph_forFit;
-}
-
 Vector
-normalize(const Vector& p)
+classic_svFit::normalize(const Vector& p)
 {
   double p_x = p.x();
   double p_y = p.y();
   double p_z = p.z();
   double mag2 = square(p_x) + square(p_y) + square(p_z);
   if ( mag2 <= 0. ) return p;
-  double mag = TMath::Sqrt(mag2);
+  double mag = std::sqrt(mag2);
   return Vector(p_x/mag, p_y/mag, p_z/mag);
 }
 
 double
-compScalarProduct(const Vector& p1, const Vector& p2)
+classic_svFit::compScalarProduct(const Vector& p1, const Vector& p2)
 {
   return (p1.x()*p2.x() + p1.y()*p2.y() + p1.z()*p2.z());
 }
 
 Vector
-compCrossProduct(const Vector& p1, const Vector& p2)
+classic_svFit::compCrossProduct(const Vector& p1, const Vector& p2)
 {
   double p3_x = p1.y()*p2.z() - p1.z()*p2.y();
   double p3_y = p1.z()*p2.x() - p1.x()*p2.z();
@@ -179,28 +62,30 @@ compCrossProduct(const Vector& p1, const Vector& p2)
 }
 
 double
-compCosThetaNuNu(double visEn, double visP, double visMass2, double nunuEn, double nunuP, double nunuMass2)
+classic_svFit::compCosThetaNuNu(double visEn, double visP, double visMass2, double nunuEn, double nunuP, double nunuMass2)
 {
   double cosThetaNuNu = (visEn*nunuEn - 0.5*(tauLeptonMass2 - (visMass2 + nunuMass2)))/(visP*nunuP);
   return cosThetaNuNu;
 }
 
 double
-compPSfactor_tauToLepDecay(double x, double visEn, double visP, double visMass, double nunuEn, double nunuP, double nunuMass)
+classic_svFit::compPSfactor_tauToLepDecay(double x, double visEn, double visP, double visMass, double nunuEn, double nunuP, double nunuMass)
 {
   double visMass2 = square(visMass);
   double nunuMass2 = square(nunuMass);
-  if ( x >= (visMass2/tauLeptonMass2) && x <= 1. && nunuMass2 < ((1. - x)*tauLeptonMass2) ) { // physical solution
+  if ( x >= (visMass2/tauLeptonMass2) && x <= 1. && nunuMass2 < ((1. - x)*tauLeptonMass2) ) 
+  { 
+    // physical solution
     double tauEn_rf = (tauLeptonMass2 + nunuMass2 - visMass2)/(2.*nunuMass);
     double visEn_rf = tauEn_rf - nunuMass;
     if ( !(tauEn_rf >= tauLeptonMass && visEn_rf >= visMass) ) return 0.;
-    double I = nunuMass2*(2.*tauEn_rf*visEn_rf - (2./3.)*TMath::Sqrt((square(tauEn_rf) - tauLeptonMass2)*(square(visEn_rf) - visMass2)));
+    double I = nunuMass2*(2.*tauEn_rf*visEn_rf - (2./3.)*std::sqrt((square(tauEn_rf) - tauLeptonMass2)*(square(visEn_rf) - visMass2)));
     #ifdef XSECTION_NORMALIZATION
     I *= GFfactor;    
     #endif
     double cosThetaNuNu = classic_svFit::compCosThetaNuNu(visEn, visP, visMass2, nunuEn, nunuP, nunuMass2);
     if ( !(cosThetaNuNu >= (-1. + epsilon) && cosThetaNuNu <= +1.) ) return 0.;
-    double PSfactor = (visEn + nunuEn)*I/(8.*visP*square(x)*TMath::Sqrt(square(visP) + square(nunuP) + 2.*visP*nunuP*cosThetaNuNu + tauLeptonMass2));
+    double PSfactor = (visEn + nunuEn)*I/(8.*visP*square(x)*std::sqrt(square(visP) + square(nunuP) + 2.*visP*nunuP*cosThetaNuNu + tauLeptonMass2));
     //-------------------------------------------------------------------------
     // CV: fudge factor to reproduce literature value for cross-section times branching fraction
     #ifdef XSECTION_NORMALIZATION
@@ -208,19 +93,21 @@ compPSfactor_tauToLepDecay(double x, double visEn, double visP, double visMass, 
     #endif
     //-------------------------------------------------------------------------
     return PSfactor;
-  } else {
+  } 
+  else 
+  {
     return 0.;
   }
 }
 
 double
-compPSfactor_tauToHadDecay(double x, double visEn, double visP, double visMass, double nuEn, double nuP)
+classic_svFit::compPSfactor_tauToHadDecay(double x, double visEn, double visP, double visMass, double nuEn, double nuP)
 {
   double visMass2 = square(visMass);
   if ( x >= (visMass2/tauLeptonMass2) && x <= 1. ) { // physical solution
     double cosThetaNu = classic_svFit::compCosThetaNuNu(visEn, visP, visMass2, nuEn, nuP, 0.);
     if ( !(cosThetaNu >= (-1. + epsilon) && cosThetaNu <= +1.) ) return 0.;
-    double PSfactor = (visEn + nuEn)/(8.*visP*square(x)*TMath::Sqrt(square(visP) + square(nuP) + 2.*visP*nuP*cosThetaNu + tauLeptonMass2));
+    double PSfactor = (visEn + nuEn)/(8.*visP*square(x)*std::sqrt(square(visP) + square(nuP) + 2.*visP*nuP*cosThetaNu + tauLeptonMass2));
     PSfactor *= 1.0/(tauLeptonMass2 - visMass2);
     //-------------------------------------------------------------------------
     // CV: multiply by constant matrix element,
@@ -238,6 +125,9 @@ compPSfactor_tauToHadDecay(double x, double visEn, double visP, double visMass, 
     return 0.;
   }
 }
+
+namespace classic_svFit
+{
 
 integrationParameters::integrationParameters()
 {
@@ -273,19 +163,188 @@ namespace
   }
 }
 
-namespace classic_svFit
-{
-
 LorentzVector
-fixTauMass(const LorentzVector& tauP4)
+classic_svFit::fixTauMass(const LorentzVector& tauP4)
 {
   return fixMass(tauP4, tauLeptonMass);
 }
 
 LorentzVector
-fixNuMass(const LorentzVector& nuP4)
+classic_svFit::fixNuMass(const LorentzVector& nuP4)
 {
   return fixMass(nuP4, 0.);
 }
 
+std::pair<double,double>
+classic_svFit::comp_dmin_and_dmax(const LorentzVector& tauP4, const Vector& flightLength, const TMatrixD& covDecayVertex)
+{
+  Vector tauP3 = tauP4.Vect();
+  TVectorD eTau = convert_to_mathVector(normalize(tauP3));
+  double d = std::sqrt(flightLength.mag2());
+  double sigma2 = eTau*(covDecayVertex*eTau);
+  double gamma_times_cTauLifetime = (tauP4.energy()/classic_svFit::tauLeptonMass)*classic_svFit::cTauLifetime;
+  double dmin = 0.;
+  double dmax = 0.;
+  if ( sigma2 > 0. )
+  {
+    double sigma = std::sqrt(sigma2);
+    if ( sigma < 1.e-3 ) sigma = 1.e-3;
+    dmin = d - 5.*sigma;
+    dmax = d + 5.*sigma;
+    if ( dmin < 0. )
+    {
+      dmin = 0.;
+      dmax = std::min(d + 5.*sigma, 10.*gamma_times_cTauLifetime);
+    }
+  }
+  else
+  {
+    dmin = 0.;
+    dmax = 10.*gamma_times_cTauLifetime;
+  }
+  if ( !(dmax > dmin) )
+  {
+    std::cerr << "ERROR: Failed to compute lower and upper limits on tauFlightLength !!" << std::endl;
+    std::cout << "covDecayVertex:" << std::endl;
+    covDecayVertex.Print();
+    std::cout << "eTau:" << std::endl;
+    eTau.Print();
+    std::cout << "d = " << d << std::endl;
+    std::cout << "gamma*ctau = " << gamma_times_cTauLifetime << std::endl;
+    std::cout << "sigma2 = " << sigma2 << std::endl;
+    std::cout << "dmin = " << dmin << ", dmax = " << dmax << std::endl;
+    assert(0);
+  }
+  return std::make_pair(dmin, dmax);
 }
+
+Vector
+classic_svFit::convert_to_recoVector(const TVectorD& v)
+{
+  return Vector(v(0), v(1), v(2));
+}
+
+LorentzVector
+classic_svFit::get_beamP4(double beamE, double mBeamParticle)
+{
+  double beamPx = 0.;
+  double beamPy = 0.;
+  double beamPz = std::sqrt(square(beamE) - square(mBeamParticle));
+  LorentzVector beamP4(beamPx, beamPy, beamPz, beamE);
+  return beamP4;
+}
+
+Vector
+classic_svFit::get_r(const Vector& k, const Vector& h)
+{
+  double cosTheta = k.Dot(h);
+  // CV: allow for small rounding errors
+  if ( cosTheta < -1.01 || cosTheta > +1.01 )
+  {
+    std::cerr << "ERROR: cosTheta = " << cosTheta << " outside physical range !!\n";
+    assert(0);
+  }
+  if ( cosTheta < -1. ) cosTheta = -1.;
+  if ( cosTheta > +1. ) cosTheta = +1.;
+  double sinTheta = std::sqrt(1. - cosTheta*cosTheta);
+  Vector r = (h - k*cosTheta)*(1./sinTheta);
+  return r;
+}
+
+Vector
+classic_svFit::get_n(const Vector& k, const Vector& r)
+{
+  // CV: The ordering of r and k in the cross product has been agreed with Luca on 06/09/2023.
+  //     The definition n = r x k has been chosen for consistency with Eq. (2.5) in the paper arXiv:1508.05271,
+  //     which Luca and Marco have used in their previous papers on Entanglement.
+  //    (Whether one computes the vector n using n = r x k or using n = p x k makes no difference:
+  //     in both cases, the vector n refers to the direction perpendicular to the scattering plane
+  //     and the vectors { n, r, k } define a right-handed coordinate system)
+  Vector n = r.Cross(k);
+  return n;
+}
+
+void
+classic_svFit::get_localCoordinateSystem(const Vector& flightDirection, Vector& r, Vector& n, Vector& k)
+{
+  k = flightDirection.unit();
+  Vector h = get_beamP4().Vect().unit();
+  r = get_r(k, h);
+  n = get_n(k, r);
+}
+
+namespace
+{
+  TMatrixD
+  get_rotationMatrixImp(const Vector& r, const Vector& n, const Vector& k, bool kInverted)
+  {
+    TMatrixD rotMatrix(3,3);
+    std::vector<Vector> rnk = { r, n, k };
+    classic_svFit::Vector x(1.,0.,0.);
+    classic_svFit::Vector y(0.,1.,0.);
+    classic_svFit::Vector z(0.,0.,1.);
+    std::vector<Vector> xyz = { x, y, z };
+    for ( unsigned int i = 0; i < 3; ++i )
+    {
+      for ( unsigned int j = 0; j < 3; ++j )
+      {
+        if ( kInverted )
+        {
+          const Vector& e_i = xyz[i];
+          const Vector& e_j = rnk[j];
+          rotMatrix(i,j) = e_i.Dot(e_j);
+        }
+        else
+        {
+          const Vector& e_i = rnk[i];
+          const Vector& e_j = xyz[j];
+          rotMatrix(i,j) = e_i.Dot(e_j);
+        }
+      }
+    }
+    return rotMatrix;
+  }
+}
+
+TMatrixD
+classic_svFit::get_rotationMatrix(const Vector& r, const Vector& n, const Vector& k)
+{
+  // compute rotation matrix for transformation from laboratory frame { x, y, z } to helicity frame { r, n, k }
+  return get_rotationMatrixImp(r, n, k, false);
+}
+
+TMatrixD
+classic_svFit::get_rotationMatrixInv(const Vector& r, const Vector& n, const Vector& k)
+{
+  // compute rotation matrix for transformation from helicity frame { r, n, k } back to laboratory frame { x, y, z }
+  return get_rotationMatrixImp(r, n, k, true);
+}
+
+TMatrixD
+classic_svFit::rotateCovMatrix(const TMatrixD& cov, const TMatrixD& rotMatrix)
+{
+  // compute elements of covariance matrix cov in rotated coordinate system, given by the matrix rotMatrix,
+  // as described in Example 4.25 in Section 4.9.2 of
+  //   V. Blobel and E. Lohrmann "Statistische und numerische Methoden der Datenanalyse".
+  TMatrixD rotMatrixT = TMatrixD(TMatrixD::kTransposed, rotMatrix);
+  return rotMatrix*cov*rotMatrixT;
+}
+
+TMatrixD
+classic_svFit::invertMatrix(const std::string& label, const TMatrixD& cov, bool& errorFlag)
+{
+  TMatrixD covInv;
+  errorFlag = false;
+  if ( cov.Determinant() == 0. )
+  {
+    std::cout << label << ":" << std::endl;
+    cov.Print();
+    std::cerr << "ERROR: Failed to invert matrix cov (det=0) !!" << std::endl;
+    errorFlag = true;
+    return covInv;
+  }
+  covInv.ResizeTo(3,3);
+  covInv = TMatrixD(TMatrixD::kInverted, cov);
+  return covInv;
+}
+

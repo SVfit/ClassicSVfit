@@ -1,15 +1,12 @@
 #include "TauAnalysis/ClassicSVfit/interface/ClassicSVfitIntegrand.h"
 
-#include "DataFormats/TauReco/interface/PFTau.h"                    // reco::PFTau::hadronicDecayMode
+#include "TauAnalysis/ClassicSVfit/interface/comp_PCA.h" // comp_PCA()
 
-#include "TauAnalysis/ClassicSVfit/interface/comp_PCA_line2line.h"  // comp_PCA_line2line()
-#include "TauAnalysis/ClassicSVfit/interface/comp_PCA_line2point.h" // comp_PCA_line2point()
+#include <TMath.h>                                       // TMath::Pi()
+#include <TString.h>                                     // Form()
+#include <TVectorD.h>                                    // TVectorD
 
-#include <TMath.h>                                                  // TMath::Pi()
-#include <TString.h>                                                // Form()
-#include <TVectorD.h>                                               // TVectorD
-
-#include <cmath>                                                    // exp(), std::fabs(), std::sqrt()
+#include <cmath>                                         // exp(), std::fabs(), std::sqrt()
 
 namespace classic_svFit
 {
@@ -21,8 +18,8 @@ ClassicSVfitIntegrand::ClassicSVfitIntegrand(int verbosity)
   : numTaus_(0)
   , fittedTauLepton1_(0, verbosity)
   , fittedTauLepton2_(1, verbosity)
-  , measuredLeadChargedHadron1_(nullptr)
-  , measuredLeadChargedHadron2_(nullptr)
+  , leg1leadChargedHadron_(nullptr)
+  , leg2leadChargedHadron_(nullptr)
   , isCentral_(true)
   , idxMEtSystematic_(0)
   , useTauFlightLength_(false)
@@ -194,45 +191,6 @@ ClassicSVfitIntegrand::disableHadTauTF()
 }
 #endif
 
-namespace
-{
-  TMatrixD
-  invertexMatrix(const std::string& label, const TMatrixD& cov, bool& errorFlag)
-  {
-    TMatrixD covInv;
-    errorFlag = false;
-    if ( cov.Determinant() == 0. )
-    {
-      std::cout << label << ":" << std::endl;
-      cov.Print();
-      std::cerr << "ERROR: Failed to invert matrix cov (det=0) !!" << std::endl;
-      errorFlag = true;
-      return covInv;
-    }
-    covInv.ResizeTo(3,3);
-    covInv = TMatrixD(TMatrixD::kInverted, cov);
-    return covInv;
-  }
-
-  const MeasuredHadTauDecayProduct* 
-  findLeadChargedHadron(const MeasuredTauLepton& measuredTauLepton)
-  {
-    const MeasuredHadTauDecayProduct* measuredLeadChargedHadron = nullptr;
-    if ( measuredTauLepton.isPrompt() ) return nullptr;
-    const std::vector<MeasuredHadTauDecayProduct>& measuredHadTauDecayProducts = measuredTauLepton.measuredHadTauDecayProducts();
-    double max_pt = -1.;
-    for ( const MeasuredHadTauDecayProduct& measuredHadTauDecayProduct : measuredHadTauDecayProducts )
-    {
-      if ( measuredHadTauDecayProduct.charge() != 0 && measuredHadTauDecayProduct.pt() > max_pt )
-      {
-        measuredLeadChargedHadron = &measuredHadTauDecayProduct;
-        max_pt = measuredHadTauDecayProduct.pt();
-      }
-    }
-    return measuredLeadChargedHadron;
-  }
-}
-
 void
 ClassicSVfitIntegrand::setMeasurement(const MeasuredEvent& measuredEvent)
 {
@@ -241,7 +199,7 @@ ClassicSVfitIntegrand::setMeasurement(const MeasuredEvent& measuredEvent)
   // reset all error codes
   errorCode_ = None;
 
-  const std::vector<MeasuredTauLepton>& measuredTauLeptons = measuredEvent.measuredTauLeptons();
+  const std::vector<MeasuredTauLepton>& measuredTauLeptons = measuredEvent.tauLeptons();
   if ( measuredTauLeptons.size() != numTaus_ )
   {
     std::cerr << "ERROR: Number of MeasuredTauLeptons is not equal to " << numTaus_ << " !!" << std::endl;
@@ -281,7 +239,7 @@ ClassicSVfitIntegrand::setMeasurement(const MeasuredEvent& measuredEvent)
   }
 #endif
 
-  const std::vector<MeasuredMEt>& measuredMEt = measuredEvent_.measuredMEt();
+  const std::vector<MeasuredMEt>& measuredMEt = measuredEvent_.MEt();
   for ( const MeasuredMEt& measuredMEt_i : measuredMEt )
   {
     if ( !measuredMEt_i.covInv_isValid() )
@@ -299,13 +257,13 @@ ClassicSVfitIntegrand::setMeasurement(const MeasuredEvent& measuredEvent)
       std::cerr << "ERROR: No primary vertex given !!" << std::endl;
       errorCode_ |= MissingVertex;
     }
-    if ( hasPrimaryVertex && !measuredEvent.covInvPrimaryVertex_isValid() )
+    if ( hasPrimaryVertex && !measuredEvent.primaryVertexCovInv_isValid() )
     {
       std::cerr << "ERROR: Failed to invert covariance matrix of primary vertex (det=0) !!" << std::endl;
       errorCode_ |= MatrixInversion;
     }
 
-    measuredPrimaryVertex_ = measuredEvent.measuredPrimaryVertex();
+    primaryVertex_ = measuredEvent.primaryVertex();
 
     bool hasDecayVertices = true;
     for ( const MeasuredTauLepton& measuredTauLepton : measuredTauLeptons )
@@ -323,7 +281,7 @@ ClassicSVfitIntegrand::setMeasurement(const MeasuredEvent& measuredEvent)
       bool covInv_isValid = true;
       for ( const MeasuredTauLepton& measuredTauLepton : measuredTauLeptons )
       {
-        if ( !measuredTauLepton.covInvDecayVertex_isValid() ) covInv_isValid = false;
+        if ( !measuredTauLepton.decayVertexCovInv_isValid() ) covInv_isValid = false;
       }
       if ( !covInv_isValid )
       {
@@ -332,30 +290,28 @@ ClassicSVfitIntegrand::setMeasurement(const MeasuredEvent& measuredEvent)
       }
     }
 
-    covDecayVertex1_.ResizeTo(3,3);
-    covDecayVertex1_ = measuredTauLepton1_.covDecayVertex() + measuredEvent.covPrimaryVertex();
-    covInvDecayVertex1_.ResizeTo(3,3);
+    leg1decayVertexCov_.ResizeTo(3,3);
+    leg1decayVertexCov_ = measuredTauLepton1_.decayVertexCov() + measuredEvent.primaryVertexCov();
+    leg1decayVertexCovInv_.ResizeTo(3,3);
     bool errorFlag1 = false;
-    covInvDecayVertex1_ = invertexMatrix("covDecayVertex1", covDecayVertex1_, errorFlag1);
-    covDecayVertex2_.ResizeTo(3,3);
-    covDecayVertex2_ = measuredTauLepton2_.covDecayVertex() + measuredEvent.covPrimaryVertex();
-    covInvDecayVertex2_.ResizeTo(3,3);
+    leg1decayVertexCovInv_ = invertMatrix("leg1decayVertexCov", leg1decayVertexCov_, errorFlag1);
+    leg2decayVertexCov_.ResizeTo(3,3);
+    leg2decayVertexCov_ = measuredTauLepton2_.decayVertexCov() + measuredEvent.primaryVertexCov();
+    leg2decayVertexCovInv_.ResizeTo(3,3);
     bool errorFlag2 = false;
-    covInvDecayVertex2_ = invertexMatrix("covDecayVertex2", covDecayVertex2_, errorFlag2);
+    leg2decayVertexCovInv_ = invertMatrix("leg2decayVertexCov", leg2decayVertexCov_, errorFlag2);
     if ( errorFlag1 || errorFlag2 )
     {
       std::cerr << "ERROR: Failed to invert covariance matrix of decay vertex (det=0) !!" << std::endl;
       errorCode_ |= MatrixInversion;
     }
-std::cout << "covDecayVertex1_.Determinant() = " << covDecayVertex1_.Determinant() << std::endl;
-std::cout << "covDecayVertex2_.Determinant() = " << covDecayVertex2_.Determinant() << std::endl;
-    const_FlightLength1_ = 1./(pow(2.*TMath::Pi(), 1.5)*std::sqrt(std::fabs(covDecayVertex1_.Determinant())));
-    const_FlightLength2_ = 1./(pow(2.*TMath::Pi(), 1.5)*std::sqrt(std::fabs(covDecayVertex2_.Determinant())));
+
+    const_FlightLength1_ = 1./(pow(2.*TMath::Pi(), 1.5)*std::sqrt(std::fabs(leg1decayVertexCov_.Determinant())));
+    const_FlightLength2_ = 1./(pow(2.*TMath::Pi(), 1.5)*std::sqrt(std::fabs(leg2decayVertexCov_.Determinant())));
   
-    measuredLeadChargedHadron1_ = findLeadChargedHadron(measuredTauLepton1_);
-    measuredLeadChargedHadron2_ = findLeadChargedHadron(measuredTauLepton2_);
-    if ( !((measuredLeadChargedHadron1_ || leg1isPrompt_) &&
-           (measuredLeadChargedHadron2_ || leg2isPrompt_)) )
+    leg1leadChargedHadron_ = measuredTauLepton1_.leadChargedHadron();
+    leg2leadChargedHadron_ = measuredTauLepton2_.leadChargedHadron();
+    if ( !((leg1leadChargedHadron_ || leg1isPrompt_) && (leg2leadChargedHadron_ || leg2isPrompt_)) )
     {
       std::cerr << "ERROR: Failed to find leading charged hadron !!" << std::endl;
       errorCode_ |= MissingLeadChargedHadron;
@@ -388,7 +344,7 @@ ClassicSVfitIntegrand::Eval(const double* q) const
   }
   if ( (probPS_*probFlightLength_) < 1.e-300 ) return 0.;
 
-  const std::vector<MeasuredMEt>& measuredMEt = measuredEvent_.measuredMEt();
+  const std::vector<MeasuredMEt>& measuredMEt = measuredEvent_.MEt();
   unsigned int idxMeasuredMEt = ( isCentral_ ) ? 0 : idxMEtSystematic_ + 1;
   assert(idxMeasuredMEt < measuredMEt.size());
   double probMEtTF = EvalMEtTF(measuredMEt[idxMeasuredMEt]);
@@ -592,25 +548,6 @@ ClassicSVfitIntegrand::EvalPS() const
   return prob;
 }
 
-}
-
-namespace
-{
-  template <typename T>
-  TVectorD
-  convert_to_mathVector(const T& v)
-  {
-    TVectorD retVal(3);
-    retVal(0) = v.x();
-    retVal(1) = v.y();
-    retVal(2) = v.z();
-    return retVal;
-  }
-}
-
-namespace classic_svFit
-{
-
 double
 ClassicSVfitIntegrand::EvalFlightLength() const
 {
@@ -624,65 +561,47 @@ ClassicSVfitIntegrand::EvalFlightLength() const
     Vector tauP3 = tauP4.Vect();
     const MeasuredTauLepton& measuredTauLepton = fittedTauLepton->getMeasuredTauLepton();
     if ( measuredTauLepton.isPrompt() ) continue;
-    const Point& measuredDecayVertex = measuredTauLepton.measuredDecayVertex();
-    const TMatrixD* covDecayVertex = nullptr;
-    const TMatrixD* covInvDecayVertex = nullptr;
+    const Point& decayVertex = measuredTauLepton.decayVertex();
+    const TMatrixD* decayVertexCov = nullptr;
+    const TMatrixD* decayVertexCovInv = nullptr;
+    const MeasuredHadTauDecayProduct* leadChargedHadron = nullptr;
     if ( iTau == 0 )
     {
-      covDecayVertex = &covDecayVertex1_;
-      covInvDecayVertex = &covInvDecayVertex1_;
+      decayVertexCov = &leg1decayVertexCov_;
+      decayVertexCovInv = &leg1decayVertexCovInv_;
+      leadChargedHadron = leg1leadChargedHadron_;
     }
     else if ( iTau == 1 )
     {
-      covDecayVertex = &covDecayVertex2_;
-      covInvDecayVertex = &covInvDecayVertex2_;
+      decayVertexCov = &leg2decayVertexCov_;
+      decayVertexCovInv = &leg2decayVertexCovInv_;
+      leadChargedHadron = leg2leadChargedHadron_;
     } else assert(0);
 
-    Point pca;
-    if ( measuredTauLepton.decayMode() == reco::PFTau::kThreeProng0PiZero || 
-         measuredTauLepton.decayMode() == reco::PFTau::kThreeProng1PiZero )
-    {
-      pca = comp_PCA_line2point(measuredPrimaryVertex_, tauP3,
-                                measuredDecayVertex, *covInvDecayVertex,
-                                0., 1.e+6);
-    }
-    else
-    {
-      const MeasuredHadTauDecayProduct* measuredLeadChargedHadron = nullptr;
-      if      ( iTau == 0 ) measuredLeadChargedHadron = measuredLeadChargedHadron1_;
-      else if ( iTau == 1 ) measuredLeadChargedHadron = measuredLeadChargedHadron2_;
-      else assert(0);
-      pca = comp_PCA_line2line(measuredPrimaryVertex_, tauP3, 
-                               measuredDecayVertex, measuredLeadChargedHadron->p3(), *covInvDecayVertex,
-                               0., 1.e+6, -1.e+6, +1.e+6).first;
-    }
-    double d_pca = std::sqrt(pca.mag2());
-    TVectorD eTau = convert_to_mathVector(std::sqrt(1./tauP3.mag2())*tauP3);
-    double gamma = tauP4.energy()/tauLeptonMass;
-    double sigma = std::sqrt(eTau*((*covDecayVertex)*eTau));
-    double dmin = d_pca - 5.*sigma;
-    double dmax = d_pca + 5.*sigma;
-    if ( dmin < 0. )
-    {
-      dmin = 0.;
-      dmax = std::min(d_pca + 5.*sigma, 10.*gamma*cTauLifetime);
-    }
-    assert(dmax > dmin);
+    Point pca = comp_PCA(tauP4, measuredTauLepton, *leadChargedHadron, primaryVertex_, decayVertex, *decayVertexCovInv);
+    Vector flightLength = pca - primaryVertex_;
+
+    std::pair<double,double> dmin_and_dmax = comp_dmin_and_dmax(tauP4, flightLength, *decayVertexCov);
+    double dmin = dmin_and_dmax.first;
+    double dmax = dmin_and_dmax.second;
 
     int idx_flightLength = legIntegrationParams_[iTau].idx_flightLength_;
     double x_flightLength = x_[idx_flightLength];
     double d = (1. - x_flightLength)*dmin + x_flightLength*dmax;
-    double prob_expDecay = (1./(gamma*cTauLifetime))*exp(-d/(gamma*cTauLifetime));
+    double gamma_times_cTauLifetime = (tauP4.energy()/tauLeptonMass)*cTauLifetime;
+    double prob_expDecay = (1./gamma_times_cTauLifetime)*exp(-d/gamma_times_cTauLifetime);
 
     double const_FlightLength = 0.;
     if      ( iTau == 0 ) const_FlightLength = const_FlightLength1_;
     else if ( iTau == 1 ) const_FlightLength = const_FlightLength2_;
     else assert(0);
-    TVectorD residual = convert_to_mathVector(measuredDecayVertex - measuredPrimaryVertex_) - d*eTau;
-    double pull2 = residual*((*covInvDecayVertex)*residual);
+    TVectorD eTau = convert_to_mathVector(normalize(tauP3));
+    TVectorD residual = convert_to_mathVector(decayVertex - primaryVertex_) - d*eTau;
+    double pull2 = residual*((*decayVertexCovInv)*residual);
     double prob_TF = const_FlightLength*exp(-0.5*pull2);
 
     double jacobiFactor = dmax - dmin;
+    assert(jacobiFactor > 0.);
     double prob_i = prob_expDecay*prob_TF*jacobiFactor;
     if ( verbosity_ >= 2 )
     {

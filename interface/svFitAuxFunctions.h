@@ -5,11 +5,12 @@
 #include "Math/PositionVector3D.h" // ROOT::Math::PositionVector3D<>
 #include "Math/Vector3D.h"         // ROOT::Math::DisplacementVector3D
 
-#include <TGraphErrors.h>          // TGraphErrors
 #include <TMatrixD.h>              // TMatrixD
+#include <TVectorD.h>              // TVectorD
 
 #include <vector>                  // std::vector<>
 #include <string>                  // std::string
+#include <utility>                 // std::pair<>
 
 namespace classic_svFit
 {
@@ -147,20 +148,6 @@ namespace classic_svFit
   TMatrixD
   roundToNdigits(const TMatrixD&, int = 3);
 
-  struct GraphPoint
-  {
-    double x_;
-    double xErr_;
-    double y_;
-    double yErr_;
-    double mTest_step_;
-  };
-  TGraphErrors*
-  makeGraph(const std::string&, const std::vector<GraphPoint>&);
-
-  void
-  extractResult(TGraphErrors*, double&, double&, double&, int = 0);
-
   Vector
   normalize(const Vector&);
   double
@@ -192,5 +179,48 @@ namespace classic_svFit
 
   LorentzVector
   fixNuMass(const LorentzVector& nuP4);
+
+  std::pair<double,double>
+  comp_dmin_and_dmax(const LorentzVector& tauP4,
+                     const Vector& flightLength, const TMatrixD& covDecayVertex);
+
+  template <typename T>
+  TVectorD
+  convert_to_mathVector(const T& v)
+  {
+    TVectorD retVal(3);
+    retVal(0) = v.x();
+    retVal(1) = v.y();
+    retVal(2) = v.z();
+    return retVal;
+  }
+
+  Vector
+  convert_to_recoVector(const TVectorD& v);
+
+  // CV: set beam energy and mass of beam particles to LHC Run 2 values
+  //    (both are used to define the beam axis and their numerical values should not really matter)
+  LorentzVector
+  get_beamP4(double beamE = 7.e+3, double mBeamParticle = 0.938272);
+
+  Vector
+  get_r(const Vector& k, const Vector& h);
+
+  Vector
+  get_n(const Vector& k, const Vector& r);
+
+  void
+  get_localCoordinateSystem(const Vector& flightDirection, Vector& r, Vector& n, Vector& k);
+
+  TMatrixD
+  get_rotationMatrix(const Vector& r, const Vector& n, const Vector& k);
+  TMatrixD
+  get_rotationMatrixInv(const Vector& r, const Vector& n, const Vector& k);
+
+  TMatrixD
+  rotateCovMatrix(const TMatrixD& cov, const TMatrixD& rotMatrix);
+
+  TMatrixD
+  invertMatrix(const std::string& label, const TMatrixD& cov, bool& errorFlag);
 }
 #endif

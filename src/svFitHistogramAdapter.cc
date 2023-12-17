@@ -472,7 +472,7 @@ SVfitQuantityDiTauMass::SVfitQuantityDiTauMass(const std::string& label)
 TH1*
 SVfitQuantityDiTauMass::createHistogram(const MeasuredEvent& measuredEvent) const
 {
-  const std::vector<MeasuredTauLepton>& measuredTauLeptons = measuredEvent.measuredTauLeptons();
+  const std::vector<MeasuredTauLepton>& measuredTauLeptons = measuredEvent.tauLeptons();
   assert(measuredTauLeptons.size() == 2);
   const LorentzVector& vis1P4 = measuredTauLeptons[0].p4();
   const LorentzVector& vis2P4 = measuredTauLeptons[1].p4();
@@ -489,7 +489,7 @@ SVfitQuantityDiTauTransverseMass::SVfitQuantityDiTauTransverseMass(const std::st
 TH1*
 SVfitQuantityDiTauTransverseMass::createHistogram(const MeasuredEvent& measuredEvent) const
 {
-  const std::vector<MeasuredTauLepton>& measuredTauLeptons = measuredEvent.measuredTauLeptons();
+  const std::vector<MeasuredTauLepton>& measuredTauLeptons = measuredEvent.tauLeptons();
   assert(measuredTauLeptons.size() == 2);
   const LorentzVector& vis1P4 = measuredTauLeptons[0].p4();
   const LorentzVector& vis2P4 = measuredTauLeptons[1].p4();
@@ -545,7 +545,7 @@ void
 HistogramAdapterDiTau::setMeasurement(const MeasuredEvent& measuredEvent)
 {
   measuredEvent_ = measuredEvent;
-  const std::vector<MeasuredTauLepton>& measuredTauLeptons = measuredEvent.measuredTauLeptons();
+  const std::vector<MeasuredTauLepton>& measuredTauLeptons = measuredEvent.tauLeptons();
   assert(measuredTauLeptons.size() == 2);
   adapter_tau1_->setMeasurement(measuredTauLeptons[0]);
   adapter_tau2_->setMeasurement(measuredTauLeptons[1]);
@@ -570,7 +570,7 @@ HistogramAdapterDiTau::bookHistograms(const MeasuredEvent& measuredEvent)
   quantity_mass_->bookHistogram(measuredEvent);
   quantity_transverseMass_->bookHistogram(measuredEvent);
   measuredEvent_ = measuredEvent;
-  const std::vector<MeasuredTauLepton>& measuredTauLeptons = measuredEvent.measuredTauLeptons();
+  const std::vector<MeasuredTauLepton>& measuredTauLeptons = measuredEvent.tauLeptons();
   assert(measuredTauLeptons.size() == 2);
   adapter_tau1_->bookHistograms(measuredTauLeptons[0]);
   adapter_tau2_->bookHistograms(measuredTauLeptons[1]);

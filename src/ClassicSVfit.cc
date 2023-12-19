@@ -29,8 +29,6 @@ ClassicSVfit::ClassicSVfit(int verbosity)
   , treeFileName_("")
   , likelihoodFileName_("")
   , numDimensions_(0)
-  , xl_(nullptr)
-  , xh_(nullptr)
   , isValidSolution_(false)
   , clock_(nullptr)
   , numSeconds_cpu_(-1.)
@@ -48,10 +46,6 @@ ClassicSVfit::ClassicSVfit(int verbosity)
 
   unsigned int numTaus = 2;
   legIntegrationParams_.resize(numTaus);
-
-  unsigned int maxNumberOfDimensions = 4*numTaus;
-  xl_ = new double[maxNumberOfDimensions];
-  xh_ = new double[maxNumberOfDimensions];
 
   clock_ = new TBenchmark();
 }
@@ -71,9 +65,6 @@ ClassicSVfit::~ClassicSVfit()
   {
     delete intAlgo_;
   }
-
-  delete [] xl_;
-  delete [] xh_;
 
   delete clock_;
 }
@@ -325,6 +316,8 @@ void ClassicSVfit::initializeIntegrationParams()
   bool useDiTauMassConstraint = (diTauMassConstraint_ > 0);
   initializeLegIntegrationParams(0, false);
   initializeLegIntegrationParams(1, useDiTauMassConstraint);
+  xl_.resize(numDimensions_);
+  xh_.resize(numDimensions_);
   initializeLegIntegrationRanges(0);
   initializeLegIntegrationRanges(1);
   if ( verbosity_ >= 1 )

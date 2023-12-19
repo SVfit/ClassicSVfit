@@ -59,7 +59,7 @@ namespace classic_svFit
     /// the points xl and xh represent the lower left and upper right corner of a Hypercube in d-dimensional integration space
     typedef double (*gPtr_C)(const double*, size_t, void*);
     void
-    integrate(gPtr_C g, const double* xl, const double* xu, unsigned d, double& integral, double& integralErr);
+    integrate(gPtr_C g, const std::vector<double>& xl, const std::vector<double>& xh, unsigned d, double& integral, double& integralErr);
 
     double
     getProbMax() const { return probMax_; }
@@ -69,7 +69,7 @@ namespace classic_svFit
 
   protected:
     void
-    setIntegrand(gPtr_C, const double*, const double*, unsigned);
+    setIntegrand(gPtr_C, const std::vector<double>&, const std::vector<double>&, unsigned);
 
     void
     initializeStartPosition_and_Momentum();
@@ -94,7 +94,7 @@ namespace classic_svFit
     ///  xMax:          upper boundaries of integration region
     ///  initMode:      flag indicating how initial position of Markov Chain is chosen (uniform/Gaus distribution)
     unsigned int numDimensions_;
-    double* x_;
+    std::vector<double> x_;
     std::vector<double> startPos_x_;
     bool hasStartPos_x_;
     std::vector<double> xMin_; // index = dimension
@@ -174,7 +174,7 @@ namespace classic_svFit
     int errorFlag_;
 
     std::vector<const ROOT::Math::Functor*> callBackFunctions_;
-    double* x_and_prob_;
+    std::vector<double> x_and_prob_;
 
     std::string treeFileName_;
     TFile* treeFile_;

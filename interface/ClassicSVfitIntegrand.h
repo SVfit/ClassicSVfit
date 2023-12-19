@@ -76,7 +76,7 @@ namespace classic_svFit
     setVerbosity(int aVerbosity);
 
     void
-    setIntegrationRanges(const double* xl, const double* xh);
+    setIntegrationRanges(const std::vector<double>& xl, const std::vector<double>& xh);
 
 #ifdef USE_SVFITTF
     /// enable/disable use of transfer functions for pT of hadronic tau decays;
@@ -178,9 +178,9 @@ namespace classic_svFit
     std::vector<classic_svFit::integrationParameters> legIntegrationParams_;
     unsigned int numDimensions_;
     unsigned int maxNumberOfDimensions_;
-    mutable double* xMin_;
-    mutable double* xMax_;
-    mutable double* x_;
+    mutable std::vector<double> xMin_;
+    mutable std::vector<double> xMax_;
+    mutable std::vector<double> x_;
 
     /// error code that can be passed on
     mutable unsigned int errorCode_;

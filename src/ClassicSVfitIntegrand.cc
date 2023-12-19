@@ -33,9 +33,6 @@ ClassicSVfitIntegrand::ClassicSVfitIntegrand(int verbosity)
   , useHadTauTF_(false)
 #endif
   , numDimensions_(0)
-  , xMin_(nullptr)
-  , xMax_(nullptr)
-  , x_(nullptr)
   , errorCode_(None)
   , probPS_(0.)
   , probFlightLength_(0.)
@@ -46,9 +43,6 @@ ClassicSVfitIntegrand::ClassicSVfitIntegrand(int verbosity)
   legIntegrationParams_.resize(numTaus_);
 
   maxNumberOfDimensions_ = 4*numTaus_;
-  xMin_ = new double[maxNumberOfDimensions_];
-  xMax_ = new double[maxNumberOfDimensions_];
-  x_    = new double[maxNumberOfDimensions_];
 
   // CV: enable log(M) term with kappa = 6, unless explicitely requested by user otherwise,
   //     as this setting provides best compatibility with "old" SVfitStandalone algorithm
@@ -71,10 +65,6 @@ ClassicSVfitIntegrand::~ClassicSVfitIntegrand()
     delete hadTauTF;
   }
 #endif
-
-  delete [] xMin_;
-  delete [] xMax_;
-  delete [] x_;
 }
 
 void
@@ -148,7 +138,8 @@ void
 ClassicSVfitIntegrand::setNumDimensions(unsigned int numDimensions) 
 { 
   assert(numDimensions <= maxNumberOfDimensions_);
-  numDimensions_ = numDimensions; 
+  numDimensions_ = numDimensions;
+  x_.resize(numDimensions_);
 }
 
 void
@@ -158,13 +149,10 @@ ClassicSVfitIntegrand::setVerbosity(int aVerbosity)
 }
 
 void
-ClassicSVfitIntegrand::setIntegrationRanges(const double* xl, const double* xh)
+ClassicSVfitIntegrand::setIntegrationRanges(const std::vector<double>& xl, const std::vector<double>& xh)
 {
-  for ( unsigned int iDimension = 0; iDimension < numDimensions_; ++iDimension )
-  {
-    xMin_[iDimension] = xl[iDimension];
-    xMax_[iDimension] = xh[iDimension];
-  }
+  xMin_ = xl;
+  xMax_ = xh;
 }
 
 #ifdef USE_SVFITTF

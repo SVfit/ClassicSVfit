@@ -47,16 +47,15 @@ SVfitIntegratorMarkovChain::SVfitIntegratorMarkovChain(const std::string& initMo
                    unsigned numChains, unsigned numBatches,
                    double epsilon0, double nu,
                    const std::string& treeFileName, int verbosity)
-  : integrand_(0),
-    x_(0),
+  : integrand_(nullptr),
     numIntegrationCalls_(0),    
     numMovesTotal_accepted_(0),
     numMovesTotal_rejected_(0),
     probMax_(-1.),
     errorFlag_(0),
     treeFileName_(treeFileName),
-    treeFile_(0),
-    tree_(0)
+    treeFile_(nullptr),
+    tree_(nullptr)
 {
   if      ( initMode == "uniform" ) initMode_ = kUniform;
   else if ( initMode == "Gaus"    ) initMode_ = kGaus;
@@ -134,8 +133,6 @@ SVfitIntegratorMarkovChain::~SVfitIntegratorMarkovChain()
     std::cout << " moves: accepted = " << numMovesTotal_accepted_ << ", rejected = " << numMovesTotal_rejected_
               << " (fraction = " << (double)numMovesTotal_accepted_/(numMovesTotal_accepted_ + numMovesTotal_rejected_)*100. << "%)" << std::endl;
   }
-
-  delete [] x_;
 }
 
 void
@@ -146,24 +143,27 @@ SVfitIntegratorMarkovChain::setStartPosition(const std::vector<double>& startPos
 }
 
 void
-SVfitIntegratorMarkovChain::setIntegrand(gPtr_C g, const double* xl, const double* xu, unsigned d)
+SVfitIntegratorMarkovChain::setIntegrand(gPtr_C g, const std::vector<double>& xl, const std::vector<double>& xh, unsigned d)
 {
   numDimensions_ = d;
-
-  delete [] x_;
-  x_ = new double[numDimensions_];
-  delete [] x_and_prob_;
-  x_and_prob_ = new double[numDimensions_ + 1];
-
-  xMin_.resize(numDimensions_);
-  xMax_.resize(numDimensions_);
-  for ( unsigned int iDimension = 0; iDimension < numDimensions_; ++iDimension )
+  if ( !(xl.size() == numDimensions_ && xh.size() == numDimensions_) )
   {
-    xMin_[iDimension] = xl[iDimension];
-    xMax_[iDimension] = xu[iDimension];
-    if ( verbosity_ >= 1 )
+    std::cerr << "ERROR: Size of xl (" << xl.size() << ") and xh (" << xh.size() << ") parameters" 
+              << " does not match number of dimensions (" << numDimensions_ << ") --> ABORTING !!\n";
+    assert(0);
+  }
+
+  x_.resize(numDimensions_);
+  x_and_prob_.resize(numDimensions_ + 1);
+
+  xMin_ = xl;
+  xMax_ = xh;
+  if ( verbosity_ >= 1 )
+  {
+    for ( unsigned int iDimension = 0; iDimension < numDimensions_; ++iDimension )
     {
-      std::cout << "dimension #" << iDimension << ": min = " << xMin_[iDimension] << ", max = " << xMax_[iDimension] << std::endl;
+      std::cout << "dimension #" << iDimension << ":" 
+                << " min = " << xMin_[iDimension] << ", max = " << xMax_[iDimension] << std::endl;
     }
   }
 
@@ -205,9 +205,9 @@ SVfitIntegratorMarkovChain::clearCallBackFunctions()
 }
 
 void
-SVfitIntegratorMarkovChain::integrate(gPtr_C g, const double* xl, const double* xu, unsigned d, double& integral, double& integralErr)
+SVfitIntegratorMarkovChain::integrate(gPtr_C g, const std::vector<double>& xl, const std::vector<double>& xh, unsigned d, double& integral, double& integralErr)
 {
-  setIntegrand(g, xl, xu, d);
+  setIntegrand(g, xl, xh, d);
 
   if ( !integrand_ )
   {
@@ -333,7 +333,7 @@ SVfitIntegratorMarkovChain::integrate(gPtr_C g, const double* xl, const double* 
           x_and_prob_[numDimensions_] = prob_;
           isFirst = false;
         }
-        (*callBackFunction)(x_and_prob_);
+        (*callBackFunction)(x_and_prob_.data());
       }
 
       if ( tree_ )
@@ -393,9 +393,9 @@ SVfitIntegratorMarkovChain::integrate(gPtr_C g, const double* xl, const double* 
     tree_->Write();
   }
   delete treeFile_;
-  treeFile_ = 0;
+  treeFile_ = nullptr;
   //delete tree_;
-  tree_ = 0;
+  tree_ = nullptr;
   
   hasStartPos_x_ = false;
 

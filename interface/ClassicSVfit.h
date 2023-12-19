@@ -144,8 +144,8 @@ class ClassicSVfit
   /// variables indices and ranges for each leg
   std::vector<classic_svFit::integrationParameters> legIntegrationParams_;
   unsigned int numDimensions_;
-  double* xl_;
-  double* xh_;
+  std::vector<double> xl_;
+  std::vector<double> xh_;
 
   /// flag indicating if algorithm succeeded to find valid solution
   bool isValidSolution_;

@@ -362,6 +362,7 @@ void ClassicSVfit::initializeIntAlgo()
   {
     treeFileName_ = "SVfitIntegratorMarkovChain_ClassicSVfit.root";
   }
+  delete intAlgo_;
   intAlgo_ = new SVfitIntegratorMarkovChain(
     "uniform",
     numIterBurnin, numIterSampling, numIterSimAnnealingPhase1, numIterSimAnnealingPhase2,

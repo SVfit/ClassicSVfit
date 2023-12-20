@@ -182,7 +182,13 @@ classic_svFit::comp_dmin_and_dmax(const LorentzVector& tauP4, const Vector& flig
   TVectorD eTau = convert_to_mathVector(normalize(tauP3));
   double d = std::sqrt(flightLength.mag2());
   double sigma2 = eTau*(covDecayVertex*eTau);
-  double gamma_times_cTauLifetime = (tauP4.energy()/classic_svFit::tauLeptonMass)*classic_svFit::cTauLifetime;
+  double gamma = tauP4.energy()/classic_svFit::tauLeptonMass;
+  if ( gamma < 1. )
+  {
+    std::cerr << "WARNING: gamma = " << gamma << " is unphysical, setting it to 1 !!" << std::endl;
+    gamma = 1.;
+  }
+  double gamma_times_cTauLifetime = gamma*classic_svFit::cTauLifetime;
   double dmin = 0.;
   double dmax = 0.;
   if ( sigma2 > 0. )

@@ -32,7 +32,7 @@ namespace classic_svFit
     mutable std::vector<std::vector<double>> points_;
     mutable std::vector<double> values_;
 
-    double* x_;
+    std::vector<double> x_;
   };
 }
 

@@ -9,13 +9,11 @@ MarkovChainRecorder::MarkovChainRecorder(unsigned int numDimensions)
   : numDimensions_(numDimensions)
 {
   assert(numDimensions > 0);
-  x_ = new double[numDimensions_];
+  x_.resize(numDimensions_);
 }
 
 MarkovChainRecorder::~MarkovChainRecorder()
-{
-  delete [] x_;
-}
+{}
 
 unsigned int
 MarkovChainRecorder::getNumPoints()
@@ -32,7 +30,7 @@ MarkovChainRecorder::getPoint(unsigned int iPoint)
   {
     x_[iDimension] = point[iDimension];
   }
-  return x_;
+  return x_.data();
 }
 
 double

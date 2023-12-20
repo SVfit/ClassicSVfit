@@ -576,7 +576,13 @@ ClassicSVfitIntegrand::EvalFlightLength() const
     int idx_flightLength = legIntegrationParams_[iTau].idx_flightLength_;
     double x_flightLength = x_[idx_flightLength];
     double d = (1. - x_flightLength)*dmin + x_flightLength*dmax;
-    double gamma_times_cTauLifetime = (tauP4.energy()/tauLeptonMass)*cTauLifetime;
+    double gamma = tauP4.energy()/tauLeptonMass;
+    if ( gamma < 1. )
+    {
+      std::cerr << "WARNING: gamma = " << gamma << " is unphysical, setting it to 1 !!" << std::endl;
+      gamma = 1.;
+    }
+    double gamma_times_cTauLifetime = gamma*classic_svFit::cTauLifetime;
     double prob_expDecay = (1./gamma_times_cTauLifetime)*exp(-d/gamma_times_cTauLifetime);
 
     double const_FlightLength = 0.;

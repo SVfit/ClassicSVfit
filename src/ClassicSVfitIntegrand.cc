@@ -597,6 +597,7 @@ ClassicSVfitIntegrand::EvalFlightLength() const
     double jacobiFactor = dmax - dmin;
     assert(jacobiFactor > 0.);
     double prob_i = prob_expDecay*prob_TF*jacobiFactor;
+    //double prob_i = prob_TF*jacobiFactor;
     if ( verbosity_ >= 2 )
     {
       std::cout << "prob(flightLength #" << iTau << "):" 

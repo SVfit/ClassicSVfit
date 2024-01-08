@@ -216,7 +216,8 @@ classic_svFit::comp_dmin_and_dmax(const LorentzVector& tauP4, const Vector& flig
     std::cout << "eTau:" << std::endl;
     eTau.Print();
     std::cout << "d = " << d << std::endl;
-    std::cout << "gamma*ctau = " << gamma_times_cTauLifetime << std::endl;
+    std::cout << "gamma*ctau = " << gamma_times_cTauLifetime 
+              << " (gamma = " << gamma << ", ctau = " << classic_svFit::cTauLifetime << ")" << std::endl;
     std::cout << "sigma2 = " << sigma2 << std::endl;
     std::cout << "dmin = " << dmin << ", dmax = " << dmax << std::endl;
     assert(0);

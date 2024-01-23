@@ -225,8 +225,9 @@ void ClassicSVfit::integrate(const MeasuredEvent& measuredEvent)
       sumP4 += measuredTauLepton.p4();
     }
     std::cout << "visible momentum sum:" 
-              << " Pt = " << sumP4.pt() << "," 
-              << " phi = " << sumP4.phi() << "," 
+              << " Pt = " << sumP4.pt() << ","
+              << " eta = " << sumP4.eta() << ","
+              << " phi = " << sumP4.phi() << ","
               << " mass = " << sumP4.mass() << std::endl;
   }
 

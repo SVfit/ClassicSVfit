@@ -86,8 +86,6 @@ FittedTauLepton::updateVisMomentum(double visPtShift)
 void
 FittedTauLepton::updateTauMomentum(double x, double phiNu, double nuMass)
 {
-//std::cout << "<FittedTauLepton::updateTauMomentum>:" << std::endl;
-//std::cout << "x = " << x << ", phiNu = " << phiNu << ", nuMass = " << nuMass << std::endl;
   // the phiNu and nuMass variables are normalized such that they are within the range [0,1];
   // scale these variables such that they extend over the full range 
   // defined in the function ClassicSVfit::initializeLegIntegrationRanges
@@ -96,10 +94,14 @@ FittedTauLepton::updateTauMomentum(double x, double phiNu, double nuMass)
   nuMass_ = nuMass*tauLeptonMass2;
 
   errorCode_ = None;
+  if ( !(x_ > 0. && x_ < 1.) )
+  {
+    errorCode_ |= TauDecayParameters;
+    return;
+  }
 
-  // compute neutrino and tau lepton four-vector 
+  // compute neutrino and tau lepton four-vector
   double nuEn = visP4_.E()*(1. - x_)/x_;
-//std::cout << "nuEn = " << nuEn << std::endl;
   double nuMass2 = square(nuMass_);
   double nuP = TMath::Sqrt(TMath::Max(0., square(nuEn) - nuMass2));
   double cosThetaNu = compCosThetaNuNu(visP4_.E(), visP4_.P(), measuredTauLepton_mass2_, nuEn, nuP, nuMass2);
@@ -108,20 +110,14 @@ FittedTauLepton::updateTauMomentum(double x, double phiNu, double nuMass)
     errorCode_ |= TauDecayParameters;
     return;
   }
-//std::cout << "nuP = " << nuP << ", cosThetaNu = " << cosThetaNu << std::endl;
 
   double cosPhiNu, sinPhiNu;
   sincos(phiNu_, &sinPhiNu, &cosPhiNu);
   double thetaNu = TMath::ACos(cosThetaNu);
   double sinThetaNu = TMath::Sin(thetaNu);
 
-//std::cout << "eX: x = " << eX_x_ << ", y = " << eX_y_ << ", z = " << eX_z_ << std::endl;
-//std::cout << "eY: x = " << eY_x_ << ", y = " << eY_y_ << ", z = " << eY_z_ << std::endl;
-//std::cout << "eZ: x = " << eZ_x_ << ", y = " << eZ_y_ << ", z = " << eZ_z_ << std::endl;
-
   double nuPx_local = nuP*cosPhiNu*sinThetaNu;
   double nuPy_local = nuP*sinPhiNu*sinThetaNu;
-//std::cout << "nuPx_local = " << nuPx_local << ", nuPy_local = " << nuPy_local << std::endl;
   double nuPz_local = nuP*cosThetaNu;
   double nuPx = nuPx_local*eX_x_ + nuPy_local*eY_x_ + nuPz_local*eZ_x_;
   double nuPy = nuPx_local*eX_y_ + nuPy_local*eY_y_ + nuPz_local*eZ_y_;

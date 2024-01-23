@@ -387,7 +387,7 @@ ClassicSVfitIntegrand::EvalPS() const
   fittedTauLepton1_.updateVisMomentum(visPtShift1);
   fittedTauLepton2_.updateVisMomentum(visPtShift2);
 
-  // compute visible energy fractions for both taus
+  // compute visible energy fraction for first tau
   double x1_dash = 1.;
   if ( !leg1isPrompt_ )
   {
@@ -398,23 +398,7 @@ ClassicSVfitIntegrand::EvalPS() const
   double x1 = x1_dash/visPtShift1;
   if ( !(x1 >= 1.e-5 && x1 <= 1.) ) return 0.;
 
-  double x2_dash = 1.;
-  if ( !leg2isPrompt_ )
-  {
-    int idx_x2 = legIntegrationParams_[1].idx_X_;
-    if ( idx_x2 != -1 )
-    {
-      x2_dash = x_[idx_x2];
-    }
-    else
-    {
-      x2_dash = (mVis2_measured_/diTauMassConstraint2_)/x1_dash;
-    }
-  }
-  double x2 = x2_dash/visPtShift2;
-  if ( !(x2 >= 1.e-5 && x2 <= 1.) ) return 0.;
-
-  // compute neutrino and tau lepton momenta 
+  // compute neutrino and tau lepton momentum for first tau
   if ( !leg1isPrompt_ )
   {
     int idx_phiNu1 = legIntegrationParams_[0].idx_phi_;
@@ -431,6 +415,39 @@ ClassicSVfitIntegrand::EvalPS() const
     }
   }
 
+  // compute visible energy fraction for second tau
+  double x2_dash = 1.;
+  if ( !leg2isPrompt_ )
+  {
+    int idx_x2 = legIntegrationParams_[1].idx_X_;
+    if ( idx_x2 != -1 )
+    {
+      x2_dash = x_[idx_x2];
+    }
+    else
+    {
+      //x2_dash = (mVis2_measured_/diTauMassConstraint2_)/x1_dash;
+      Vector p1 = fittedTauLepton1_.tauP4().Vect();
+      //std::cout << "p1: Px = " << p1.x() << ", Py = " << p1.y() << ", Pz = " << p1.z() << std::endl;
+      Vector ep2 = fittedTauLepton2_.visP4().Vect().unit();
+      //std::cout << "ep2: Px = " << ep2.x() << ", Py = " << ep2.y() << ", Pz = " << ep2.z() << std::endl;
+      double p1_times_ep2 = p1.Dot(ep2);
+      //std::cout << "p1*ep2 = " << p1_times_ep2 << std::endl;
+      double term1 = 4.*tauLeptonMass4 + square(diTauMassConstraint2_) - 4.*tauLeptonMass2*(diTauMassConstraint2_ - square(p1_times_ep2));
+      //std::cout << "term1 = " << term1 << std::endl;
+      double E1 = fittedTauLepton1_.tauP4().energy();
+      double Evis2 = fittedTauLepton2_.visP4().energy();
+      double pvis2 = fittedTauLepton2_.visP4().P();
+      double term2 = square(p1_times_ep2)*(term1*(square(pvis2) + tauLeptonMass2) - 4.*square(E1*Evis2)*tauLeptonMass2);
+      //std::cout << "term2 = " << term2 << std::endl;
+      x2_dash = 2.*(E1*Evis2*(diTauMassConstraint2_ - 2.*tauLeptonMass2) + std::sqrt(term2))/term1;
+      //std::cout << "x2_dash = " << x2_dash << std::endl;
+    }
+  }
+  double x2 = x2_dash/visPtShift2;
+  if ( !(x2 >= 1.e-5 && x2 <= 1.) ) return 0.;
+
+  // compute neutrino and tau lepton momentum for second tau
   if ( !leg2isPrompt_ )
   {
     int idx_phiNu2 = legIntegrationParams_[1].idx_phi_;

@@ -27,7 +27,7 @@ namespace classic_svFit
     void
     updateVisMomentum(double visPtShift);
 
-    /// reconstruct tau lepton momentum, given momentum of visible tau decays products and the three parameters x, nuPhi, nuMass
+    /// compute tau lepton momentum, given momentum of visible tau decays products and the three parameters x, nuPhi, nuMass
     void
     updateTauMomentum(double x, double phiNu, double nuMass);
 

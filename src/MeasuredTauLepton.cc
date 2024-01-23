@@ -93,6 +93,7 @@ MeasuredTauLepton::MeasuredTauLepton(int type,
 
 MeasuredTauLepton::MeasuredTauLepton(const MeasuredTauLepton& measuredTauLepton)
   : type_(measuredTauLepton.type_)
+  , type_string_(measuredTauLepton.type_string_)
   , charge_(measuredTauLepton.charge_)
   , pt_(measuredTauLepton.pt_)
   , eta_(measuredTauLepton.eta_)
@@ -431,7 +432,7 @@ MeasuredTauLepton::setDecayVertex(const Point& decayVertex, double decayVertexSi
 void
 MeasuredTauLepton::setHadTauDecayProducts(const std::vector<MeasuredHadTauDecayProduct>* hadTauDecayProducts)
 {
-  if ( hadTauDecayProducts )
+  if ( hadTauDecayProducts && hadTauDecayProducts->size() > 0 )
   {
     if ( type_ != kTauToHadDecay )
     {

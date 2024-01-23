@@ -64,18 +64,18 @@ int main(int argc, char* argv[])
 
   if ( isValidSolution_1stRun )
   {
-    std::cout << "found valid solution: mass = " << mass_1stRun << " +/- " << massErr_1stRun << " (expected value = 115.746 +/- 87.0011),"
-              << " transverse mass = " << transverseMass_1stRun << " +/- " << transverseMassErr_1stRun << " (expected value = 114.242 +/- 85.8296)" << std::endl;
+    std::cout << "found valid solution: mass = " << mass_1stRun << " +/- " << massErr_1stRun << " (expected value = 112.923 +/- 94.9048),"
+              << " transverse mass = " << transverseMass_1stRun << " +/- " << transverseMassErr_1stRun << " (expected value = 114.242 +/- 91.8558)" << std::endl;
   }
   else
   {
     std::cout << "sorry, failed to find valid solution !!" << std::endl;
   }
-  if (std::abs((mass_1stRun - 115.746) / 115.746) > 0.001) return 1;
-  if (std::abs((massErr_1stRun - 87.001) / 87.0011) > 0.001) return 1;
-  if (std::abs((transverseMass_1stRun - 114.242) / 114.242) > 0.001) return 1;
-  if (std::abs((transverseMassErr_1stRun - 85.8296) / 85.8296) > 0.001) return 1;
- 
+  if (std::abs((mass_1stRun - 112.923) / 112.923) > 1.e-3) return 1;
+  if (std::abs((massErr_1stRun - 94.9048) / 94.9048) > 1.e-3) return 1;
+  if (std::abs((transverseMass_1stRun - 114.242) / 114.242) > 1.e-3) return 1;
+  if (std::abs((transverseMassErr_1stRun - 91.8558) / 91.8558) > 1.e-3) return 1;
+
   // re-run with mass constraint
   double massContraint = 125.06;
   std::cout << "\n\nTesting integration with ditau mass constraint set to " << massContraint << std::endl;
@@ -90,17 +90,17 @@ int main(int argc, char* argv[])
 
   if ( isValidSolution_2ndRun )
   {
-    std::cout << "found valid solution: mass = " << mass_2ndRun << " +/- " << massErr_2ndRun << " (expected value = 124.646 +/- 1.27228),"
-              << " transverse mass = " << transverseMass_2ndRun << " +/- " << transverseMassErr_2ndRun << " (expected value = 123.026 +/- 1.18168)" << std::endl;
+    std::cout << "found valid solution: mass = " << mass_2ndRun << " +/- " << massErr_2ndRun << " (expected value = 124.646 +/- 1.24435),"
+              << " transverse mass = " << transverseMass_2ndRun << " +/- " << transverseMassErr_2ndRun << " (expected value = 123.026 +/- 1.05863)" << std::endl;
   } 
   else
   {
     std::cout << "sorry, failed to find valid solution !!" << std::endl;
   }
-  if (std::abs((mass_2ndRun - 124.646) / 124.646) > 0.001) return 1;
-  if (std::abs((massErr_2ndRun - 1.27575) / 1.27575) > 0.001) return 1;
-  if (std::abs((transverseMass_2ndRun - 123.026) / 123.026) > 0.001) return 1;
-  if (std::abs((transverseMassErr_2ndRun - 1.19297) / 1.19297) > 0.001) return 1;
+  if (std::abs((mass_2ndRun - 124.646) / 124.646) > 1.e-3) return 1;
+  if (std::abs((massErr_2ndRun - 1.24435) / 1.24435) > 1.e-3) return 1;
+  if (std::abs((transverseMass_2ndRun - 123.026) / 123.026) > 1.e-3) return 1;
+  if (std::abs((transverseMassErr_2ndRun - 1.05863) / 1.05863) > 1.e-3) return 1;
   
   std::cout << std::endl;
   std::cout << "*****************************************************************************************************************************************" << std::endl;

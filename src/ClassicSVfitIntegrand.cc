@@ -426,7 +426,8 @@ ClassicSVfitIntegrand::EvalPS() const
     }
     else
     {
-      //x2_dash = (mVis2_measured_/diTauMassConstraint2_)/x1_dash;
+      x2_dash = (mVis2_measured_/diTauMassConstraint2_)/x1_dash;
+/*
       Vector p1 = fittedTauLepton1_.tauP4().Vect();
       //std::cout << "p1: Px = " << p1.x() << ", Py = " << p1.y() << ", Pz = " << p1.z() << std::endl;
       Vector ep2 = fittedTauLepton2_.visP4().Vect().unit();
@@ -442,6 +443,7 @@ ClassicSVfitIntegrand::EvalPS() const
       //std::cout << "term2 = " << term2 << std::endl;
       x2_dash = 2.*(E1*Evis2*(diTauMassConstraint2_ - 2.*tauLeptonMass2) + std::sqrt(term2))/term1;
       //std::cout << "x2_dash = " << x2_dash << std::endl;
+ */
     }
   }
   double x2 = x2_dash/visPtShift2;

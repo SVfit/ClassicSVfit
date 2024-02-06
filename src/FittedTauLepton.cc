@@ -86,6 +86,7 @@ FittedTauLepton::updateVisMomentum(double visPtShift)
 void
 FittedTauLepton::updateTauMomentum(double x, double phiNu, double nuMass)
 {
+//std::cout << "<FittedTauLepton::updateTauMomentum>:" << std::endl;
   // the phiNu and nuMass variables are normalized such that they are within the range [0,1];
   // scale these variables such that they extend over the full range 
   // defined in the function ClassicSVfit::initializeLegIntegrationRanges
@@ -94,7 +95,7 @@ FittedTauLepton::updateTauMomentum(double x, double phiNu, double nuMass)
   nuMass_ = nuMass*tauLeptonMass2;
 
   errorCode_ = None;
-  if ( !(x_ > 0. && x_ < 1.) )
+  if ( !(x_ > 0. && x_ <= 1.) )
   {
     errorCode_ |= TauDecayParameters;
     return;
@@ -105,11 +106,14 @@ FittedTauLepton::updateTauMomentum(double x, double phiNu, double nuMass)
   double nuMass2 = square(nuMass_);
   double nuP = TMath::Sqrt(TMath::Max(0., square(nuEn) - nuMass2));
   double cosThetaNu = compCosThetaNuNu(visP4_.E(), visP4_.P(), measuredTauLepton_mass2_, nuEn, nuP, nuMass2);
-  if ( !(cosThetaNu >= -1. && cosThetaNu <= +1.) )
+//std::cout << "cosThetaNu = " << cosThetaNu << std::endl;
+  if ( !(cosThetaNu >= -1.01 && cosThetaNu <= +1.01) )
   {
     errorCode_ |= TauDecayParameters;
     return;
   }
+  if ( cosThetaNu < -1. ) cosThetaNu = -1.;
+  if ( cosThetaNu > +1. ) cosThetaNu = +1.;
 
   double cosPhiNu, sinPhiNu;
   sincos(phiNu_, &sinPhiNu, &cosPhiNu);

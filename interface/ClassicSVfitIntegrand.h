@@ -104,6 +104,12 @@ namespace classic_svFit
     void
     rescaleX(const double* q) const;
 
+    /// compute tau lepton momenta
+    void
+    updateFittedTauLepton1(double x1) const;
+    void
+    updateFittedTauLepton2(double x2) const;
+
     /// evaluate phase-space part of the integrand for given value of integration variables x
     double
     EvalPS() const;

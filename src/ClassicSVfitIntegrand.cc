@@ -355,6 +355,30 @@ ClassicSVfitIntegrand::rescaleX(const double* q) const
   }
 }
 
+void
+ClassicSVfitIntegrand::updateFittedTauLepton1(double x1) const
+{
+  int idx_phiNu1 = legIntegrationParams_[0].idx_phi_;
+  assert(idx_phiNu1 != -1);
+  double phiNu1 = x_[idx_phiNu1];
+  int idx_nu1Mass = legIntegrationParams_[0].idx_mNuNu_;
+  double nu1Mass = ( idx_nu1Mass != -1 ) ? std::sqrt(x_[idx_nu1Mass]) : 0.;
+  fittedTauLepton1_.updateTauMomentum(x1, phiNu1, nu1Mass);
+  //std::cout << "fittedTauLepton1: errorCode = " << fittedTauLepton1_.errorCode() << std::endl;
+}
+
+void
+ClassicSVfitIntegrand::updateFittedTauLepton2(double x2) const
+{
+  int idx_phiNu2 = legIntegrationParams_[1].idx_phi_;
+  assert(idx_phiNu2 != -1);
+  double phiNu2 = x_[idx_phiNu2];
+  int idx_nu2Mass = legIntegrationParams_[1].idx_mNuNu_;
+  double nu2Mass = ( idx_nu2Mass != -1 ) ? std::sqrt(x_[idx_nu2Mass]) : 0.;
+  fittedTauLepton2_.updateTauMomentum(x2, phiNu2, nu2Mass);
+  //std::cout << "fittedTauLepton2: errorCode = " << fittedTauLepton2_.errorCode() << std::endl;
+}
+
 double
 ClassicSVfitIntegrand::EvalPS() const
 {
@@ -401,13 +425,7 @@ ClassicSVfitIntegrand::EvalPS() const
   // compute neutrino and tau lepton momentum for first tau
   if ( !leg1isPrompt_ )
   {
-    int idx_phiNu1 = legIntegrationParams_[0].idx_phi_;
-    assert(idx_phiNu1 != -1);
-    double phiNu1 = x_[idx_phiNu1];
-    int idx_nu1Mass = legIntegrationParams_[0].idx_mNuNu_;
-    double nu1Mass = ( idx_nu1Mass != -1 ) ? std::sqrt(x_[idx_nu1Mass]) : 0.;
-    fittedTauLepton1_.updateTauMomentum(x1, phiNu1, nu1Mass);
-    //std::cout << "fittedTauLepton1: errorCode = " << fittedTauLepton1_.errorCode() << std::endl;
+    updateFittedTauLepton1(x1);
     if ( fittedTauLepton1_.errorCode() != FittedTauLepton::None )
     {
       errorCode_ |= TauDecayParameters;
@@ -426,8 +444,6 @@ ClassicSVfitIntegrand::EvalPS() const
     }
     else
     {
-      x2_dash = (mVis2_measured_/diTauMassConstraint2_)/x1_dash;
-/*
       Vector p1 = fittedTauLepton1_.tauP4().Vect();
       //std::cout << "p1: Px = " << p1.x() << ", Py = " << p1.y() << ", Pz = " << p1.z() << std::endl;
       Vector ep2 = fittedTauLepton2_.visP4().Vect().unit();
@@ -441,9 +457,46 @@ ClassicSVfitIntegrand::EvalPS() const
       double pvis2 = fittedTauLepton2_.visP4().P();
       double term2 = square(p1_times_ep2)*(term1*(square(pvis2) + tauLeptonMass2) - 4.*square(E1*Evis2)*tauLeptonMass2);
       //std::cout << "term2 = " << term2 << std::endl;
-      x2_dash = 2.*(E1*Evis2*(diTauMassConstraint2_ - 2.*tauLeptonMass2) + std::sqrt(term2))/term1;
-      //std::cout << "x2_dash = " << x2_dash << std::endl;
- */
+      std::vector<double> x2_dash_solutions;
+      for ( unsigned int iSolution = 0; iSolution < 2; ++iSolution )
+      {
+        double sign = 0.;
+        if      ( iSolution == 0 ) sign = +1.;
+        else if ( iSolution == 1 ) sign = -1.;
+        else assert(0);
+        double x2_dash_solution = 2.*(E1*Evis2*(diTauMassConstraint2_ - 2.*tauLeptonMass2) + sign*std::sqrt(term2))/term1;
+        x2_dash_solutions.push_back(x2_dash_solution);
+      }
+      x2_dash_solutions.push_back((mVis2_measured_/diTauMassConstraint2_)/x1_dash);
+      bool isFirst = true;
+      double mTauTau_best_residual = 1.e+6;
+      for ( size_t iSolution = 0; iSolution < x2_dash_solutions.size(); ++iSolution )
+      {
+        double x2_dash_solution = x2_dash_solutions[iSolution];
+        //std::cout << "solution #" << iSolution << ": x2_dash = " << x2_dash_solution << std::endl;
+        double x2_solution = x2_dash_solution/visPtShift2;
+        if ( x2_solution >= 1.e-5 && x2_solution <= 1. )
+        {
+          updateFittedTauLepton2(x2_solution);
+          if ( fittedTauLepton2_.errorCode() == FittedTauLepton::None )
+          {
+            double mTauTau_solution = (fittedTauLeptons_[0]->tauP4() + fittedTauLeptons_[1]->tauP4()).mass();
+            //std::cout << "solution #" << iSolution << ": mTauTau = " << mTauTau_solution << std::endl;
+            double mTauTau_residual = std::fabs(mTauTau_solution - diTauMassConstraint_);
+            if ( isFirst || mTauTau_residual < mTauTau_best_residual )
+            {
+              x2_dash = x2_dash_solution;
+              isFirst = false;
+              mTauTau_best_residual = mTauTau_residual;
+            }
+          }
+        }
+      }
+      if ( mTauTau_best_residual > 5.e-2*diTauMassConstraint_ )
+      {
+        errorCode_ |= TauDecayParameters;
+        return 0.;
+      }
     }
   }
   double x2 = x2_dash/visPtShift2;
@@ -452,13 +505,7 @@ ClassicSVfitIntegrand::EvalPS() const
   // compute neutrino and tau lepton momentum for second tau
   if ( !leg2isPrompt_ )
   {
-    int idx_phiNu2 = legIntegrationParams_[1].idx_phi_;
-    assert(idx_phiNu2 != -1);
-    double phiNu2 = x_[idx_phiNu2];
-    int idx_nu2Mass = legIntegrationParams_[1].idx_mNuNu_;
-    double nu2Mass = ( idx_nu2Mass != -1 ) ? std::sqrt(x_[idx_nu2Mass]) : 0.;
-    fittedTauLepton2_.updateTauMomentum(x2, phiNu2, nu2Mass);
-    //std::cout << "fittedTauLepton2: errorCode = " << fittedTauLepton2_.errorCode() << std::endl;
+    updateFittedTauLepton2(x2);
     if ( fittedTauLepton2_.errorCode() != FittedTauLepton::None )
     {
       errorCode_ |= TauDecayParameters;
@@ -522,6 +569,7 @@ ClassicSVfitIntegrand::EvalPS() const
   prob_PS_and_tauDecay *= classic_svFit::matrixElementNorm;
 
   double mTauTau = (fittedTauLepton1_.tauP4() + fittedTauLepton2_.tauP4()).mass();
+//std::cout << "mTauTau = " << mTauTau << std::endl;
   double prob_logM = 1.;
   if ( addLogM_ )
   {

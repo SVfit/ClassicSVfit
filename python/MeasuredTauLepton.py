@@ -75,16 +75,21 @@ class MeasuredTauLepton:
                     maxVisMass = 1.5
 
             self.preciseVisMass = self.mass
-            if self.type == MeasuredTauLepton.kTauToElecDecay:
-                type_string = "tau -> electron decay"
-            elif self.type == MeasuredTauLepton.kTauToMuDecay:
-                type_string = "tau -> muon decay"
-            elif self.type == MeasuredTauLepton.kTauToHadDecay:
-                type_string = "tau -> had decay"
-            else:
-                raise ValueError(f"Invalid type {self.type} declared for leg: Pt = {self.pt}, eta = {self.eta}, phi = {self.phi}, mass = {self.mass} !!")
-            print(f"Warning: {type_string} declared for leg: Pt = {self.pt}, eta = {self.eta}, phi = {self.phi}, mass = {self.mass} !!")
-            print(f" (mass expected in the range = {minVisMass}..{maxVisMass})")
+
+            print(minVisMass, maxVisMass)
+            print(0.9*minVisMass, 1.1*maxVisMass)
+            if (self.preciseVisMass < 0.9*minVisMass or self.preciseVisMass > 1.1*maxVisMass):
+
+                if self.type == MeasuredTauLepton.kTauToElecDecay:
+                    type_string = "tau -> electron decay"
+                elif self.type == MeasuredTauLepton.kTauToMuDecay:
+                    type_string = "tau -> muon decay"
+                elif self.type == MeasuredTauLepton.kTauToHadDecay:
+                    type_string = "tau -> had decay"
+                else:
+                    raise ValueError(f"Invalid type {self.type} declared for leg: Pt = {self.pt}, eta = {self.eta}, phi = {self.phi}, mass = {self.mass} !!")
+                print(f"Warning: {type_string} declared for leg: Pt = {self.pt}, eta = {self.eta}, phi = {self.phi}, mass = {self.mass} !!")
+                print(f" (mass expected in the range = {minVisMass}..{maxVisMass})")
 
             if self.preciseVisMass < minVisMass:
                 self.preciseVisMass = minVisMass

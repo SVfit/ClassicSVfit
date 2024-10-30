@@ -4,47 +4,39 @@ import json
 import argparse
 
 def root_to_json(root_file_path, output_json_path):
-    """
-    Konwertuje dane z pliku ROOT do formatu JSON, obsługując obiekty typu TTree oraz TH1D.
-
-    Parameters:
-        root_file_path (str): Ścieżka do pliku ROOT.
-        output_json_path (str): Ścieżka do wynikowego pliku JSON.
-    """
-    # Otwieramy plik .root
+    # Opening the ROOT file
     file = uproot.open(root_file_path)
-
-    # Inicjalizujemy pustą listę do przechowywania danych
     data_as_dicts = []
 
-    # Iterujemy przez obiekty w pliku
     for key in file.keys():
         obj = file[key]
 
-        # Sprawdzamy, czy obiekt jest typu TTree
-        if obj.classname.startswith("TTree"):
+        # Checking for TTree objects
+        if hasattr(obj, "arrays"):
             arrays = obj.arrays(library="np")
+
             num_rows = len(next(iter(arrays.values())))
-            data_as_dicts.extend([
-                {key: arrays[key][i].item() if isinstance(arrays[key][i], np.generic) else arrays[key][i] for key in arrays.keys()}
+            tree_data_as_dicts = [
+                {key: arrays[key][i] for key in arrays.keys()}
                 for i in range(num_rows)
-            ])
+            ]
+            data_as_dicts.extend(tree_data_as_dicts)
+            print(f"Dodano dane z drzewa: {key}")
 
-        # Sprawdzamy, czy obiekt jest typu TH1 (histogram)
-        elif obj.classname.startswith("TH1"):
-            data_as_dicts.append({
-                "name": key,
-                "bins": obj.values().tolist(),
-                "edges": obj.axis().edges().tolist()
-            })
+        else:
+            print(f"Ignoruję obiekt {key} (nie jest TTree)")
 
-    # Zapis do pliku JSON
-    with open(output_json_path, 'w') as f:
+    # Saving to JSON
+    with open(output_json_path, "w") as f:
         json.dump(data_as_dicts, f, indent=4)
 
+    print(f"Dane TTree zapisane do {output_json_path}")
+
+# If the script is run directly in the terminal, we could use:
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Konwertuje plik ROOT do formatu JSON.")
-    parser.add_argument("root_file_path", type=str, help="Ścieżka do pliku ROOT.")
-    parser.add_argument("output_json_path", type=str, help="Ścieżka do wynikowego pliku JSON.")
+    parser = argparse.ArgumentParser(description="Konwertuj TTree z pliku ROOT do formatu JSON")
+    parser.add_argument("root_file_path", type=str, help="Ścieżka do pliku ROOT")
+    parser.add_argument("output_json_path", type=str, help="Ścieżka do pliku wynikowego JSON")
     args = parser.parse_args()
+
     root_to_json(args.root_file_path, args.output_json_path)

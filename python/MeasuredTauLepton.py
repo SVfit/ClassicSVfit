@@ -28,7 +28,7 @@ class MeasuredTauLepton:
     kTauToElecDecay = 2
     kTauToMuDecay = 3
 
-    def __init__(self, type = 0, pt = 0., eta = 0., phi = 0., mass = 0., decayMode = -1, full_setup = True):
+    def __init__(self, pt = 0., eta = 0., phi = 0., mass = 0., decayMode = -1, type = 0, full_setup = True):
         self.type = type
         self.pt = pt
         self.eta = eta

@@ -1,22 +1,25 @@
 import numpy as np
-from vector import obj, Vector4D
+import vector
 from MeasuredTauLepton import *
+import time
+#from numba import jit
+#from scipy.optimize import minimize
 
 ###Reference: https://github.com/SVfit/ClassicSVfit/blob/fastMTT_2024/src/FastMTT.cc ###
 
 class Likelihood:
     def __init__(self, enable_MET = True, enable_mass = True, enable_px = True, enable_py = True):
         #setMETinputs
-        self.recoMET = Vector4D(px = 0.0, py = 0.0, pz = 0.0, E = 0.0)
-        self.covMET = np.ones(2, 2)
+        self.recoMET = vector.obj(px = 0.0, py = 0.0, pz = 0.0, E = 0.0)
+        self.covMET = np.ones((2, 2))
 
         #setParameters
         self.coeff1 = 6
-        self.coeff2 = 1.15
+        self.coeff2 = 1/1.15
 
         #setLeptonInputs
-        self.leg1P4 = Vector4D(px = 0.0, py = 0.0, pz = 0.0, E = 0.0)
-        self.leg2P4 = Vector4D(px = 0.0, py = 0.0, pz = 0.0, E = 0.0)
+        self.leg1P4 = vector.obj(px = 0.0, py = 0.0, pz = 0.0, E = 0.0)
+        self.leg2P4 = vector.obj(px = 0.0, py = 0.0, pz = 0.0, E = 0.0)
         
         #visible invariant mass
         #eq. (4)
@@ -27,8 +30,9 @@ class Likelihood:
 
         self.mVisOverTauSquare1 = 0.0
         self.mVisOverTauSquare2 = 0.0
-            
-        self.mTau = 0.0
+         
+        self.mTau = tauLeptonMass
+        
         self.leg1DecayType = 0
         self.leg2DecayType = 0
         self.leg1DecayMode = 0
@@ -56,20 +60,18 @@ class Likelihood:
         
         #visible invariant mass
         #eq. (4)
-        self.mvis = (self.leg1P4 + self.leg2P4).mass()
+        self.mvis = (self.leg1P4 + self.leg2P4).mass
 
-        self.mvisleg1 = self.leg1P4.mass()
-        self.mvisleg2 = self.leg2P4.mass()
-
+        self.mvisleg1 = self.leg1P4.mass
+        self.mvisleg2 = self.leg2P4.mass
         self.mVisOverTauSquare1 = (self.mvisleg1/self.mTau)**2
         self.mVisOverTauSquare2 = (self.mvisleg2/self.mTau)**2
 
-        if aLeg1DecayType==MeasuredTauLepton.kTauToHadDecay and self.mvis1>1.5:
+        if aLeg1DecayType==MeasuredTauLepton.kTauToHadDecay and self.mvisleg1>1.5:
             self.mvisleg1 = 0.3
-        if aLeg2DecayType==MeasuredTauLepton.kTauToHadDecay and self.mvis2>1.5:
+        if aLeg2DecayType==MeasuredTauLepton.kTauToHadDecay and self.mvisleg2>1.5:
             self.mvisleg2 = 0.3
-            
-        self.mTau = tauLeptonMass
+
         self.leg1DecayType = aLeg1DecayType
         self.leg2DecayType = aLeg2DecayType
         self.leg1DecayMode = aLeg1DecayMode
@@ -81,7 +83,7 @@ class Likelihood:
         if mScaled<self.mvis:
             return 0.0
         mVS2 = (self.mvis/mScaled)**2
-        x1Min = min(1.0, )
+        x1Min = min(1.0, self.mVisOverTauSquare1)
         x2Min = max(self.mVisOverTauSquare2, mVS2)
         x2Max = min(1.0, mVS2/x1Min)
         
@@ -94,6 +96,9 @@ class Likelihood:
         value = x2IntegralTerm
 
         if self.leg1DecayType != MeasuredTauLepton.kTauToHadDecay:
+            value += mVS2*(1/x2Max - 1/x2Min)
+
+        if self.leg2DecayType != MeasuredTauLepton.kTauToHadDecay:
             value += mVS2*x2IntegralTerm - (x2Max - x2Min)
 
         value *= 1E9*jacobiFactor
@@ -104,17 +109,17 @@ class Likelihood:
             return 0.0
         
         if type == 0:
-            pT1 = self.leg1P4.px()
-            pT2 = self.leg2P4.px()
+            pT1 = self.leg1P4.px
+            pT2 = self.leg2P4.px
         elif type == 1:
-            pT1 = self.leg1P4.py()
-            pT2 = self.leg2P4.py()
+            pT1 = self.leg1P4.py
+            pT2 = self.leg2P4.py
         elif type == 2:
-            pT1 = self.leg1P4.pz()
-            pT2 = self.leg2P4.pz()
+            pT1 = self.leg1P4.pz
+            pT2 = self.leg2P4.pz
 
-        x1Min = np.min(1.0, self.mVisOverTauSquare1)
-        x2Min = np.min(1.0, self.mVisOverTauSquare2)
+        x1Min = min(1.0, self.mVisOverTauSquare1)
+        x2Min = min(1.0, self.mVisOverTauSquare2)
 
         x1Max = 1.0
         x2Max = 1.0
@@ -128,13 +133,13 @@ class Likelihood:
             return 0.0
 
         if (-pT2*pT1)<0:
-            x2Min = np.max(x2Min, b_x2)
-            x2Max = np.min(x2Max, a_x2)
+            x2Min = max(x2Min, b_x2)
+            x2Max = min(x2Max, a_x2)
             if x2_vs_x1_singularity and x2Max<0:
                 x2Max = 1.0
         else:
-            x2Min = np.max(x2Min, a_x2)
-            x2Max = np.min(x2Max, b_x2)
+            x2Min = max(x2Min, a_x2)
+            x2Max = min(x2Max, b_x2)
             if x2_vs_x1_singularity and x2Max<0:
                 x2Max = 1.0
 
@@ -145,7 +150,7 @@ class Likelihood:
             return 0.0
         
         mNuNuIntegral = 0.0
-        x2 = np.min(1.0, x2Max)
+        x2 = min(1.0, x2Max)
 
         term1 = pT2 - pTTauTau*x2
         log_term1 = np.log(np.abs(term1))
@@ -178,11 +183,11 @@ class Likelihood:
 
         return np.abs(value)
     
-    def metTF(metP4: Vector4D, nuP4: Vector4D, covMET):
+    def metTF(self, metP4: vector.Vector4D, nuP4: vector.Vector4D, covMET):
         aMETx = metP4.x
         aMETy = metP4.y
 
-        covDET = np.det(covMET)
+        covDET = np.linalg.det(covMET)
         
         if covDET < 1E-10:
             print(f"Error: Cannot invert MET covariance matrix (det=0)! aMETx: {aMETx}, aMETy: {aMETy}")
@@ -192,18 +197,14 @@ class Likelihood:
         residualX = aMETx - nuP4.x
         residualY = aMETy - nuP4.y
 
-        pull2 = residualX*(covMET[0][0]*residualX + covMET[0][1]*residualY) + residualY*(covMET[1][0]*residualX + covMET[1][1]*residualY)
-
+        #covMET 0 coordinate responds to X and 1 coordinate to Y
+        pull2 = residualX*(covMET[1][1]*residualX - covMET[0][1]*residualY) + residualY*(-covMET[1][0]*residualX + covMET[0][0]*residualY)
+        pull2 /= covDET
         return constMET*np.exp(-0.5*pull2)
-    
-    #Uwaga#
-    #ComponentParams zastąpią enable/disable Component
-    #które (jeśli dobrze rozumiem) uwzględniają lub nie konkretne prawdopodobieństwa (pt, metTF, mass) w końcowym wyniku
-    #Możemy to zrobić w value albo w __init__ - jeszcze nie wiem, co jest potrzebne do poprawnego działania kodu
 
     def value(self, x, ComponentsParams = True):
-        x1Min = np.min(1.0, self.mVisOverTauSquare1)
-        x2Min = np.min(1.0, self.mVisOverTauSquare2)
+        x1Min = min(1.0, self.mVisOverTauSquare1)
+        x2Min = min(1.0, self.mVisOverTauSquare2)
 
         if x[0]<x1Min or x[1]<x2Min:
             return 0.0
@@ -215,19 +216,13 @@ class Likelihood:
         if self.enable_MET:
             value *= self.metTF(self.recoMET, testMET, self.covMET)
         if self.enable_mass:
-            value *= self.massLikelihood(testP4.mass())
+            value *= self.massLikelihood(testP4.mass)
         if self.enable_px:
-            value *= self.ptLikelihood(testP4.pt(), 0)
+            value *= self.ptLikelihood(testP4.px, 0)
         if self.enable_py:
-            value *= self.ptLikelihood(testP4.pt(), 1)
+            value *= self.ptLikelihood(testP4.py, 1)
 
         return value
-
-
-        #Implementacja
-        #zawiera odwołania do massLikelihood, ptLikelihood, metTF
-        #o ile są odblokowane przy definicji funkcji
-        return
 
 ###UWAGA###
 #Ponieważ da się to jednak prosto napisać bez dziedziczenia funkcji, to spróbujemy zarówno z numbą, jak i innymi plikami jit
@@ -238,32 +233,31 @@ class FastMTT(Likelihood):
         self.BestLikelihood = 0.0
         self.BestX = np.array([0.0, 0.0])
         self.bestP4 = 0.0
-        #inicjalizacja
-        #parametry aPars i ComponentParams przez dziedziczenie z Likelihood
-        #Odpuścimy inicjalizację rzeczy do minimalizacji, skoro i tak jej nie ma w kodzie
+        self.tau1P4 = 0.0
+        self.tau2P4 = 0.0
         return
     
-    def run(self, measuredTauLeptons: np.ndarray, measuredMETx, measuredMETy, covMET) -> np.ndarray:
-        if measuredTauLeptons != 2:
-            print(f"Number of MeasuredTauLepton is {measuredTauLeptons.size()}. A user shouls pass exactly two leptons.\n")
+    def run(self, measuredTauLeptons, measuredMETx, measuredMETy, covMET) -> np.ndarray:
+        if len(measuredTauLeptons) != 2:
+            print(f"Number of MeasuredTauLepton is {len(measuredTauLeptons)}. A user shouls pass exactly two leptons.\n")
             return
         
-        #Waiting for sorting#
-        sortedMeasuredTauLeptons = measuredTauLeptons
+        #Sorting (not implementes, as it does not seem to be utilized in the original code)
+        #sortedMeasuredTauLeptons = measuredTauLeptons...
         metLenght = np.sqrt(measuredMETx**2 + measuredMETy**2)
-        aMET = Vector4D(px = measuredMETx, py = measuredMETy, pz = 0.0, E = metLenght)
-        aLepton1 = MeasuredTauLepton[0]
-        aLepton2 = MeasuredTauLepton[1]
+        aMET = vector.obj(px = measuredMETx, py = measuredMETy, pz = 0.0, E = metLenght)
+        aLepton1 = measuredTauLeptons[0]
+        aLepton2 = measuredTauLeptons[1]
 
         self.myLikelihood.setMETinputs(aMET, covMET)
-        self.myLikelihood.setLeptonInputs(aLepton1.p4(), aLepton2.p4(), aLepton1.type, aLepton2.type, aLepton1.decayMode, aLepton2.decayMode)
+        self.myLikelihood.setLeptonInputs(aLepton1.p4, aLepton2.p4, aLepton1.type, aLepton2.type, aLepton1.decayMode, aLepton2.decayMode)
 
         self.scan()
-        tau1P4 = aLepton1.p4()*(1/self.minimumPosition[0])
-        tau2P4 = aLepton2.p4()*(1/self.minimumPosition[1])
-        self.bestP4 = tau1P4 + tau2P4
+        self.tau1P4 = aLepton1.p4*(1/self.BestX[0])
+        self.tau2P4 = aLepton2.p4*(1/self.BestX[1])
+        self.bestP4 = self.tau1P4 + self.tau2P4
     
-    def compareLeptons(self, measuredTauLepton1: MeasuredTauLepton, measuredTauLepton2: MeasuredTauLepton): #używane w run
+    def compareLeptons(self, measuredTauLepton1: MeasuredTauLepton, measuredTauLepton2: MeasuredTauLepton):
         if (measuredTauLepton1.type == MeasuredTauLepton.kTauToElecDecay or measuredTauLepton1.type == MeasuredTauLepton.kTauToMuDecay) and measuredTauLepton2.type == MeasuredTauLepton.kTauToHadDecay:
             return True
         if (measuredTauLepton2.type == MeasuredTauLepton.kTauToElecDecay or measuredTauLepton2.type == MeasuredTauLepton.kTauToMuDecay) and measuredTauLepton1.type == MeasuredTauLepton.kTauToHadDecay:
@@ -273,32 +267,47 @@ class FastMTT(Likelihood):
     def myLikelihoodValue(self, x):
         return self.myLikelihood.value(x)
     
-    def scan(self): #używane w run
+    def scan(self):
+
+        start_real_time = time.time()
+        start_cpu_time = time.process_time()
+
         lh = 0.0
         bestLH = 0.0
         x = np.array([0.5, 0.5])
         theMinimum = np.array([0.75, 0.75])
         nGridPoints = 100
         gridFactor = 1.0/nGridPoints
-        nCalls = 0
+        #nCalls = 0
+
         for iX2 in range(1, nGridPoints):
             x[1] = iX2*gridFactor
             for iX1 in range(1, nGridPoints):
                 x[0] = iX1*gridFactor
                 lh = self.myLikelihood.value(x)
-                nCalls += 1
+                #nCalls += 1
                 if lh < bestLH:
                     bestLH = lh
                     theMinimum[0] = x[0]
                     theMinimum[1] = x[1]
 
-        self.minimumPosition[0] = theMinimum[0]
-        self.minimumPosition[1] = theMinimum[1]
-        self.minimumValue = bestLH
+        self.BestX[0] = theMinimum[0]
+        self.BestX[1] = theMinimum[1]
+        self.BestLikelihood = bestLH
 
-        #Używa MyLikelihood.value
-        #Implementacja z pętlami
-        #lub gradient_descent (w artykule było wspomniane, że może poprawić szybkość algorytmu)
+        #Code for minimalizing function with scipy. 10x faster than grid search:
+        '''initial_guess = np.array([0.5, 0.5])
+        result = minimize(self.myLikelihood.value, initial_guess, method='BFGS')
+        self.BestX = result.x
+        self.BestLikelihood = result.fun'''
+
+        end_real_time = time.time()
+        end_cpu_time = time.process_time()
+        
+        real_time_elapsed = end_real_time - start_real_time
+        cpu_time_elapsed = end_cpu_time - start_cpu_time
+
+        print(f"Real time elapsed: {real_time_elapsed} seconds")
+        print(f"CPU time elapsed: {cpu_time_elapsed} seconds")
+
         return
-    
-#Do wszystkiego dołożymy do testowania funkcje do pomiaru czasu (np. import time), tak jak w oryginalnym kodzie

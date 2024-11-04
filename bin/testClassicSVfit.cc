@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
      This is a single event for testing purposes.
   */
 
-  std::ifstream file("events.json");
+  std::ifstream file("test_events.json");
 
   if (!file.is_open()) {
     std::cerr << "You cannot open json file!" << std::endl;
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 
   // define lepton four vectors
   std::vector<MeasuredTauLepton> measuredTauLeptons;
-  measuredTauLeptons.push_back(MeasuredTauLepton(MeasuredTauLepton::kTauToElecDecay, event["pt_1"], event["eta_1"],  event["phi_1"], event["m_1"], event["dm_1"])); // tau -> electron decay (Pt, eta, phi, mass)
+  measuredTauLeptons.push_back(MeasuredTauLepton(MeasuredTauLepton::kTauToElecDecay, event["pt_1"], event["eta_1"],  event["phi_1"], event["m_1"])); // tau -> electron decay (Pt, eta, phi, mass)
   measuredTauLeptons.push_back(MeasuredTauLepton(MeasuredTauLepton::kTauToHadDecay,  event["pt_2"], event["eta_2"],  event["phi_2"], event["m_2"], event["dm_2"])); // tau -> 1prong0pi0 hadronic decay (Pt, eta, phi, mass)
   /*
      tauDecayModes:  0 one-prong without neutral pions
@@ -62,6 +62,22 @@ int main(int argc, char* argv[])
   */
 
   int verbosity = 1;
+
+//Run FastMTT
+  FastMTT aFastMTTAlgo;
+  aFastMTTAlgo.run(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+  LorentzVector ttP4 = aFastMTTAlgo.getBestP4();
+  std::cout<<std::endl;
+  std::cout << "FastMTT found best p4 with mass = " << ttP4.M()
+	    << " (expected value = 108.991),"
+	    <<std::endl;
+  std::cout<<"Real Time =   "<<aFastMTTAlgo.getRealTime("scan")<<" seconds "
+	   <<" Cpu Time =   "<<aFastMTTAlgo.getCpuTime("scan")<<" seconds"<<std::endl;
+  if(std::abs(ttP4.M() -  108.991)>1E-6*108.991) return 1;
+  
+  return 0;
+
+
   ClassicSVfit svFitAlgo(verbosity);
 #ifdef USE_SVFITTF
   //HadTauTFCrystalBall2* hadTauTF = new HadTauTFCrystalBall2();
@@ -137,17 +153,4 @@ int main(int argc, char* argv[])
   if (std::abs((tau1P4.Pt() - 102.508) / 102.508) > 0.001) return 1;
   if (std::abs((tau2P4.Pt() - 27.019) / 27.019) > 0.001) return 1;
 
-  //Run FastMTT
-  FastMTT aFastMTTAlgo;
-  aFastMTTAlgo.run(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
-  LorentzVector ttP4 = aFastMTTAlgo.getBestP4();
-  std::cout<<std::endl;
-  std::cout << "FastMTT found best p4 with mass = " << ttP4.M()
-	    << " (expected value = 108.991),"
-	    <<std::endl;
-  std::cout<<"Real Time =   "<<aFastMTTAlgo.getRealTime("scan")<<" seconds "
-	   <<" Cpu Time =   "<<aFastMTTAlgo.getCpuTime("scan")<<" seconds"<<std::endl;
-  if(std::abs(ttP4.M() -  108.991)>1E-6*108.991) return 1;
-  
-  return 0;
 }

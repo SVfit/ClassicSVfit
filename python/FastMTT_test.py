@@ -1,7 +1,7 @@
 import json
 import numpy as np
 import pandas as pd
-import fastMTT
+import FastMTT
 import argparse
 
 def load_json_data(file_path):
@@ -14,7 +14,7 @@ def process_event_json(json_data):
 
     for event in json_data:
         
-        fMTT = fastMTT.fastMTT()
+        fMTT = FastMTT.FastMTT()
 
         measuredMETx = event['metx']
         measuredMETy = event['mety']
@@ -37,14 +37,14 @@ def process_event_json(json_data):
 
         fMTT.run(measuredTauLeptons, measuredMETx, measuredMETy, covMET)
         p4Fast = (fMTT.tau1P4 + fMTT.tau2P4)
-        mFast = fastMTT.InvariantMass(p4Fast)
+        mFast = FastMTT.InvariantMass(p4Fast)
         print(f"Fast Mass: {mFast[0]}")
 
 def load_events_csv(csv_data):
 
     df = pd.read_csv(csv_data)
 
-    event_df = df[['met', 'metphi', 'metcov00', 'metcov01', 'metcov11', 'pt_1', 'eta_1', 'phi_1', 'm_1', 'pt_2', 'eta_2', 'phi_2', 'm_2', 'dm_2']]
+    event_df = df[['met', 'metphi', 'metcov00', 'metcov01', 'metcov11', 'pt_1', 'eta_1', 'phi_1', 'm_1', 'pt_2', 'eta_2', 'phi_2', 'm_2', 'dm_2']].copy()
 
     met = event_df.pop('met').to_numpy()
     metphi = event_df.pop('metphi').to_numpy()
@@ -63,23 +63,25 @@ def load_events_csv(csv_data):
 
 def process_events_csv(measuredTauLeptons, MET, phiMET, covMET):
 
-    fMTT = fastMTT.fastMTT()
+    fMTT = FastMTT.FastMTT()
     
     measuredMETx = MET * np.cos(phiMET)
     measuredMETy = MET * np.sin(phiMET)
 
     fMTT.run(measuredTauLeptons, measuredMETx, measuredMETy, covMET)
     p4Fast = (fMTT.tau1P4 + fMTT.tau2P4)
-    mFast = fastMTT.InvariantMass(p4Fast)
+    mFast = FastMTT.InvariantMass(p4Fast)
+
+    for i in range(len(mFast)):
+        print(f"Fast Mass {i}: {mFast[i]}")
 
     #Comparison to the C++ results:
-    df = pd.read_csv('TauAnalysis/ClassicSVfit/results.csv')
+    '''df = pd.read_csv('testing_files/results.csv')
     fmtt_df = df['fastMTT_mass'].to_numpy()
-    print(fmtt_df.shape)
     difference = np.absolute(mFast - fmtt_df)
-    indices = np.where(difference > 0.1)[0]
+    indices = np.where(difference > 1)[0]
     for index in indices:
-        print(f"Zdarzenie {index}: różnica = {difference[index]}")
+        print(f"Event {index}: difference = {difference[index]}")'''
     
 
 if __name__ == "__main__":

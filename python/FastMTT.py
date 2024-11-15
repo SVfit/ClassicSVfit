@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from MeasuredTauLepton import *
 import time
+from scipy.constants import physical_constants
 
 #import jax
 #import jax.numpy as jnp
@@ -44,7 +44,7 @@ class Likelihood:
         self.mVisOverTauSquare1 = np.array([0.0])
         self.mVisOverTauSquare2 = np.array([0.0])
          
-        self.mTau = tauLeptonMass
+        self.mTau = physical_constants['tau energy equivalent'][0]/1000 #MeV -> GeV
         
         self.leg1DecayType = np.array([0.0])
         self.leg2DecayType = np.array([0.0])

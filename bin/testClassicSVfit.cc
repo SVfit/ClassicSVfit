@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
      This is a single event for testing purposes.
   */
 
-  std::ifstream file("test_events.json");
+  std::ifstream file("TauAnalysis/ClassicSVfit/bin/test_events.json");
 
   if (!file.is_open()) {
     std::cerr << "You cannot open json file!" << std::endl;

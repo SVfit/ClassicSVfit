@@ -1,17 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import Ellipse
 import time
 from scipy.constants import physical_constants
-
-#import jax
-#import jax.numpy as jnp
-#from jax import grad
-#from jax.scipy.optimize import minimize as jax_minimize
-
-#from numba import jit
+import os
 #from scipy.optimize import minimize
 
 ###Main reference: https://github.com/SVfit/ClassicSVfit/blob/fastMTT_2024/src/FastMTT.cc ###
+
+
+ElectronMass = physical_constants['electron mass energy equivalent in MeV'][0]/1000 #MeV -> GeV
+MuonMass = physical_constants['muon mass energy equivalent in MeV'][0]/1000 #MeV -> GeV
+ChargedPionMass = 139.5/1000 #MeV -> GeV
 
 
 #Invariant mass calculation
@@ -21,7 +21,7 @@ def InvariantMass(aP4):
     return np.sqrt(energy_squared - momentum_squared)
 
 class Likelihood:
-    def __init__(self, enable_MET = True, enable_mass = True, enable_px = False, enable_py = False):
+    def __init__(self, enable_MET = True, enable_mass = True, enable_BW = False, enable_px = False, enable_py = False):
         #METinputs
         self.recoMET = np.array([0.0, 0.0, 0.0, 0.0])
         self.covMET = np.ones((2, 2))
@@ -57,14 +57,11 @@ class Likelihood:
         self.enable_mass = enable_mass
 
         #These are experimental and not used by main code
+        self.enable_BW = enable_BW
         self.enable_px = enable_px
         self.enable_py = enable_py
 
         return
-
-    def setParameters(self, aPars):
-        self.coeff1 = aPars[0]
-        self.coeff2 = aPars[1]
 
     def setLeptonInputs(self, aLeg1P4, aLeg2P4, aLeg1DecayType, aLeg2DecayType, aLeg1DecayMode, aLeg2DecayMode):
         
@@ -85,7 +82,6 @@ class Likelihood:
 
         self.mVisOverTauSquare1 = (self.mvisleg1/self.mTau)**2
         self.mVisOverTauSquare2 = (self.mvisleg2/self.mTau)**2
-
 
     def massLikelihood(self, m: np.ndarray):
         mScaled = m*self.coeff2
@@ -115,9 +111,30 @@ class Likelihood:
 
         value *= 1E9*jacobiFactor
         return value
+
+    ###WORK IN PROGRESS###
+    #This experimental component is still to be tested (and set to false by default)#
+    #It will better constraint the likelihood function to Z0/H mass
+    #(in order for better momenta estimation)
+
+    def BreitWigner(self, invariant_mass):
+        Higgs_mass = 125
+        Higgs_gamma = Higgs_mass*0.01 #value set in original SVfit paper, however we will play with it yet
+        Z_mass = 91.2
+        Z_gamma = 2.5
+
+        def normalization_constant(mass, gamma):
+            x = mass*np.sqrt(mass**2+gamma**2)
+
+            return 2*np.sqrt(2)*mass*gamma*x/np.pi/np.sqrt(mass**2 + x)
+
+        H_denominator = (invariant_mass**2 - Higgs_mass**2)**2 + (Higgs_mass**2)*(Higgs_gamma**2)
+        Z_denominator = (invariant_mass**2 - Z_mass**2)**2 + (Z_mass**2)*(Z_gamma**2)
+        return normalization_constant(Z_mass, Z_gamma)/Z_denominator + normalization_constant(Higgs_mass, Higgs_gamma)/H_denominator
     
 
     #This is experimental part and by default not used by main code
+
     def ptLikelihood(self, pTTauTau: np.ndarray, type: np.ndarray):
 
         mask1 = (np.abs(pTTauTau)<0.5)
@@ -202,7 +219,7 @@ class Likelihood:
 
         return np.abs(value)
     
-    def metTF(self, metP4: np.ndarray, nuP4: np.ndarray, covMET: np.ndarray):
+    def metTF(self, metP4: np.ndarray, nuP4: np.ndarray, covMET: np.ndarray) -> np.ndarray:
         aMETx = metP4[..., 0]
         aMETy = metP4[..., 1]
 
@@ -214,14 +231,13 @@ class Likelihood:
         residualX = aMETx[:, np.newaxis] - nuP4[:, :, 0]
         residualY = aMETy[:, np.newaxis] - nuP4[:, :, 1]
 
-        #covMET 0 coordinate responds to X and 1 coordinate to Y
+        #covMET 1 coordinate responds to X and 0 coordinate to Y
         pull2 = residualX*(covMET[:, np.newaxis, 1, 1]*residualX - covMET[:, np.newaxis, 0, 1]*residualY) + residualY*(-covMET[:, np.newaxis, 1, 0]*residualX + covMET[:, np.newaxis, 0, 0]*residualY)
         pull2 /= covDET[:, np.newaxis]
         
         pull2[np.broadcast_to(mask[:, np.newaxis], pull2.shape)] = 0.0
         return constMET[:, np.newaxis]*np.exp(-0.5*pull2)
     
-
     def value(self, x: np.ndarray):
         
         x1Min = np.minimum(1.0, self.mVisOverTauSquare1)
@@ -233,33 +249,49 @@ class Likelihood:
 
         testMET = testP4 - self.leg1P4[:, np.newaxis, :] - self.leg2P4[:, np.newaxis, :]
 
-        value = np.full(testMET.shape[:2], -1.0)
+        value = np.full(testMET.shape[:2], -1.0) #Negative likelihood
         
         if self.enable_MET:
             value *= self.metTF(self.recoMET, testMET, self.covMET)
         if self.enable_mass:
             value *= self.massLikelihood(InvariantMass(testP4))
+
+        #Experimental components
+        #Not  introduced yet in official version
         if self.enable_px:
             value *= self.ptLikelihood(testP4[:, :, 0], 0)
         if self.enable_py:
             value *= self.ptLikelihood(testP4[:, :, 1], 1)
-
-        value[mask] = 0.0
+        if self.enable_BW:
+            value *= self.BreitWigner(InvariantMass(testP4))
+        
+        value[mask] = 0.000001
 
         return value
 
 class FastMTT(Likelihood):
-    def __init__(self):
+    def __init__(self, calculate_uncertainties = True):
         self.myLikelihood = Likelihood()
         self.BestLikelihood = 0.0
         self.BestX = np.array([0.0, 0.0])
         self.bestP4 = 0.0
         self.tau1P4 = 0.0
         self.tau2P4 = 0.0
+        self.mass = 0.0
 
-        #Likelihood of which event to plot
+        #The first try to implement calculation of uncertainties by ellipse fitting.
+        #It isn't working so good and we plan to develop another method.
+        #Therefore set to False by default.
+
+        self.CalculateUncertainties = calculate_uncertainties
+        self.covX11 = 0.0
+        self.covX22 = 0.0
+        self.covX12 = 0.0
+        self.one_sigma = 0.0
+
+        #Number of event for which likelihood plot will be shown.
         #-1 = no plot
-        self.GridLikelihood = -1
+        self.WhichLikelihoodPlot = -1
 
         return
     
@@ -275,16 +307,21 @@ class FastMTT(Likelihood):
         if np.shape(measuredTauLeptons)[1] != 2:
             print(f"Number of MeasuredTauLepton is {len(measuredTauLeptons)}. A user shouls pass exactly two leptons.\n")
             return
-        
+
         metLenght = np.sqrt(measuredMETx**2 + measuredMETy**2)
         aMET = np.array([measuredMETx, measuredMETy, np.zeros(np.shape(measuredMETx)), metLenght]).T
 
-
         aLepton1 = measuredTauLeptons[:, 0]
         aLepton2 = measuredTauLeptons[:, 1]
+
         p4_Lepton1 = self.get_p4(aLepton1)
         p4_Lepton2 = self.get_p4(aLepton2)
 
+        self.Lepton1 = p4_Lepton1
+        self.Lepton2 = p4_Lepton2
+
+        aLepton1 = self.modify_lepton_mass(aLepton1)
+        aLepton2 = self.modify_lepton_mass(aLepton2)
 
         self.myLikelihood.mvisleg1 = aLepton1[:, 4]
         self.myLikelihood.mvisleg2 = aLepton2[:, 4]
@@ -300,6 +337,10 @@ class FastMTT(Likelihood):
         self.tau1P4 = p4_Lepton1*(1/self.BestX[:, np.newaxis, 0])
         self.tau2P4 = p4_Lepton2*(1/self.BestX[:, np.newaxis, 1])
         self.bestP4 = self.tau1P4 + self.tau2P4
+        self.mass = InvariantMass(self.bestP4)
+
+        if self.CalculateUncertainties == True:
+            self.propagate_uncertainties()
 
         ##############################################
 
@@ -322,8 +363,7 @@ class FastMTT(Likelihood):
     #lepton[2]: eta
     #lepton[3]: phi
     #lepton[4]: mass
-    #lepton[5]: decay_mode (for hadrons):
-    #uzupełnić o listę decay modes
+    #lepton[5]: hadron decay mode
 
     def get_p4(self, lepton: np.ndarray):
         p = lepton[:, 1] * np.cosh(lepton[:, 2])
@@ -332,6 +372,37 @@ class FastMTT(Likelihood):
         pz = lepton[:, 1] * np.sinh(lepton[:, 2])
         energy = np.sqrt(p**2 + lepton[:, 4])
         return np.array([px, py, pz, energy]).T
+    
+    def modify_lepton_mass(self, aLepton1, electron_mass=ElectronMass, muon_mass=MuonMass, pion_mass=ChargedPionMass):
+
+        # 1) Set electron inv mass to electron
+        aLepton1[aLepton1[:, 0] == 2, 4] = electron_mass
+
+        # 2) Set muon inv mass to muon
+        aLepton1[aLepton1[:, 0] == 3, 4] = muon_mass
+
+        # 3) If decay is hadronic, we set minimal and maximal mass, depending on decay mode
+        mask_type1 = aLepton1[:, 0] == 1
+
+        # a) If hadronic decay mode == -1, then min mass = pion_mass and max mass = 1.5
+        mask_a = (mask_type1 & (aLepton1[:, 5] == -1) & (aLepton1[:, 4] < pion_mass))
+        aLepton1[mask_a, 4] = pion_mass
+
+        mask_b = (mask_type1 & (aLepton1[:, 5] == -1) & (aLepton1[:, 4] > 1.5))
+        aLepton1[mask_b, 4] = 1.5
+
+        # c) If hadronic decay mode == 0, then mass = pion mass
+        mask_c = (mask_type1 & (aLepton1[:, 5] == 0))
+        aLepton1[mask_c, 4] = pion_mass
+
+        # d) If hadronic decay mode has another value, we set min mass to 0.3 and max mass to 1.5
+        mask_d = (mask_type1 & (aLepton1[:, 5] != -1) & (aLepton1[:, 5] != 0) & (aLepton1[:, 4] < 0.3))
+        aLepton1[mask_d, 4] = 0.3
+
+        mask_e = (mask_type1 & (aLepton1[:, 5] != -1) & (aLepton1[:, 5] != 0) & (aLepton1[:, 4] > 1.5))
+        aLepton1[mask_e, 4] = 1.5
+
+        return aLepton1
     
     def scan(self):
         
@@ -342,43 +413,197 @@ class FastMTT(Likelihood):
         X2 = np.arange(1, nGridPoints) * gridFactor
 
         # Cartesian product
-        pairs = np.column_stack((np.repeat(X1, len(X2)), np.tile(X2, len(X1))))
+        pairs = np.column_stack((np.repeat(X1, len(X2)),
+                                 np.tile(X2, len(X1))))
         
         lh = self.myLikelihood.value(pairs)
 
         minimum = np.argmin(lh, axis=1)
 
-        self.BestX = pairs[minimum] 
+        self.BestX = pairs[minimum]
         self.BestLikelihood = lh[np.arange(lh.shape[0]), minimum]
 
-        if self.GridLikelihood != -1:
-            self.plot_likelihood(lh, X1, X2, self.GridLikelihood)
+        chi_square = 2.3
 
-        #Code for minimalizing function with scipy.
+        #Plotting likelihoods
+        
+        if self.WhichLikelihoodPlot != -1:
+            self.plot_likelihood(lh, X1, X2, event_number = self.WhichLikelihoodPlot, threshold=self.BestLikelihood[self.WhichLikelihoodPlot]/np.exp(chi_square/2))
+
+        if self.CalculateUncertainties == True:
+            self.calculate_uncertainties(lh, X1, X2, chi_square)
+
+        #Code for minimalizing function with scipy:
 
         '''initial_guess = np.array([0.5, 0.5])
         result = minimize(self.myLikelihood.value, initial_guess, method='BFGS')
         self.BestX = result.x
         self.BestLikelihood = result.fun'''
-
         
         #Faster than grid search in pure python
         #Slower than grid search in numpy with vectorization and broadcasting
-        #Plan to replace it with jax and/or numba
+        #Potentially one can replace it with jax and/or numba
 
         return
     
-    def plot_likelihood(self, lh, X1, X2, event_number=0):
-        
+    def plot_likelihood(self, lh, X1, X2, event_number=0, threshold=None):
+
+        print("Threshold: ", threshold)
         nGridPoints = np.shape(X1)[0]
 
         lh_grid = lh[event_number, :].reshape(nGridPoints, nGridPoints)
 
         plt.figure(figsize=(8, 6))
-        plt.imshow(lh_grid, origin='lower', extent=(X1.min(), X1.max(), X2.min(), X2.max()), cmap='viridis')
-        plt.colorbar(label='Likelihood')
-        plt.xlabel("X1")
-        plt.ylabel("X2")
+
+        # Main heatmap
+        img = plt.imshow(-lh_grid, origin='lower', extent=(X1[0], X1[-1], X2[0], X2[-1]), 
+                        cmap='viridis_r', interpolation='nearest')
+
+        # Unphysical region excluded
+        unphysical_region_mask = (lh_grid == 0.000001)
+        plt.contourf(X1, X2, unphysical_region_mask, levels=[0.5, 1], colors='red', alpha=0.6)
+        contour_proxy = plt.Line2D([0], [0], linestyle="none", marker="s", markersize=10, markerfacecolor="red", alpha=0.6)
+        plt.legend([contour_proxy], [r"Kinematic limit $(\frac{m_i}{m_\tau})^2<x_i$"], loc="upper left")
+
+        # Maximum likelihood point
+        maximum_likelihood = self.BestX[event_number]
+        plt.scatter(maximum_likelihood[1], maximum_likelihood[0], color='red', marker='x', s=100, label="Maximum likelihood", linewidth=2.5)
+
+        # Contour for uncertainties (threshold = 2.3 for 1 sigma)
+        if threshold is not None:
+            plt.contour(X1, X2, lh_grid, levels=[threshold], colors='blue', linewidths=2, linestyles='--')
+
+        # Finalizing
+        plt.colorbar(img, label='Likelihood')
+
+        plt.xlabel(r"$X_1$")
+        plt.ylabel(r"$X_2$")
         plt.title("2D Heatmap of Likelihood Function")
-        plt.savefig("likelihood_heatmap.png", dpi=300)
+
+        params = {'legend.fontsize': 'xx-large',
+          'figure.figsize': (10, 7),
+         'axes.labelsize': 'xx-large',
+         'axes.titlesize':'xx-large',
+         'xtick.labelsize':'xx-large',
+         'ytick.labelsize':'xx-large'}
+        plt.rcParams.update(params)
+
+        file_path = f"images/fastMTT/likelihood_{self.WhichLikelihoodPlot}_event.png"
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        plt.savefig(file_path, dpi=300)
         plt.close()
+
+    def calculate_uncertainties(self, lh, X1, X2, chi_square = 2.3):
+        threshold = self.BestLikelihood/np.exp(chi_square/2)
+
+        nGridPoints = np.shape(X1)[0]
+        nEvents = np.shape(lh)[0]
+
+        lh_grid = lh.reshape(nEvents, nGridPoints, nGridPoints)
+        mask = (lh_grid < threshold[:, np.newaxis, np.newaxis])
+
+        up = np.roll(mask, shift=-1, axis=1)
+        down = np.roll(mask, shift=1, axis=1)
+        left = np.roll(mask, shift=-1, axis=2)
+        right = np.roll(mask, shift=1, axis=2)
+        boundary_mask = mask & ~(up & down & left & right)
+        
+        nRows, nCols = lh_grid.shape[1], lh_grid.shape[2]
+
+        # Only interior points are True (no boundary of the grid)
+        interior_mask = np.zeros((nRows, nCols), dtype=bool)
+        interior_mask[1:-1, 1:-1] = True
+        boundary_mask &= interior_mask[np.newaxis, :, :]
+        
+        X1_grid, X2_grid = np.meshgrid(X1, X2, indexing='ij')
+        mean_result = np.array([
+            np.nanmean(np.where(boundary_mask, X1_grid, np.nan), axis=(1, 2)),
+            np.nanmean(np.where(boundary_mask, X2_grid, np.nan), axis=(1, 2))
+        ]).T
+
+        #mean_result = self.BestX
+
+        X1_shifted = X1[np.newaxis, :] - mean_result[:, 0][:, np.newaxis]
+        X2_shifted = X2[np.newaxis, :] - mean_result[:, 1][:, np.newaxis]
+
+        X1_shifted_grid = X1_shifted[:, :, np.newaxis]
+        X2_shifted_grid = X2_shifted[:, np.newaxis, :]
+
+        covXX = np.nanmean(np.where(boundary_mask, X1_shifted_grid**2, np.nan),
+                        axis = (1, 2))[:, np.newaxis, np.newaxis]
+        covYY = np.nanmean(np.where(boundary_mask, X2_shifted_grid**2, np.nan),
+                        axis = (1, 2))[:, np.newaxis, np.newaxis]
+        covXY = np.nanmean(np.where(boundary_mask, X1_shifted_grid*X2_shifted_grid, np.nan),
+                        axis = (1, 2))[:, np.newaxis, np.newaxis]
+
+        CovarianceMatrix = np.concatenate([
+            np.concatenate([covXX, covXY], axis=2),
+            np.concatenate([covXY, covYY], axis=2)
+        ], axis=1)
+
+        self.covX11 = covXX[:, 0, 0]*chi_square
+        self.covX22 = covYY[:, 0, 0]*chi_square
+        self.covX12 = covXY[:, 0, 0]*chi_square
+
+        ### Plot:) ###
+
+        if self.WhichLikelihoodPlot != -1:
+
+            plt.figure(figsize=(8, 6))
+            plt.imshow(boundary_mask[self.WhichLikelihoodPlot], origin='lower', cmap='viridis', interpolation='nearest', extent=(X1[0], X1[-1], X2[0], X2[-1]))
+
+            plt.colorbar(label='Mask value')
+            plt.title(f"Mask for event {self.WhichLikelihoodPlot}")
+            plt.xlabel("X")
+            plt.ylabel("Y")
+
+            plt.scatter(mean_result[self.WhichLikelihoodPlot, 1], mean_result[self.WhichLikelihoodPlot, 0], color='red', marker='x', s=100, label="Mean of ellipse", linewidth=2.5)
+
+            #Ellipse
+            cov_matrix = CovarianceMatrix[self.WhichLikelihoodPlot]
+            ax = plt.gca()
+            flipped_mean = mean_result[self.WhichLikelihoodPlot][[1, 0]]
+            flipped_cov_matrix = cov_matrix[[1, 0]][:, [1, 0]]
+            plot_covariance_ellipse(flipped_mean, flipped_cov_matrix, chi_square, ax, edgecolor='blue', linestyle='-', linewidth=2, alpha=0.7)
+
+            #Saving
+            file_path = f"images/fastMTT/boundary_mask_case_{self.WhichLikelihoodPlot}.png"
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            plt.savefig(file_path, dpi=300)
+            plt.close()
+
+        return
+    
+    def propagate_uncertainties(self):
+        
+        tau1_momentum_sum = self.tau1P4[:, 1] + self.tau1P4[:, 2] + self.tau1P4[:, 3]
+        tau2_momentum_sum = self.tau2P4[:, 1] + self.tau2P4[:, 2] + self.tau2P4[:, 3]
+
+        X1Derivative = (tau1_momentum_sum + tau2_momentum_sum)*tau1_momentum_sum/self.BestX[:, 0]/self.mass
+        X1Derivative += (self.tau1P4[:, 0]+self.tau2P4[:, 0])*self.tau1P4[:, 0]/self.BestX[:, 0]/self.mass
+
+        X2Derivative = (tau1_momentum_sum + tau2_momentum_sum)*tau2_momentum_sum/self.BestX[:, 1]/self.mass
+        X2Derivative += (self.tau1P4[:, 0]+self.tau2P4[:, 0])*self.tau2P4[:, 0]/self.BestX[:, 1]/self.mass
+
+        overall_error = self.covX11*X1Derivative**2 + self.covX22*X2Derivative**2 + 2*self.covX12*X1Derivative*X2Derivative
+
+        self.one_sigma = np.sqrt(overall_error)
+
+        return
+
+def plot_covariance_ellipse(mean, cov_matrix, chi_square, ax, edgecolor='blue', linestyle='-', linewidth=2, alpha=0.5):
+
+    #Plotting an ellipse
+    
+    eigenvalues, eigenvectors = np.linalg.eigh(cov_matrix)
+    order = eigenvalues.argsort()[::-1]
+    eigenvalues = eigenvalues[order]
+    eigenvectors = eigenvectors[:, order]
+
+    angle = np.degrees(np.arctan2(eigenvectors[1, 0], eigenvectors[0, 0]))
+
+    width, height = 2 * np.sqrt(eigenvalues) * np.sqrt(chi_square)
+
+    ellipse = Ellipse(xy=mean, width=width, height=height, angle=angle, edgecolor=edgecolor,
+                      facecolor='none', linestyle=linestyle, linewidth=linewidth, alpha=alpha)
+    ax.add_patch(ellipse)

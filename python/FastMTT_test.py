@@ -1,98 +1,85 @@
 import json
 import numpy as np
+#import jax.numpy as jnp
 import pandas as pd
+import matplotlib.pyplot as plt
 import FastMTT
 import argparse
-
-def load_json_data(file_path):
-
-    with open(file_path, "r") as file:
-        data = json.load(file)
-    return data
-
-def process_event_json(json_data):
-
-    for event in json_data:
-        
-        fMTT = FastMTT.FastMTT()
-
-        measuredMETx = event['metx']
-        measuredMETy = event['mety']
-        covMET = np.array([[event['metcov00'], event['metcov01']], [event['metcov01'], event['metcov11']]])
-
-        #1 - TauToHad
-        #2 - TauToElec
-        #3 - TauToMu
-
-        leg1 = np.array([2, event['pt_1'], event['eta_1'], event['phi_1'], event['m_1'], -1])
-        leg2 = np.array([1, event['pt_2'], event['eta_2'], event['phi_2'], event['m_2'], event['dm_2']])
-        measuredTauLeptons = np.array([leg1, leg2])
-
-        N=100
-
-        measuredTauLeptons = np.tile(measuredTauLeptons, (N, 1, 1))
-        measuredMETx = np.tile(measuredMETx, (N, 1))[..., 0]
-        measuredMETy = np.tile(measuredMETy, (N, 1))[..., 0]
-        covMET = np.tile(covMET, (N, 1, 1))
-
-        fMTT.run(measuredTauLeptons, measuredMETx, measuredMETy, covMET)
-        p4Fast = (fMTT.tau1P4 + fMTT.tau2P4)
-        mFast = FastMTT.InvariantMass(p4Fast)
-        print(f"Fast Mass: {mFast[0]}")
+import os
 
 def load_events_csv(csv_data):
 
     df = pd.read_csv(csv_data)
 
-    event_df = df[['met', 'metphi', 'metcov00', 'metcov01', 'metcov11', 'pt_1', 'eta_1', 'phi_1', 'm_1', 'pt_2', 'eta_2', 'phi_2', 'm_2', 'dm_2']].copy()
+    event_df = df[['H.m', 'METx', 'METy', 'covXX', 'covXY', 'covYY', 'dm1', 'pt1', 'eta1', 'phi1', 'mass1', 'type1', 'dm2', 'pt2', 'eta2', 'phi2', 'mass2', 'type2']].copy()
 
-    met = event_df.pop('met').to_numpy()
-    metphi = event_df.pop('metphi').to_numpy()
-    metcov = event_df[['metcov00', 'metcov01', 'metcov01', 'metcov11']].to_numpy()
-    event_df.drop(columns=['metcov00', 'metcov01', 'metcov11'], inplace=True)
+    Higgs_mass = event_df.pop('H.m').to_numpy()
+    METx = event_df.pop('METx').to_numpy()
+    METy = event_df.pop('METy').to_numpy()
+    metcov = event_df[['covXX', 'covXY', 'covXY', 'covYY']].to_numpy()
+    event_df.drop(columns=['covXX', 'covXY', 'covYY'], inplace=True)
     metcov = np.reshape(metcov, (len(metcov), 2, 2))
 
-    event_df.insert(0, 'type1', 3)
-    event_df.insert(5, 'dm1', -1)
-    event_df.insert(6, 'type2', 1)
+    print('pandas dataframe:\n', event_df)
 
     events = event_df.to_numpy()
     events = np.reshape(events, (len(events), 2, 6))
 
-    return {"measuredTauLeptons": events, "MET": met, "phiMET": metphi, "covMET": metcov}
+    return {"measuredTauLeptons": events, "measuredMETx": METx, "measuredMETy": METy, "covMET": metcov}
 
-def process_events_csv(measuredTauLeptons, MET, phiMET, covMET):
+def process_events_csv(measuredTauLeptons, measuredMETx, measuredMETy, covMET):
 
     fMTT = FastMTT.FastMTT()
-    
-    measuredMETx = MET * np.cos(phiMET)
-    measuredMETy = MET * np.sin(phiMET)
 
+    #You can choose to plot likelihood for one of the events. -1 means no plot.
+    fMTT.WhichLikelihoodPlot = -1
+
+    print('Input shapes:', measuredTauLeptons.shape, measuredMETx.shape, measuredMETy.shape, covMET.shape)
     fMTT.run(measuredTauLeptons, measuredMETx, measuredMETy, covMET)
-    p4Fast = (fMTT.tau1P4 + fMTT.tau2P4)
-    mFast = FastMTT.InvariantMass(p4Fast)
+    mFast = fMTT.mass
+    print("FastMTT mass mean:", np.mean(mFast))
 
-    for i in range(len(mFast)):
-        print(f"Fast Mass {i}: {mFast[i]}")
+    ### PLOTTING ###
 
-    #Comparison to the C++ results:
-    '''df = pd.read_csv('testing_files/results.csv')
-    fmtt_df = df['fastMTT_mass'].to_numpy()
-    difference = np.absolute(mFast - fmtt_df)
-    indices = np.where(difference > 1)[0]
-    for index in indices:
-        print(f"Event {index}: difference = {difference[index]}")'''
-    
+    plt.tick_params(axis='both', labelsize=14)
+
+    bin_width = 10
+    bins = np.arange(0, 300 + bin_width, bin_width)
+
+    # Calculate the mean and standard deviation
+    mean_mass = np.mean(mFast)
+    std_mass = np.std(mFast)
+
+    plt.figure(figsize=(8, 6))
+    plt.hist(mFast, bins=bins, color='blue', alpha=0.7, edgecolor='black')
+
+    # Add vertical line for the mean
+    plt.axvline(mean_mass, color='red', linestyle='--', linewidth=2, label=f'Mean: {mean_mass:.2f} GeV')
+
+    # Add vertical lines for one standard deviation
+    plt.axvline(mean_mass - std_mass, color='orange', linestyle='--', linewidth=2, label=f'1σ: {std_mass:.2f} GeV')
+    plt.axvline(mean_mass + std_mass, color='orange', linestyle='--', linewidth=2)
+
+    # Add labels and title
+    plt.xlabel('Mass (GeV)', fontsize=14)
+    plt.ylabel('Number of Events', fontsize=14)
+    plt.title(f'Two tau leptons invariant mass', fontsize=16)
+
+    # Add grid and legend
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.legend(fontsize=10)
+
+    # Save and close the plot
+    file_path = f"images/fastMTT/fastMTT_histogram.png"
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    plt.savefig(file_path, dpi=300)
+    plt.close()
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Processes data from either a JSON or CSV file and prints the results.")
-    parser.add_argument("file_type", choices=["json", "csv"], help="Type of file to process: 'json' or 'csv'.")
-    parser.add_argument("file_path", type=str, help="Path to the file.")
+    parser = argparse.ArgumentParser(description="Processes data from a CSV file and prints the results.")
+    parser.add_argument("file_path", type=str, help="Path to the CSV file.")
     args = parser.parse_args()
 
-    if args.file_type == "json":
-        json_data = load_json_data(args.file_path)
-        process_event_json(json_data)
-    elif args.file_type == "csv":
-        csv_data = load_events_csv(args.file_path)
-        process_events_csv(**csv_data)
+    csv_data = load_events_csv(args.file_path)
+    process_events_csv(**csv_data)

@@ -270,7 +270,7 @@ class Likelihood:
         return value
 
 class FastMTT(Likelihood):
-    def __init__(self, calculate_uncertainties = True):
+    def __init__(self, calculate_uncertainties = False):
         self.myLikelihood = Likelihood()
         self.BestLikelihood = 0.0
         self.BestX = np.array([0.0, 0.0])
@@ -279,14 +279,11 @@ class FastMTT(Likelihood):
         self.tau2P4 = 0.0
         self.mass = 0.0
 
-        #The first try to implement calculation of uncertainties by ellipse fitting.
-        #It isn't working so good and we plan to develop another method.
-        #Therefore set to False by default.
+        #New component to calculate uncertainty
+        #It produces long tails, but apart from that calculates uncertainties event by event quite ok ~ after some cuts results are aprox. Gaussian
+        #A bit time consuming -- doubles the time of calculation -- so it is disabled by default
 
         self.CalculateUncertainties = calculate_uncertainties
-        self.covX11 = 0.0
-        self.covX22 = 0.0
-        self.covX12 = 0.0
         self.one_sigma = 0.0
 
         #Number of event for which likelihood plot will be shown.
@@ -314,11 +311,11 @@ class FastMTT(Likelihood):
         aLepton1 = measuredTauLeptons[:, 0]
         aLepton2 = measuredTauLeptons[:, 1]
 
-        p4_Lepton1 = self.get_p4(aLepton1)
-        p4_Lepton2 = self.get_p4(aLepton2)
+        self.p4_Lepton1 = self.get_p4(aLepton1)
+        self.p4_Lepton2 = self.get_p4(aLepton2)
 
-        self.Lepton1 = p4_Lepton1
-        self.Lepton2 = p4_Lepton2
+        self.Lepton1 = self.p4_Lepton1
+        self.Lepton2 = self.p4_Lepton2
 
         aLepton1 = self.modify_lepton_mass(aLepton1)
         aLepton2 = self.modify_lepton_mass(aLepton2)
@@ -330,17 +327,17 @@ class FastMTT(Likelihood):
         self.myLikelihood.recoMET = aMET
         self.myLikelihood.covMET = covMET
 
-        self.myLikelihood.setLeptonInputs(p4_Lepton1, p4_Lepton2, aLepton1[:, 0], aLepton2[:, 0], aLepton1[:, 5], aLepton2[:, 5])
+        self.myLikelihood.setLeptonInputs(self.p4_Lepton1, self.p4_Lepton2, aLepton1[:, 0], aLepton2[:, 0], aLepton1[:, 5], aLepton2[:, 5])
 
         self.scan()
         
-        self.tau1P4 = p4_Lepton1*(1/self.BestX[:, np.newaxis, 0])
-        self.tau2P4 = p4_Lepton2*(1/self.BestX[:, np.newaxis, 1])
+        self.tau1P4 = self.p4_Lepton1*(1/self.BestX[:, np.newaxis, 0])
+        self.tau2P4 = self.p4_Lepton2*(1/self.BestX[:, np.newaxis, 1])
         self.bestP4 = self.tau1P4 + self.tau2P4
         self.mass = InvariantMass(self.bestP4)
 
-        if self.CalculateUncertainties == True:
-            self.propagate_uncertainties()
+        #if self.CalculateUncertainties == True:
+        #    self.propagate_uncertainties()
 
         ##############################################
 
@@ -413,25 +410,26 @@ class FastMTT(Likelihood):
         X2 = np.arange(1, nGridPoints) * gridFactor
 
         # Cartesian product
-        pairs = np.column_stack((np.repeat(X1, len(X2)),
+        self.pairs = np.column_stack((np.repeat(X1, len(X2)),
                                  np.tile(X2, len(X1))))
         
-        lh = self.myLikelihood.value(pairs)
+        self.lh = self.myLikelihood.value(self.pairs)
 
-        minimum = np.argmin(lh, axis=1)
+        minimum = np.argmin(self.lh, axis=1)
 
-        self.BestX = pairs[minimum]
-        self.BestLikelihood = lh[np.arange(lh.shape[0]), minimum]
+        self.BestX = self.pairs[minimum]
+        self.BestLikelihood = self.lh[np.arange(self.lh.shape[0]), minimum]
+
+        ### USER INTERFACE AND ADDITIONAL COMPONENTS ###
 
         chi_square = 2.3
 
         #Plotting likelihoods
-        
         if self.WhichLikelihoodPlot != -1:
-            self.plot_likelihood(lh, X1, X2, event_number = self.WhichLikelihoodPlot, threshold=self.BestLikelihood[self.WhichLikelihoodPlot]/np.exp(chi_square/2))
+            self.plot_likelihood(X1, X2, event_number = self.WhichLikelihoodPlot, threshold=self.BestLikelihood[self.WhichLikelihoodPlot]/np.exp(chi_square/2))
 
         if self.CalculateUncertainties == True:
-            self.calculate_uncertainties(lh, X1, X2, chi_square)
+            self.contour_uncertainties(X1, X2, chi_square)
 
         #Code for minimalizing function with scipy:
 
@@ -446,12 +444,12 @@ class FastMTT(Likelihood):
 
         return
     
-    def plot_likelihood(self, lh, X1, X2, event_number=0, threshold=None):
+    def plot_likelihood(self, X1, X2, event_number=0, threshold=None):
 
         print("Threshold: ", threshold)
         nGridPoints = np.shape(X1)[0]
 
-        lh_grid = lh[event_number, :].reshape(nGridPoints, nGridPoints)
+        lh_grid = self.lh[event_number, :].reshape(nGridPoints, nGridPoints)
 
         plt.figure(figsize=(8, 6))
 
@@ -493,13 +491,21 @@ class FastMTT(Likelihood):
         plt.savefig(file_path, dpi=300)
         plt.close()
 
-    def calculate_uncertainties(self, lh, X1, X2, chi_square = 2.3):
+    def evaluate_mass(self, x):
+        tau1P4 = self.p4_Lepton1[:, np.newaxis, np.newaxis, :]*(1/x[np.newaxis, :, :, np.newaxis, 0])
+        tau2P4 = self.p4_Lepton2[:, np.newaxis, np.newaxis, :]*(1/x[np.newaxis, :, :, np.newaxis, 1])
+        bestP4 = tau1P4 + tau2P4
+        mass = InvariantMass(bestP4)
+        return mass
+    
+    def contour_uncertainties(self, X1, X2, chi_square = 2.3):
         threshold = self.BestLikelihood/np.exp(chi_square/2)
 
         nGridPoints = np.shape(X1)[0]
-        nEvents = np.shape(lh)[0]
+        nEvents = np.shape(self.lh)[0]
 
-        lh_grid = lh.reshape(nEvents, nGridPoints, nGridPoints)
+        lh_grid = self.lh.reshape(nEvents, nGridPoints, nGridPoints)
+        pairs = self.pairs.reshape(nGridPoints, nGridPoints, 2)
         mask = (lh_grid < threshold[:, np.newaxis, np.newaxis])
 
         up = np.roll(mask, shift=-1, axis=1)
@@ -508,102 +514,11 @@ class FastMTT(Likelihood):
         right = np.roll(mask, shift=1, axis=2)
         boundary_mask = mask & ~(up & down & left & right)
         
-        nRows, nCols = lh_grid.shape[1], lh_grid.shape[2]
+        masses = self.evaluate_mass(pairs)
+        masses = np.where(boundary_mask, masses, np.nan)
+        max_masses = np.nanmax(masses, axis=(1, 2))
+        min_masses = np.nanmin(masses, axis=(1, 2))
 
-        # Only interior points are True (no boundary of the grid)
-        interior_mask = np.zeros((nRows, nCols), dtype=bool)
-        interior_mask[1:-1, 1:-1] = True
-        boundary_mask &= interior_mask[np.newaxis, :, :]
-        
-        X1_grid, X2_grid = np.meshgrid(X1, X2, indexing='ij')
-        mean_result = np.array([
-            np.nanmean(np.where(boundary_mask, X1_grid, np.nan), axis=(1, 2)),
-            np.nanmean(np.where(boundary_mask, X2_grid, np.nan), axis=(1, 2))
-        ]).T
+        arbitrary_numerical_factor = 2.5
 
-        #mean_result = self.BestX
-
-        X1_shifted = X1[np.newaxis, :] - mean_result[:, 0][:, np.newaxis]
-        X2_shifted = X2[np.newaxis, :] - mean_result[:, 1][:, np.newaxis]
-
-        X1_shifted_grid = X1_shifted[:, :, np.newaxis]
-        X2_shifted_grid = X2_shifted[:, np.newaxis, :]
-
-        covXX = np.nanmean(np.where(boundary_mask, X1_shifted_grid**2, np.nan),
-                        axis = (1, 2))[:, np.newaxis, np.newaxis]
-        covYY = np.nanmean(np.where(boundary_mask, X2_shifted_grid**2, np.nan),
-                        axis = (1, 2))[:, np.newaxis, np.newaxis]
-        covXY = np.nanmean(np.where(boundary_mask, X1_shifted_grid*X2_shifted_grid, np.nan),
-                        axis = (1, 2))[:, np.newaxis, np.newaxis]
-
-        CovarianceMatrix = np.concatenate([
-            np.concatenate([covXX, covXY], axis=2),
-            np.concatenate([covXY, covYY], axis=2)
-        ], axis=1)
-
-        self.covX11 = covXX[:, 0, 0]*chi_square
-        self.covX22 = covYY[:, 0, 0]*chi_square
-        self.covX12 = covXY[:, 0, 0]*chi_square
-
-        ### Plot:) ###
-
-        if self.WhichLikelihoodPlot != -1:
-
-            plt.figure(figsize=(8, 6))
-            plt.imshow(boundary_mask[self.WhichLikelihoodPlot], origin='lower', cmap='viridis', interpolation='nearest', extent=(X1[0], X1[-1], X2[0], X2[-1]))
-
-            plt.colorbar(label='Mask value')
-            plt.title(f"Mask for event {self.WhichLikelihoodPlot}")
-            plt.xlabel("X")
-            plt.ylabel("Y")
-
-            plt.scatter(mean_result[self.WhichLikelihoodPlot, 1], mean_result[self.WhichLikelihoodPlot, 0], color='red', marker='x', s=100, label="Mean of ellipse", linewidth=2.5)
-
-            #Ellipse
-            cov_matrix = CovarianceMatrix[self.WhichLikelihoodPlot]
-            ax = plt.gca()
-            flipped_mean = mean_result[self.WhichLikelihoodPlot][[1, 0]]
-            flipped_cov_matrix = cov_matrix[[1, 0]][:, [1, 0]]
-            plot_covariance_ellipse(flipped_mean, flipped_cov_matrix, chi_square, ax, edgecolor='blue', linestyle='-', linewidth=2, alpha=0.7)
-
-            #Saving
-            file_path = f"images/fastMTT/boundary_mask_case_{self.WhichLikelihoodPlot}.png"
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            plt.savefig(file_path, dpi=300)
-            plt.close()
-
-        return
-    
-    def propagate_uncertainties(self):
-        
-        tau1_momentum_sum = self.tau1P4[:, 1] + self.tau1P4[:, 2] + self.tau1P4[:, 3]
-        tau2_momentum_sum = self.tau2P4[:, 1] + self.tau2P4[:, 2] + self.tau2P4[:, 3]
-
-        X1Derivative = (tau1_momentum_sum + tau2_momentum_sum)*tau1_momentum_sum/self.BestX[:, 0]/self.mass
-        X1Derivative += (self.tau1P4[:, 0]+self.tau2P4[:, 0])*self.tau1P4[:, 0]/self.BestX[:, 0]/self.mass
-
-        X2Derivative = (tau1_momentum_sum + tau2_momentum_sum)*tau2_momentum_sum/self.BestX[:, 1]/self.mass
-        X2Derivative += (self.tau1P4[:, 0]+self.tau2P4[:, 0])*self.tau2P4[:, 0]/self.BestX[:, 1]/self.mass
-
-        overall_error = self.covX11*X1Derivative**2 + self.covX22*X2Derivative**2 + 2*self.covX12*X1Derivative*X2Derivative
-
-        self.one_sigma = np.sqrt(overall_error)
-
-        return
-
-def plot_covariance_ellipse(mean, cov_matrix, chi_square, ax, edgecolor='blue', linestyle='-', linewidth=2, alpha=0.5):
-
-    #Plotting an ellipse
-    
-    eigenvalues, eigenvectors = np.linalg.eigh(cov_matrix)
-    order = eigenvalues.argsort()[::-1]
-    eigenvalues = eigenvalues[order]
-    eigenvectors = eigenvectors[:, order]
-
-    angle = np.degrees(np.arctan2(eigenvectors[1, 0], eigenvectors[0, 0]))
-
-    width, height = 2 * np.sqrt(eigenvalues) * np.sqrt(chi_square)
-
-    ellipse = Ellipse(xy=mean, width=width, height=height, angle=angle, edgecolor=edgecolor,
-                      facecolor='none', linestyle=linestyle, linewidth=linewidth, alpha=alpha)
-    ax.add_patch(ellipse)
+        self.one_sigma = (max_masses - min_masses)/2*arbitrary_numerical_factor

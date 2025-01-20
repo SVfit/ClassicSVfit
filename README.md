@@ -1,5 +1,6 @@
 # ClassicSVfit
 Latest version of SVfit_standalone algorithm
+Python instructions: https://github.com/SVfit/ClassicSVfit/blob/fastMTT_2024/python/README.md
 
 # Installation instructions with CMSSW
 The SVfitPerformanceStudies package has been tested with CMSSW 9_4_4.

@@ -78,7 +78,29 @@ It calculates the uncertainty of the mass by estimating the contour, in which th
 
 The procedure produces long tails, but apart from that calculates uncertainties event by event quite ok ~ after some cuts results are aprox. Gaussian. It is also a bit time consuming -- doubles the time of calculation -- so it is disabled by default.
 
+# Python wrapper
 
+One can also use old C++ code with python wrapper.
+
+This wrapper has been developed with the purpose of using it with the [ColumnFlow](https://columnflow.readthedocs.io/en/latest/) columnar Python-based framework. In order to use `ClassicSVFit` in Python, the [pybind11](https://pybind11.readthedocs.io/en/stable/basics.html) wrapper has been used. The wrapper for the different classes can be found here : [pybind_wrapper.cpp](https://github.com/oponcet/ClassicSVfit/blob/fastMTT_19_02_2019/wrapper/pybind_wrapper.cpp).
+
+The cloned `ClassicSVFit` already contains the `pybind11` and the `wrapper` itself. A few more things to modify [hard-coded, please be patient !!!]
+```bash
+open TauAnalysis/ClassicSVfit/wrapper/CMakeList.txt
+change L10 and L33
+```
+Now, this wrapper needs to be compiled with :
+```bash
+export LIBRARY_PATH=$LIBRARY_PATH:$PWD/TauAnalysis/ClassicSVfit/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/TauAnalysis/ClassicSVfit/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/cvmfs/sft.cern.ch/lcg/app/releases/ROOT/6.30.04/x86_64-centosstream9-gcc113-opt/lib/
+cmake -S TauAnalysis/ClassicSVfit/wrapper/ -B TauAnalysis/ClassicSVfit/wrapper/
+make -C TauAnalysis/ClassicSVfit/wrapper/
+```
+It should produce a `.so` file which can be used as a module in Python. For example you can import it like :
+```py
+from modules.extern.TauAnalysis.ClassicSVfit.wrapper.pybind_wrapper import *
+```
 
 
 

@@ -2,6 +2,8 @@
 
 Documentation for FastMTT implementation in python. It's performance is of the order of C++ version, but probably worse (one should expect around 3.5 times slower calculations).
 
+Presentation: https://indico.cern.ch/event/1467095/
+
 Version is standalone and do not need any installations apart from standard libraries (numpy, pandas, os, scipy, matplotlib, pyplot, argparse).
 
 To see example usage of the code, please use FastMTT_test.py file and execute it with:

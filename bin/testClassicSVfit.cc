@@ -1,4 +1,8 @@
 
+//The code was slightly modified to read the input from a json file
+//Example json file is stored in events.json
+//Which should be moved to the directory from where the code will be run
+
 /**
    \class testClassicSVfit testClassicSVfit.cc "TauAnalysis/ClassicSVfit/bin/testClassicSVfit.cc"
    \brief Basic example of the use of the standalone version of the "classic" SVfit algorithm
@@ -13,6 +17,11 @@
 
 #include "TH1F.h"
 
+#include <iostream>
+#include <fstream>
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 using namespace classic_svFit;
 
 int main(int argc, char* argv[])
@@ -21,28 +30,54 @@ int main(int argc, char* argv[])
      This is a single event for testing purposes.
   */
 
-  // define MET
-  double measuredMETx =  11.7491;
-  double measuredMETy = -51.9172;
+  std::ifstream file("TauAnalysis/ClassicSVfit/bin/test_events.json");
+
+  if (!file.is_open()) {
+    std::cerr << "You cannot open json file!" << std::endl;
+    return 1;
+  }
+
+  json jsonData;
+  file >> jsonData;
+
+  json event = jsonData[0];
+
+  double measuredMETx = event["metx"].get<double>();
+  double measuredMETy = event["mety"].get<double>();
 
   // define MET covariance
   TMatrixD covMET(2, 2);
-  covMET[0][0] =  787.352;
-  covMET[1][0] = -178.63;
-  covMET[0][1] = -178.63;
-  covMET[1][1] =  179.545;
+  covMET[0][0] =  event["metcov00"].get<double>();
+  covMET[1][0] = event["metcov01"].get<double>();
+  covMET[0][1] = event["metcov01"].get<double>();
+  covMET[1][1] =  event["metcov11"].get<double>();
 
   // define lepton four vectors
   std::vector<MeasuredTauLepton> measuredTauLeptons;
-  measuredTauLeptons.push_back(MeasuredTauLepton(MeasuredTauLepton::kTauToElecDecay, 33.7393, 0.9409,  -0.541458, 0.51100e-3)); // tau -> electron decay (Pt, eta, phi, mass)
-  measuredTauLeptons.push_back(MeasuredTauLepton(MeasuredTauLepton::kTauToHadDecay,  25.7322, 0.618228, 2.79362,  0.13957, 0)); // tau -> 1prong0pi0 hadronic decay (Pt, eta, phi, mass)
+  measuredTauLeptons.push_back(MeasuredTauLepton(MeasuredTauLepton::kTauToElecDecay, event["pt_1"], event["eta_1"],  event["phi_1"], event["m_1"])); // tau -> electron decay (Pt, eta, phi, mass)
+  measuredTauLeptons.push_back(MeasuredTauLepton(MeasuredTauLepton::kTauToHadDecay,  event["pt_2"], event["eta_2"],  event["phi_2"], event["m_2"], event["dm_2"])); // tau -> 1prong0pi0 hadronic decay (Pt, eta, phi, mass)
   /*
      tauDecayModes:  0 one-prong without neutral pions
-                     1 one-prong with neutral pions
         10 three-prong without neutral pions
   */
 
   int verbosity = 1;
+
+//Run FastMTT
+  FastMTT aFastMTTAlgo;
+  aFastMTTAlgo.run(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
+  LorentzVector ttP4 = aFastMTTAlgo.getBestP4();
+  std::cout<<std::endl;
+  std::cout << "FastMTT found best p4 with mass = " << ttP4.M()
+	    << " (expected value = 108.991),"
+	    <<std::endl;
+  std::cout<<"Real Time =   "<<aFastMTTAlgo.getRealTime("scan")<<" seconds "
+	   <<" Cpu Time =   "<<aFastMTTAlgo.getCpuTime("scan")<<" seconds"<<std::endl;
+  if(std::abs(ttP4.M() -  108.991)>1E-6*108.991) return 1;
+  
+  return 0;
+
+
   ClassicSVfit svFitAlgo(verbosity);
 #ifdef USE_SVFITTF
   //HadTauTFCrystalBall2* hadTauTF = new HadTauTFCrystalBall2();
@@ -118,17 +153,4 @@ int main(int argc, char* argv[])
   if (std::abs((tau1P4.Pt() - 102.508) / 102.508) > 0.001) return 1;
   if (std::abs((tau2P4.Pt() - 27.019) / 27.019) > 0.001) return 1;
 
-  //Run FastMTT
-  FastMTT aFastMTTAlgo;
-  aFastMTTAlgo.run(measuredTauLeptons, measuredMETx, measuredMETy, covMET);
-  LorentzVector ttP4 = aFastMTTAlgo.getBestP4();
-  std::cout<<std::endl;
-  std::cout << "FastMTT found best p4 with mass = " << ttP4.M()
-	    << " (expected value = 108.991),"
-	    <<std::endl;
-  std::cout<<"Real Time =   "<<aFastMTTAlgo.getRealTime("scan")<<" seconds "
-	   <<" Cpu Time =   "<<aFastMTTAlgo.getCpuTime("scan")<<" seconds"<<std::endl;
-  if(std::abs(ttP4.M() -  108.991)>1E-6*108.991) return 1;
-  
-  return 0;
 }

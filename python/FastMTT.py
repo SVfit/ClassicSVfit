@@ -21,7 +21,7 @@ def InvariantMass(aP4):
     return np.sqrt(energy_squared - momentum_squared)
 
 class Likelihood:
-    def __init__(self, enable_MET = True, enable_mass = True, enable_BW = False, enable_px = False, enable_py = False):
+    def __init__(self, enable_MET = True, enable_mass = True, enable_mass_constraint = False, enable_px = False, enable_py = False):
         #METinputs
         self.recoMET = np.array([0.0, 0.0, 0.0, 0.0])
         self.covMET = np.ones((2, 2))
@@ -57,7 +57,7 @@ class Likelihood:
         self.enable_mass = enable_mass
 
         #These are experimental and not used by main code
-        self.enable_BW = enable_BW
+        self.enable_mass_constraint = enable_mass_constraint
         self.enable_px = enable_px
         self.enable_py = enable_py
 
@@ -99,7 +99,8 @@ class Likelihood:
         jacobiFactor = 2.0*self.mvis[:, np.newaxis]**2*mScaled**(-self.coeff1)
         x2IntegralTerm = np.log(x2Max/x2Min)
 
-        value = x2IntegralTerm
+        value = 0.0
+        value += x2IntegralTerm
 
         HadDecay1 = np.broadcast_to((self.leg1DecayType != 1)[:, np.newaxis], value.shape)
         value += HadDecay1 * mVS2 * (1 / x2Max - 1 / x2Min)
@@ -117,21 +118,17 @@ class Likelihood:
     #It will better constraint the likelihood function to Z0/H mass
     #(in order for better momenta estimation)
 
-    def BreitWigner(self, invariant_mass):
+    def mass_constraint(self, invariant_mass):
         Higgs_mass = 125
-        Higgs_gamma = Higgs_mass*0.01 #value set in original SVfit paper, however we will play with it yet
-        Z_mass = 91.2
-        Z_gamma = 2.5
+        Z0_mass = 91.2
+        sigma = 10 #artificially set value, one can play with it and adjust for the best mass/pt resolution
+        #However something around 10GeV seems to work optimally
 
-        def normalization_constant(mass, gamma):
-            x = mass*np.sqrt(mass**2+gamma**2)
+        Higgs_gauss_factor = np.exp(-(invariant_mass - Higgs_mass)**2/(2*sigma**2))
+        Z_gauss_factor = np.exp(-(invariant_mass - Z_mass)**2/(2*sigma**2))
 
-            return 2*np.sqrt(2)*mass*gamma*x/np.pi/np.sqrt(mass**2 + x)
-
-        H_denominator = (invariant_mass**2 - Higgs_mass**2)**2 + (Higgs_mass**2)*(Higgs_gamma**2)
-        Z_denominator = (invariant_mass**2 - Z_mass**2)**2 + (Z_mass**2)*(Z_gamma**2)
-        return normalization_constant(Z_mass, Z_gamma)/Z_denominator + normalization_constant(Higgs_mass, Higgs_gamma)/H_denominator
-    
+        return Higgs_gauss_factor
+        #return Z_gauss_factor
 
     #This is experimental part and by default not used by main code
 
@@ -262,8 +259,8 @@ class Likelihood:
             value *= self.ptLikelihood(testP4[:, :, 0], 0)
         if self.enable_py:
             value *= self.ptLikelihood(testP4[:, :, 1], 1)
-        if self.enable_BW:
-            value *= self.BreitWigner(InvariantMass(testP4))
+        if self.enable_mass_constraint:
+            value *= self.mass_constraint(InvariantMass(testP4))
         
         value[mask] = 0.000001
 

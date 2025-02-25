@@ -2,6 +2,8 @@
 
 Documentation for FastMTT implementation in python. It's performance is of the order of C++ version, but probably worse (one should expect around 3.5 times slower calculations).
 
+Presentation: https://indico.cern.ch/event/1467095/
+
 Version is standalone and do not need any installations apart from standard libraries (numpy, pandas, os, scipy, matplotlib, pyplot, argparse).
 
 To see example usage of the code, please use FastMTT_test.py file and execute it with:
@@ -55,6 +57,18 @@ lepton[5]: hadron decay mode (-1 for non-hadrons)
 
 For the output one will obtain one array of the size (N,), containing estimated invariant masses.
 
+# Another outputs
+
+One can also get the reconstructed pT of the Higgs/Z and the momenta of reconstructed taons with:
+
+'''
+ptFast = fMTT.pt
+p4_fast_1 = fMTT.tau1P4
+p4_fast_2 = fMTT.tau2P4
+'''
+
+However one should be carefull, as the resolutions of these results are not perfect -- FastMTT was mainly invented for fast mass reconstruction.
+
 # Additional User Interface components
 
 1) In case one want to see the likelihood of mass, one could plot it with the functions of FastMTT.
@@ -77,6 +91,27 @@ fMTT.CalculateUncertainties = True
 It calculates the uncertainty of the mass by estimating the contour, in which there should be masses with the probability in 1 sigma interval (according to the chi^2 test). Then the masses are calculated for the contour and highest and lowest masses give the interval for 1 sigma uncertainty. Additional arbitrary factor is used to adjust the results for chi^2 test.
 
 The procedure produces long tails, but apart from that calculates uncertainties event by event quite ok ~ after some cuts results are aprox. Gaussian. It is also a bit time consuming -- doubles the time of calculation -- so it is disabled by default.
+
+# Additional likelihood constraints
+
+There are set two mass constraints, similar to each other (both disabled by default):
+
+1) We modify the likelihood by the normal distribution, by setting:
+
+'''
+fMTT.myLikelihood.enable_mass_constraint = True
+'''
+We set the standard deviation to be equal to 10GeV, as this value seems to bring the best pT resolution. However one should avoid using it in the case of searching for heavy resonances.
+
+2) Suggested by ICL team -- hard cut constraint on possible likelihood. To enable it one can set it and modify the range of window by:
+
+'''
+fMTT.myLikelihood.enable_window = True
+fMTT.myLikelihood.window = [123, 127]
+'''
+
+Idea was already proved to improve the results in CP H->tau tau measurements, if used in proper way.
+
 
 # Python wrapper
 

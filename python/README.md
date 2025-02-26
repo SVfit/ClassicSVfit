@@ -61,11 +61,11 @@ For the output one will obtain one array of the size (N,), containing estimated 
 
 One can also get the reconstructed pT of the Higgs/Z and the momenta of reconstructed taons with:
 
-'''
+```
 ptFast = fMTT.pt
 p4_fast_1 = fMTT.tau1P4
 p4_fast_2 = fMTT.tau2P4
-'''
+```
 
 However one should be carefull, as the resolutions of these results are not perfect -- FastMTT was mainly invented for fast mass reconstruction.
 
@@ -98,17 +98,18 @@ There are set two mass constraints, similar to each other (both disabled by defa
 
 1) We modify the likelihood by the normal distribution, by setting:
 
-'''
+```
 fMTT.myLikelihood.enable_mass_constraint = True
-'''
+```
+
 We set the standard deviation to be equal to 10GeV, as this value seems to bring the best pT resolution. However one should avoid using it in the case of searching for heavy resonances.
 
 2) Suggested by ICL team -- hard cut constraint on possible likelihood. To enable it one can set it and modify the range of window by:
 
-'''
+```
 fMTT.myLikelihood.enable_window = True
 fMTT.myLikelihood.window = [123, 127]
-'''
+```
 
 Idea was already proved to improve the results in CP H->tau tau measurements, if used in proper way.
 

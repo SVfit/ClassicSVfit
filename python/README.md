@@ -1,12 +1,15 @@
 # FastMTT
 
+Author: Wiktor Matyszkiewicz
+Last update: 27.02.2025
+
 Documentation for FastMTT implementation in python. It's performance is of the order of C++ version, but probably worse (one should expect around 3.5 times slower calculations).
 
 Presentation: https://indico.cern.ch/event/1467095/
 
 Version is standalone and do not need any installations apart from standard libraries (numpy, pandas, os, scipy, matplotlib, pyplot, argparse).
 
-To see example usage of the code, please use FastMTT_test.py file and execute it with:
+To see example usage of the code, you can see Short_tutorial.py file with batch division. You can also try Long_tutorial.py, containing example of how to use FastMTT components. You can execute it with:
 
 ```
 python3 FastMTT_test.py example_data.csv
@@ -57,17 +60,27 @@ lepton[5]: hadron decay mode (-1 for non-hadrons)
 
 For the output one will obtain one array of the size (N,), containing estimated invariant masses.
 
-# Another outputs
+For another outpyts one can also get the reconstructed pT of the Higgs/Z and the momenta of reconstructed taons with:
 
-One can also get the reconstructed pT of the Higgs/Z and the momenta of reconstructed taons with:
-
-```
+'''
 ptFast = fMTT.pt
 p4_fast_1 = fMTT.tau1P4
 p4_fast_2 = fMTT.tau2P4
-```
+'''
 
 However one should be carefull, as the resolutions of these results are not perfect -- FastMTT was mainly invented for fast mass reconstruction.
+
+# Batching system
+
+We prepared additional function, that divide input data into batches. The simple function process_FastMTT is located in FastMTT_utils.py.
+
+This approach is recommended, especially for the number of events > 10 thousands (memory allocation is very big in these cases without batching).
+
+Additionally using it makes execution of the code faster -- probably due to the fact, that only the first batch is needed for highly-consuming memory allocation. Using batches allows for at least 2 times better time performance.
+
+Inputs: measuredTauLeptons, METx, METy, covMET (as in previous section). Optional -- batch_size (5 000 by default) and log_interval (1 by default, so the code will raport upon its progress with each batch).
+
+Outputs: mass, pT. Other can be added by hand in FastMTT_utlis.py file.
 
 # Additional User Interface components
 
@@ -92,27 +105,29 @@ It calculates the uncertainty of the mass by estimating the contour, in which th
 
 The procedure produces long tails, but apart from that calculates uncertainties event by event quite ok ~ after some cuts results are aprox. Gaussian. It is also a bit time consuming -- doubles the time of calculation -- so it is disabled by default.
 
-# Additional likelihood constraints
+3) There are set two mass constraints, similar to each other (both disabled by default):
 
-There are set two mass constraints, similar to each other (both disabled by default):
+a) We modify the likelihood by the normal distribution, by setting:
 
-1) We modify the likelihood by the normal distribution, by setting:
-
-```
+'''
 fMTT.myLikelihood.enable_mass_constraint = True
-```
-
+'''
 We set the standard deviation to be equal to 10GeV, as this value seems to bring the best pT resolution. However one should avoid using it in the case of searching for heavy resonances.
 
-2) Suggested by ICL team -- hard cut constraint on possible likelihood. To enable it one can set it and modify the range of window by:
+b) Suggested by ICL team -- hard cut constraint on possible likelihood. To enable it one can set it and modify the range of window by:
 
-```
+'''
 fMTT.myLikelihood.enable_window = True
 fMTT.myLikelihood.window = [123, 127]
-```
+'''
 
 Idea was already proved to improve the results in CP H->tau tau measurements, if used in proper way.
 
+# Likelihood components
+
+Likelihood.py contains is responsible for calculating likelihood for each point on the grid. These likelihood is crucial to the algorithm, as it is a basis for MLE method.
+
+(Detailed description of physical work will be provided probably when the article will be written)
 
 # Python wrapper
 

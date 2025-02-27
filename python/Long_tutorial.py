@@ -19,9 +19,13 @@ def process_events_csv(measuredTauLeptons, measuredMETx, measuredMETy, covMET, H
     fMTT.CalculateUncertainties = True
 
     #You can enable some likelihood components or other constraints in the following way:
-    fMTT.myLikelihood.enable_window = False
-    fMTT.myLikelihood.window = [115, 140]
-    fMTT.myLikelihood.enable_mass_constraint = False
+    fMTT.myLikelihood.setWindow = [123, 127] #default settings
+    fMTT.myLikelihood.enableLikelihoodComponents(window = True)
+    fMTT.myLikelihood.setMassConstraint(mean = 125, sigma = 10) #default settings
+    fMTT.myLikelihood.enableLikelihoodComponents(window = False, mass_constraint = True)
+
+    #For default set-up:
+    fMTT.myLikelihood.enableLikelihoodComponents(MET = True, mass = True, px = False, py = False, mass_constraint = False, window = False)
 
     print('Input shapes:', measuredTauLeptons.shape, measuredMETx.shape, measuredMETy.shape, covMET.shape)
     fMTT.run(measuredTauLeptons, measuredMETx, measuredMETy, covMET)

@@ -1,10 +1,11 @@
 import numpy as np
 from scipy.constants import physical_constants
 
-def InvariantMass(aP4):
-    energy_squared = aP4[..., 3]**2
-    momentum_squared = aP4[..., 0]**2 + aP4[..., 1]**2 + aP4[..., 2]**2
-    return np.sqrt(energy_squared - momentum_squared)
+def InvariantMass(p4):
+    metric = np.array([-1,-1,-1,1])
+    p4_square = p4*(metric*p4)
+    m = np.sqrt(np.sum(p4_square, axis=-1))
+    return m
 
 class Likelihood:
     def __init__(self):
@@ -58,6 +59,27 @@ class Likelihood:
         self.enable_py = False
 
         return
+
+    def setMassConstraint(self, mean, sigma):
+        self.constraint_mean = mean
+        self.constraint_sigma = sigma
+
+    def setWindow(self, window):
+        self.window = window
+
+    def enableLikelihoodComponents(self, MET = None, mass = None, px = None, py = None, mass_constraint = None, window = None):  #All Boolean
+        if MET is not None:
+            self.enable_MET = MET
+        if mass is not None:
+            self.enable_mass = mass
+        if px is not None:
+            self.enable_px = px
+        if py is not None:
+            self.enable_py = py
+        if mass_constraint is not None:
+            self.enable_mass_constraint = mass_constraint
+        if window is not None:
+            self.enable_window = window
 
     def setLeptonInputs(self, aLeg1P4, aLeg2P4, aLeg1DecayType, aLeg2DecayType, aLeg1DecayMode, aLeg2DecayMode):
         

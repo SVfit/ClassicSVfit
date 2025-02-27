@@ -3,11 +3,11 @@ import uproot
 from FastMTT_utils import *
 import FastMTT
 
-file_path = "/afs/cern.ch/user/w/wmatyszk/eos/HiggsCP/analysis/2022_postEE/Data/Muon_Run2022E_mutau.root"
-tree_name = "tree;1"
+file_path = "/eos/home-w/wmatyszk/public/FastMTT_tutorial.root"
+tree_name = "tree;1;1"
 branches = ['pt_1', 'eta_1', 'phi_1', 'm_1', 'pt_2', 'eta_2', 'phi_2', 'm_2', 'dm_2', 'met', 'metphi', 'metcov00', 'metcov01', 'metcov11']
 
-data = read_root_file(file_path, tree_name, branches, entry_stop = 50_000)
+data = read_root_file(file_path, tree_name, branches, entry_stop = None)
 
 # Access the numpy arrays
 shape = data["pt_1"].shape
@@ -31,6 +31,6 @@ print("Input shapes: ", measuredTauLeptons.shape, covMET.shape, METx.shape, METy
 #fMTT = FastMTT.FastMTT()
 #fMTT.run(measuredTauLeptons, METx, METy, covMET)
 #mFast = fMTT.mass
-mFast, ptFast = process_FastMTT(measuredTauLeptons, METx, METy, covMET, batch_size = 1000)
+mFast, ptFast = process_FastMTT(measuredTauLeptons, METx, METy, covMET, batch_size = 10)
 print("Output shape: ", mFast.shape, ptFast.shape)
 print("Output means: ", np.mean(mFast), np.mean(ptFast))

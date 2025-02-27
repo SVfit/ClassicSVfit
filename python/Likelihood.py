@@ -43,6 +43,13 @@ class Likelihood:
 
         #Mass constraints of two type -- strict cut (window) or additional likelihood component with normal distribution (mass_constraint)
         self.enable_mass_constraint = False
+        self.constraint_mean = 125  # Mass of the particle, that we want to reconstruct. In this case, it is Higgs mass
+        
+        # For Z0:
+        #self.constraint_mean = 91.1876
+        self.constraint_sigma = 10 #artificially set value, one can play with it and adjust for the best mass/pt resolution
+        #However something around 10GeV seems to work optimally
+
         self.enable_window = False
         self.window = [123, 127]
 
@@ -109,16 +116,10 @@ class Likelihood:
     #(in order for better momenta estimation)
 
     def mass_constraint(self, invariant_mass):
-        Higgs_mass = 125
-        Z0_mass = 91.2
-        sigma = 10 #artificially set value, one can play with it and adjust for the best mass/pt resolution
-        #However something around 10GeV seems to work optimally
 
-        Higgs_gauss_factor = np.exp(-(invariant_mass - Higgs_mass)**2/(2*sigma**2))
-        Z_gauss_factor = np.exp(-(invariant_mass - Z0_mass)**2/(2*sigma**2))
+        Gauss_factor = np.exp(-(invariant_mass - self.constraint_mean)**2/(2*self.constraint_sigma**2))
 
-        return Higgs_gauss_factor
-        #return Z_gauss_factor
+        return Gauss_factor
 
     def Window(self, invariant_mass):
         mask = (invariant_mass > self.window[0]) & (invariant_mass < self.window[1])

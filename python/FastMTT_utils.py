@@ -3,38 +3,46 @@ import uproot
 import matplotlib.pyplot as plt
 import time
 import FastMTT
+import multiprocessing as mp
 
-def process_FastMTT(measuredTauLeptons, xMETs, yMETs, covMETs, batch_size = 5_000, log_interval = 1):
-    
-    # Splitting into batches
-    measuredTauLeptons_batches = np.array_split(measuredTauLeptons, np.ceil(len(measuredTauLeptons) / batch_size))
-    METx_batches = np.array_split(xMETs, np.ceil(len(xMETs) / batch_size))
-    METy_batches = np.array_split(yMETs, np.ceil(len(yMETs) / batch_size))
-    covMET_batches = np.array_split(covMETs, np.ceil(len(covMETs) / batch_size))
+global_fMTT = None  
 
-    fMTT = FastMTT.FastMTT()
+def init_worker():
+    global global_fMTT
+    global_fMTT = FastMTT.FastMTT()
 
-    mFast = []
-    ptFast = []
+def process_batch(batch_data):
+    global global_fMTT  # Each process uses its own class instance
+
+    measuredTau, METx, METy, covMET = batch_data
+    global_fMTT.run(measuredTau, METx, METy, covMET)
+    return global_fMTT.mass, global_fMTT.pt, global_fMTT.tau1pt, global_fMTT.tau2pt
+
+def process_FastMTT(measuredTauLeptons, xMETs, yMETs, covMETs, batch_size=125, num_workers=4):
+
+    # Preparing batches
+    num_batches = int(np.ceil(len(measuredTauLeptons) / batch_size))
+    batches = [
+        (measuredTauLeptons[i * batch_size:(i + 1) * batch_size],
+         xMETs[i * batch_size:(i + 1) * batch_size],
+         yMETs[i * batch_size:(i + 1) * batch_size],
+         covMETs[i * batch_size:(i + 1) * batch_size])
+        for i in range(num_batches)
+    ]
 
     start_time = time.time()
 
-    for i, (measuredTau, METx, METy, covMET) in enumerate(zip(measuredTauLeptons_batches, METx_batches, METy_batches, covMET_batches)):
-        #Each batch processing
-        fMTT.run(measuredTau, METx, METy, covMET)
-        mFast.append(fMTT.mass)
-        ptFast.append(fMTT.pt)
+    # Pool multiprocessing with FastMTT instance initialization
+    with mp.Pool(processes=num_workers, initializer=init_worker) as pool:
+        results = pool.map(process_batch, batches)
 
-        if i % log_interval == 0 or i == len(measuredTauLeptons_batches) - 1:
-            print(f"Batch {i+1}/{len(measuredTauLeptons_batches)} processed")
-
-    #Time measurement
+    # Ziping results
+    mFast, ptFast, tau1pt, tau2pt = zip(*results)
+    
     end_time = time.time()
     print(f"Processing FastMTT took {end_time - start_time:.2f} seconds")
 
-    # Merging:)
-    return np.concatenate(mFast, axis=0), np.concatenate(ptFast, axis=0)
-    
+    return np.concatenate(mFast, axis=0), np.concatenate(ptFast, axis=0), np.concatenate(tau1pt, axis=0), np.concatenate(tau2pt, axis=0)
 
 def read_root_file(file_path, tree_name, branches, entry_stop=None):
     # Open the ROOT file using uproot

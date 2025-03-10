@@ -17,10 +17,11 @@ ChargedPionMass = 139.5/1000 #MeV -> GeV
 
 
 #Invariant mass calculation
-def InvariantMass(aP4):
-    energy_squared = aP4[..., 3]**2
-    momentum_squared = aP4[..., 0]**2 + aP4[..., 1]**2 + aP4[..., 2]**2
-    return np.sqrt(energy_squared - momentum_squared)
+def InvariantMass(p4):
+    metric = np.array([-1,-1,-1,1])
+    p4_square = p4*(metric*p4)
+    m = np.sqrt(np.sum(p4_square, axis=-1))
+    return m
 
 def pT(aP4):
     return np.sqrt(aP4[..., 0]**2 + aP4[..., 1]**2)
@@ -89,14 +90,23 @@ class FastMTT:
         
         self.tau1P4 = self.p4_Lepton1*(1/self.BestX[:, np.newaxis, 0])
         self.tau2P4 = self.p4_Lepton2*(1/self.BestX[:, np.newaxis, 1])
+
+        if self.myLikelihood.enable_window:
+            mvis = InvariantMass(self.p4_Lepton1 + self.p4_Lepton2)
+            mask = mvis > self.myLikelihood.window[1]
+            self.tau1P4[mask] = self.p4_Lepton1[mask]
+            self.tau2P4[mask] = self.p4_Lepton2[mask]
+
         self.bestP4 = self.tau1P4 + self.tau2P4
         self.mass = InvariantMass(self.bestP4)
+        self.pt = pT(self.bestP4)
 
         if self.myLikelihood.enable_window:
             self.mass[(self.mass < self.myLikelihood.window[0])] = self.myLikelihood.window[0]
             self.mass[(self.mass > self.myLikelihood.window[1])] = self.myLikelihood.window[1]
 
-        self.pt = pT(self.bestP4)
+        self.tau1pt = np.sqrt(self.tau1P4[..., 0]**2 + self.tau1P4[..., 1]**2)
+        self.tau2pt = np.sqrt(self.tau2P4[..., 0]**2 + self.tau2P4[..., 1]**2)
 
         ##############################################
 
@@ -190,12 +200,10 @@ class FastMTT:
         # 5 sigma = 28.7
         ###
 
-
         #Plotting likelihoods
         if self.WhichLikelihoodPlot != -1:
             threshold=self.BestLikelihood[self.WhichLikelihoodPlot]/np.exp(chi_square/2)
             self.plot_likelihood(X1, X2, event_number = self.WhichLikelihoodPlot, threshold=threshold)
-            self.plot_likelihood_comparison(X1, X2, event_number = self.WhichLikelihoodPlot)
 
         if self.CalculateUncertainties == True:
             self.contour_uncertainties(X1, X2, chi_square)
@@ -265,9 +273,9 @@ class FastMTT:
                 'ytick.labelsize': 'xx-large'}
         plt.rcParams.update(params)
 
-        file_path = f"images/fastMTT/likelihood_{self.WhichLikelihoodPlot}_event.pdf"
+        file_path = f"images/fastMTT/likelihood_{self.WhichLikelihoodPlot}_event.png"
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        plt.savefig(file_path, format='pdf')
+        plt.savefig(file_path, format='png')
         plt.close()
 
     def evaluate_mass(self, x):

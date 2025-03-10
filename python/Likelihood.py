@@ -283,9 +283,9 @@ class Likelihood:
         if self.enable_mass_constraint:
             value *= self.mass_constraint(InvariantMass(testP4))
         
-        value[mask] = 0.000001
-        
-        if self.enable_window:
+        if not self.enable_window: #default
+            value[mask] = 0.000001
+        else:
             value[~self.Window(InvariantMass(testP4))] = 1.0
 
         return value

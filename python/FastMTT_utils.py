@@ -5,6 +5,7 @@ import time
 import FastMTT
 import multiprocessing as mp
 
+# Globalna instancja dla każdego procesu
 global_fMTT = None  
 
 def init_worker():
@@ -12,7 +13,8 @@ def init_worker():
     global global_fMTT
     global_fMTT = FastMTT.FastMTT()
 
-def process_batches_for_worker(worker_batches):
+def process_batches_for_worker(args):
+    worker_id, worker_batches = args
     #Each core processes its own batches
     global global_fMTT
     results = []
@@ -30,15 +32,15 @@ def process_FastMTT(measuredTauLeptons, xMETs, yMETs, covMETs, batch_size=5_000,
     worker_data_splits = np.array_split(range(num_total), num_workers)
     worker_batches = []
     
-    for worker_indices in worker_data_splits:
+    for worker_id, worker_indices in enumerate(worker_data_splits):
         batches = [
-            (measuredTauLeptons[i:i + batch_size],
-             xMETs[i:i + batch_size],
-             yMETs[i:i + batch_size],
-             covMETs[i:i + batch_size])
-            for i in range(worker_indices[0], worker_indices[-1] + 1, batch_size)
+            (measuredTauLeptons[idxs],
+            xMETs[idxs],
+            yMETs[idxs],
+            covMETs[idxs])
+            for idxs in np.array_split(worker_indices, int(np.ceil(len(worker_indices) / batch_size)))
         ]
-        worker_batches.append(batches)
+        worker_batches.append((worker_id, batches))
     
     start_time = time.time()
     
@@ -52,7 +54,7 @@ def process_FastMTT(measuredTauLeptons, xMETs, yMETs, covMETs, batch_size=5_000,
     end_time = time.time()
     print(f"Processing FastMTT took {end_time - start_time:.2f} seconds")
     
-    return np.concatenate(mFast, axis=0), np.concatenate(ptFast, axis=0), np.concatenate(tau1pt, axis=0), np.concatenate(tau2pt, axis=0)
+    return np.concatenate(mFast, axis=0), np.concatenate(ptFast, axis=0), np.concatenate(tau1pt, axis = 0), np.concatenate(tau2pt, axis = 0)
 
 def read_root_file(file_path, tree_name, branches, entry_stop=None):
     # Open the ROOT file using uproot

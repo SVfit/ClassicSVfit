@@ -28,9 +28,10 @@ METy = data["met"] * np.sin(data["metphi"])
 
 print("Input shapes: ", measuredTauLeptons.shape, covMET.shape, METx.shape, METy.shape)
 
-#fMTT = FastMTT.FastMTT()
-#fMTT.run(measuredTauLeptons, METx, METy, covMET)
-#mFast = fMTT.mass
-mFast, ptFast = process_FastMTT(measuredTauLeptons, METx, METy, covMET, batch_size = 10)
+fMTT = FastMTT.FastMTT()
+fMTT.run(measuredTauLeptons, METx, METy, covMET)
+mFast = fMTT.mass
+ptFast = fMTT.pt
+mFast, ptFast, tau1pt, tau2pt = process_FastMTT(measuredTauLeptons, METx, METy, covMET, batch_size = 10, num_workers = 8)
 print("Output shape: ", mFast.shape, ptFast.shape)
 print("Output means: ", np.mean(mFast), np.mean(ptFast))

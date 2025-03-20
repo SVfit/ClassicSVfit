@@ -131,6 +131,8 @@ Likelihood.py contains is responsible for calculating likelihood for each point 
 
 # Python wrapper
 
+(Author: Ocean Poncet)
+
 One can also use old C++ code with python wrapper.
 
 This wrapper has been developed with the purpose of using it with the [ColumnFlow](https://columnflow.readthedocs.io/en/latest/) columnar Python-based framework. In order to use `ClassicSVFit` in Python, the [pybind11](https://pybind11.readthedocs.io/en/stable/basics.html) wrapper has been used. The wrapper for the different classes can be found here : [pybind_wrapper.cpp](https://github.com/oponcet/ClassicSVfit/blob/fastMTT_19_02_2019/wrapper/pybind_wrapper.cpp).

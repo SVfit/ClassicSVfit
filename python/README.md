@@ -11,7 +11,7 @@ Version is standalone and do not need any installations apart from standard libr
 
 To see example usage of the code, you can see Short_tutorial.py file with batch division. You can also try Long_tutorial.py, containing example of how to use FastMTT components. You can execute it with:
 
-```
+```python
 python3 FastMTT_test.py example_data.csv
 ```
 
@@ -20,20 +20,20 @@ python3 FastMTT_test.py example_data.csv
 FastMTT has simple structure and is written in the FastMTT.py file only.
 Moreover FastMTT is written as separate python class called FastMTT and to start using it, one have to make an instance of this class:
 
- ```
+ ```python
 import FastMTT
 
 fMTT = FastMTT.FastMTT()
  ```
 
 The function responsible for communication with the program is .run and one can use the programm with:
-```
+```python
 fMTT.run(measuredTauLeptons, measuredMETx, measuredMETy, covMET)
 ```
 
 Then importing the results is made with .mass component:
 
-```
+```python
 masses = fMTT.mass
 ```
 
@@ -62,11 +62,11 @@ For the output one will obtain one array of the size (N,), containing estimated 
 
 For another outpyts one can also get the reconstructed pT of the Higgs/Z and the momenta of reconstructed taons with:
 
-'''
+```python
 ptFast = fMTT.pt
 p4_fast_1 = fMTT.tau1P4
 p4_fast_2 = fMTT.tau2P4
-'''
+```
 
 However one should be carefull, as the resolutions of these results are not perfect -- FastMTT was mainly invented for fast mass reconstruction.
 
@@ -89,7 +89,7 @@ To set it, one should set the value of parameter .WhichLikelihoodPlot. It contai
 
 Example usage:
 
-```
+```python
 fMTT.WhichLikelihoodPlot = 5
 ```
 
@@ -97,7 +97,7 @@ WhichLikelihoodPlot = -1 means, that no image will be plotted and is a default o
 
 2) In order to estimate event-by-event uncertainty, one can set:
 
-```
+```python
 fMTT.CalculateUncertainties = True
 ```
 
@@ -109,17 +109,17 @@ The procedure produces long tails, but apart from that calculates uncertainties 
 
 a) We modify the likelihood by the normal distribution, by setting:
 
-'''
+```python
 fMTT.myLikelihood.enable_mass_constraint = True
-'''
+```
 We set the standard deviation to be equal to 10GeV, as this value seems to bring the best pT resolution. However one should avoid using it in the case of searching for heavy resonances.
 
 b) Suggested by ICL team -- hard cut constraint on possible likelihood. To enable it one can set it and modify the range of window by:
 
-'''
+```python
 fMTT.myLikelihood.enable_window = True
 fMTT.myLikelihood.window = [123, 127]
-'''
+```
 
 Idea was already proved to improve the results in CP H->tau tau measurements, if used in proper way.
 
